@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,19 +6,7 @@ plugins {
 }
 
 kotlin {
-    iosArm64()
-    iosSimulatorArm64()
-
     jvm()
-
-    js {
-        browser()
-    }
-
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-    }
 
     androidLibrary {
         namespace = "dev.koenv.roadassist.core"
@@ -39,7 +26,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            // put your Multiplatform dependencies here
+            // shared dependencies added in Task 4
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

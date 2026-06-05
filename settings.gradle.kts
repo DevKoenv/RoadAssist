@@ -1,4 +1,4 @@
-rootProject.name = "demo"
+rootProject.name = "RoadAssist"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -35,6 +35,5 @@ plugins {
 include(":app:androidApp")
 include(":app:desktopApp")
 include(":app:shared")
-include(":app:webApp")
 include(":core")
 include(":server")

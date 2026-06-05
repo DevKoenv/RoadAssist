@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.painterResource
 
-import demo.app.shared.generated.resources.Res
-import demo.app.shared.generated.resources.compose_multiplatform
+import roadassist.app.shared.generated.resources.Res
+import roadassist.app.shared.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
