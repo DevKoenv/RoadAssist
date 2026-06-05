@@ -9,12 +9,11 @@ import kotlin.test.*
 class ApplicationTest {
 
     @Test
-    fun testRoot() = testApplication {
+    fun testUnknownRouteReturns404() = testApplication {
         application {
             module()
         }
         val response = client.get("/")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("Hello, Ktor!", response.bodyAsText())
+        assertEquals(HttpStatusCode.NotFound, response.status)
     }
 }
