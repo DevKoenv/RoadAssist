@@ -164,3 +164,6 @@ gradle-app.setting
 local.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,gradle,jetbrains+all,java
+
+# Local workspace (notes, scratch, plans)
+.workspace/
