@@ -18,6 +18,7 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "dev.koenv.roadassist.MainKt"
+        jvmArgs += listOf("-Dskiko.renderApi=SOFTWARE")
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

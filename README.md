@@ -34,10 +34,10 @@ Targets: Android (API 26+), Desktop (Windows/Linux). Backend: Ktor Server.
 
 | Branch | Purpose |
 | ------ | ------- |
-| `main` | Protected. Stable, releasable code. Merge via PR only. |
-| `develop` | Default working branch. All feature branches merge here. |
+| `master` | Protected. Stable, releasable code. Merge via PR only. |
+| `staging` | Acceptance environment. All feature branches merge here. |
 | `feature/<name>` | Short-lived branches per issue — e.g. `feature/9-jwt-auth`. |
 
-PRs target `develop`. Merges to `main` require a passing CI build.
+PRs target `staging`. Merges to `master` require a passing CI build.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for commit conventions.

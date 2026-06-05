@@ -32,8 +32,8 @@ test(server): add edge case for missing location field
 
 ## Pull requests
 
-Target `develop`. Fill in the PR template before requesting review.
-PRs to `main` are release merges only.
+Target `staging`. Fill in the PR template before requesting review.
+PRs to `master` are release merges only.
 
 ## Architecture guidelines
 
