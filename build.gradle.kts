@@ -10,6 +10,29 @@ plugins {
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.ktor) apply false
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
+}
+
+val coverageThreshold = 60 // raise as coverage improves
+
+kover {
+    merge {
+        projects(":core", ":server")
+    }
+    reports {
+        total {
+            xml {
+                onCheck = false
+                xmlFile.set(layout.buildDirectory.file("reports/kover/report.xml"))
+            }
+            verify {
+                onCheck = true
+                rule {
+                    minBound(coverageThreshold)
+                }
+            }
+        }
+    }
 }
 
 detekt {
