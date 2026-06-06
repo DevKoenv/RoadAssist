@@ -1,5 +1,6 @@
 package dev.koenv.roadassist
 
+import dev.koenv.roadassist.core.PingMessage
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
