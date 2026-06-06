@@ -9,4 +9,21 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.ktor) apply false
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    config.setFrom("$rootDir/detekt.yml")
+    buildUponDefaultConfig = true
+    source.setFrom(
+        fileTree(rootDir) {
+            include(
+                "**/src/commonMain/**/*.kt",
+                "**/src/jvmMain/**/*.kt",
+                "**/src/androidMain/**/*.kt",
+                "**/src/main/kotlin/**/*.kt",
+            )
+            exclude("**/build/**")
+        }
+    )
 }
