@@ -7,7 +7,7 @@ group = "dev.koenv.roadassist"
 version = "1.0.0"
 
 application {
-    mainClass = "dev.koenv.roadassist.ApplicationKt"
+    mainClass = "dev.koenv.roadassist.server.ApplicationKt"
 }
 
 dependencies {

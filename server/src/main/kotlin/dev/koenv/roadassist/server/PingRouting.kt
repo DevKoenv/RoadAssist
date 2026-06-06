@@ -1,4 +1,4 @@
-package dev.koenv.roadassist
+package dev.koenv.roadassist.server
 
 import dev.koenv.roadassist.core.PingMessage
 import io.ktor.server.application.*

@@ -1,4 +1,4 @@
-package dev.koenv.roadassist
+package dev.koenv.roadassist.server
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
