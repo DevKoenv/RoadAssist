@@ -1,9 +1,9 @@
-package dev.koenv.roadassist
+package dev.koenv.roadassist.app
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class SharedLogicDesktopTest {
+class SharedCommonTest {
 
     @Test
     fun example() {

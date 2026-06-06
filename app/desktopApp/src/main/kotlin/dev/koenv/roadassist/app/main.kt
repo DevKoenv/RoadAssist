@@ -1,4 +1,4 @@
-package dev.koenv.roadassist
+package dev.koenv.roadassist.app
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application

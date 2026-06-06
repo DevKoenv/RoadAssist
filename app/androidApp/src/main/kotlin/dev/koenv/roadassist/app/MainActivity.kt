@@ -1,4 +1,4 @@
-package dev.koenv.roadassist
+package dev.koenv.roadassist.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

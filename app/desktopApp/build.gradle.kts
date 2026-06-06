@@ -17,7 +17,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "dev.koenv.roadassist.MainKt"
+        mainClass = "dev.koenv.roadassist.app.MainKt"
         jvmArgs += listOf("-Dskiko.renderApi=SOFTWARE")
 
         nativeDistributions {
