@@ -1,6 +1,7 @@
 package dev.koenv.roadassist.server
 
 import dev.koenv.roadassist.server.database.DatabaseFactory
+import dev.koenv.roadassist.server.database.DatabaseSeeder
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -14,6 +15,7 @@ fun main() {
 
 fun Application.module() {
     DatabaseFactory.init()
+    DatabaseSeeder.seed()
     install(ContentNegotiation) { json() }
     configurePingRouting()
 }

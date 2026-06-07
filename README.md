@@ -30,6 +30,16 @@ Targets: Android (API 26+), Desktop (Windows/Linux). Backend: Ktor Server.
 ./gradlew :app:desktopApp:run
 ```
 
+## Development credentials
+
+The server seeds one test account on first startup (when the users table is empty).
+
+| Username | Password | Role      |
+| -------- | -------- | --------- |
+| `user`   | `user123` | ROAD_USER |
+
+Passwords are stored as bcrypt hashes. These credentials are for local development only and must not be used in any other environment.
+
 ## Branch strategy
 
 | Branch | Purpose |

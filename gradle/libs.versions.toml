@@ -18,6 +18,7 @@ ktor = "3.5.0"
 kotlinx-serialization = "1.8.0"
 navigation = "2.9.0-alpha01"
 exposed = "0.61.0"
+jbcrypt = "0.4"
 h2 = "2.3.232"
 logback = "1.5.34"
 sqlite-jdbc = "3.49.1.0"
@@ -47,6 +48,7 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
+jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "jbcrypt" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 ktor-serverCore = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }

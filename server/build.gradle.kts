@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.h2)
+    implementation(libs.jbcrypt)
     implementation(libs.logback)
     implementation(libs.sqlite.jdbc)
     implementation(libs.ktor.serverCore)
