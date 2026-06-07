@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import dev.koenv.roadassist.core.PingMessage
 import dev.koenv.roadassist.core.Role
-import dev.koenv.roadassist.server.database.DatabaseFactory
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.UsersTable
 import io.ktor.client.call.*
@@ -17,18 +16,10 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.Date
 import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class PingRouteTest {
-
-    private val testSecret = "test-jwt-secret-for-ping-route-tests-32c"
-
-    @BeforeTest
-    fun setUp() {
-        DatabaseFactory.init()
-    }
 
     @AfterTest
     fun tearDown() {
@@ -41,11 +32,12 @@ class PingRouteTest {
         .withSubject("1")
         .withClaim("role", Role.ROAD_USER.name)
         .withExpiresAt(Date(System.currentTimeMillis() + 86_400_000L))
-        .sign(Algorithm.HMAC256(testSecret))
+        .sign(Algorithm.HMAC256(TEST_JWT_SECRET))
 
     @Test
     fun `GET ping with valid token returns 200 with pong content`() = testApplication {
-        application { configure(testSecret) }
+        applyTestConfig()
+        application { module() }
         val client = createClient { install(ClientContentNegotiation) { json() } }
         val response = client.get("/ping") {
             bearerAuth(testToken())

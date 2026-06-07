@@ -6,19 +6,17 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object DatabaseFactory {
 
-    fun init() {
-        connect()
+    fun init(mode: String = "h2", path: String? = null) {
+        connect(mode, path)
         transaction {
             SchemaUtils.create(UsersTable, IncidentsTable)
         }
     }
 
-    private fun connect() {
-        val dbMode = System.getenv("DB_MODE") ?: "h2"
-        when (dbMode.lowercase()) {
+    private fun connect(mode: String, path: String?) {
+        when (mode.lowercase()) {
             "sqlite" -> {
-                val dbPath = System.getenv("DB_PATH")
-                    ?: error("DB_PATH environment variable must be set when DB_MODE=sqlite")
+                val dbPath = path ?: error("database.path must be set when database.mode is sqlite")
                 Database.connect(
                     url = "jdbc:sqlite:$dbPath",
                     driver = "org.sqlite.JDBC",

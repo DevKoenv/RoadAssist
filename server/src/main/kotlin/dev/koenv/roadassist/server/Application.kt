@@ -8,25 +8,25 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 
-fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
-}
+fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.module() {
-    val jwtSecret = System.getenv("JWT_SECRET")
-        ?: error("JWT_SECRET environment variable must be set")
-    DatabaseFactory.init()
+    val config = environment.config
+    val jwtSecret = config.propertyOrNull("jwt.secret")?.getString()
+        ?: System.getenv("JWT_SECRET")
+        ?: error("JWT_SECRET must be set via config or environment variable")
+    val dbMode = config.property("database.mode").getString()
+    val dbPath = config.propertyOrNull("database.path")?.getString()
+    DatabaseFactory.init(dbMode, dbPath)
     DatabaseSeeder.seed()
     configure(jwtSecret)
 }
 
-internal fun Application.configure(jwtSecret: String) {
+private fun Application.configure(jwtSecret: String) {
     install(Authentication) {
         jwt("auth-jwt") {
             verifier(JWT.require(Algorithm.HMAC256(jwtSecret)).build())
