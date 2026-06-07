@@ -18,6 +18,8 @@ dependencies {
     implementation(libs.jbcrypt)
     implementation(libs.logback)
     implementation(libs.sqlite.jdbc)
+    implementation(libs.ktor.serverAuth)
+    implementation(libs.ktor.serverAuthJwt)
     implementation(libs.ktor.serverCore)
     implementation(libs.ktor.serverNetty)
     implementation(libs.ktor.serverContentNegotiation)
