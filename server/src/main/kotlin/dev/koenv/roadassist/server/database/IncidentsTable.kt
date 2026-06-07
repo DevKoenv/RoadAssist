@@ -2,7 +2,7 @@ package dev.koenv.roadassist.server.database
 
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.IncidentStatus
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 object IncidentsTable : IntIdTable("incidents") {
     val userId = reference("user_id", UsersTable)
