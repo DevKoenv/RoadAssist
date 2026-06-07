@@ -12,7 +12,11 @@ application {
 
 dependencies {
     api(projects.core)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.h2)
     implementation(libs.logback)
+    implementation(libs.sqlite.jdbc)
     implementation(libs.ktor.serverCore)
     implementation(libs.ktor.serverNetty)
     implementation(libs.ktor.serverContentNegotiation)
