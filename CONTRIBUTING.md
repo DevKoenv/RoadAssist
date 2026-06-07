@@ -27,8 +27,8 @@ test(server): add edge case for missing location field
 
 ## Branch naming
 
-- `feature/<issue-number>-short-description` — e.g. `feature/9-jwt-auth`
-- `fix/<issue-number>-short-description` — e.g. `fix/26-offline-banner`
+- `feature/<issue-number>-short-description`, e.g. `feature/9-jwt-auth`
+- `fix/<issue-number>-short-description`, e.g. `fix/26-offline-banner`
 
 ## Pull requests
 

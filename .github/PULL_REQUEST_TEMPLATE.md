@@ -10,5 +10,5 @@ Closes #<!-- issue number -->
 
 - [ ] Code compiles (`./gradlew build`)
 - [ ] Tests pass (`./gradlew :core:jvmTest :server:test`)
-- [ ] Self-review done — no debug leftovers, code is readable
+- [ ] Self-review done: no debug leftovers, code is readable
 - [ ] Commit messages follow the conventional commit format
