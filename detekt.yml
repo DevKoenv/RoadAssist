@@ -5,7 +5,7 @@ complexity:
   CyclomaticComplexMethod:
     threshold: 30
   LongMethod:
-    threshold: 200
+    threshold: 60
   LongParameterList:
     functionThreshold: 8
     constructorThreshold: 10
@@ -40,6 +40,6 @@ style:
 
 exceptions:
   SwallowedException:
-    active: false
+    active: true
   TooGenericExceptionCaught:
-    active: false
+    active: true
