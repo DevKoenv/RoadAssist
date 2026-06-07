@@ -16,8 +16,15 @@ class AuthSerializationTest {
 
     @Test
     fun auth_response_round_trip() {
-        val original = AuthResponse(token = "eyJ.abc.def", role = Role.DISPATCHER)
+        val original = AuthResponse(token = "eyJ.abc.def", refreshToken = "refresh-tok", role = Role.DISPATCHER)
         val decoded = Json.decodeFromString<AuthResponse>(Json.encodeToString(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun refresh_request_round_trip() {
+        val original = RefreshRequest(refreshToken = "some-refresh-token")
+        val decoded = Json.decodeFromString<RefreshRequest>(Json.encodeToString(original))
         assertEquals(original, decoded)
     }
 
@@ -31,9 +38,10 @@ class AuthSerializationTest {
 
     @Test
     fun auth_response_fields_map_correctly() {
-        val json = """{"token":"tok","role":"ROAD_USER"}"""
+        val json = """{"token":"tok","refreshToken":"rtok","role":"ROAD_USER"}"""
         val resp = Json.decodeFromString<AuthResponse>(json)
         assertEquals("tok", resp.token)
+        assertEquals("rtok", resp.refreshToken)
         assertEquals(Role.ROAD_USER, resp.role)
     }
 }

@@ -1,6 +1,7 @@
 package dev.koenv.roadassist.server
 
 import dev.koenv.roadassist.server.database.IncidentsTable
+import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -16,7 +17,7 @@ class ApplicationTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(IncidentsTable, UsersTable)
+            SchemaUtils.drop(RefreshTokensTable, IncidentsTable, UsersTable)
         }
     }
 

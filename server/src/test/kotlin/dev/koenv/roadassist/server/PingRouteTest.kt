@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import dev.koenv.roadassist.core.PingMessage
 import dev.koenv.roadassist.core.Role
 import dev.koenv.roadassist.server.database.IncidentsTable
+import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
@@ -24,7 +25,7 @@ class PingRouteTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(IncidentsTable, UsersTable)
+            SchemaUtils.drop(RefreshTokensTable, IncidentsTable, UsersTable)
         }
     }
 

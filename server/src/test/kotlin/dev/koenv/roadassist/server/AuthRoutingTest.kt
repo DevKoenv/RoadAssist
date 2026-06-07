@@ -2,8 +2,10 @@ package dev.koenv.roadassist.server
 
 import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.LoginRequest
+import dev.koenv.roadassist.core.RefreshRequest
 import dev.koenv.roadassist.core.Role
 import dev.koenv.roadassist.server.database.IncidentsTable
+import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
@@ -23,12 +25,12 @@ class AuthRoutingTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(IncidentsTable, UsersTable)
+            SchemaUtils.drop(RefreshTokensTable, IncidentsTable, UsersTable)
         }
     }
 
     @Test
-    fun login_with_valid_credentials_returns_200_and_auth_response() = testApplication {
+    fun login_with_valid_credentials_returns_200_and_both_tokens() = testApplication {
         applyTestConfig()
         application { module() }
         val client = createClient { install(ClientContentNegotiation) { json() } }
@@ -40,6 +42,7 @@ class AuthRoutingTest {
         val body = response.body<AuthResponse>()
         assertEquals(Role.ROAD_USER, body.role)
         assertTrue(body.token.isNotBlank())
+        assertTrue(body.refreshToken.isNotBlank())
     }
 
     @Test
@@ -72,5 +75,60 @@ class AuthRoutingTest {
         application { module() }
         val response = client.get("/ping")
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun refresh_with_valid_token_returns_new_access_token() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val loginResp = client.post("/auth/login") {
+            contentType(ContentType.Application.Json)
+            setBody(LoginRequest(username = "user", password = "user123"))
+        }.body<AuthResponse>()
+
+        val refreshResp = client.post("/auth/refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(RefreshRequest(refreshToken = loginResp.refreshToken))
+        }
+        assertEquals(HttpStatusCode.OK, refreshResp.status)
+        val body = refreshResp.body<AuthResponse>()
+        assertTrue(body.token.isNotBlank())
+        assertEquals(loginResp.refreshToken, body.refreshToken)
+    }
+
+    @Test
+    fun refresh_with_invalid_token_returns_401() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val response = client.post("/auth/refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(RefreshRequest(refreshToken = "not-a-real-token"))
+        }
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun logout_then_refresh_returns_401() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val loginResp = client.post("/auth/login") {
+            contentType(ContentType.Application.Json)
+            setBody(LoginRequest(username = "user", password = "user123"))
+        }.body<AuthResponse>()
+
+        val logoutResp = client.post("/auth/logout") {
+            contentType(ContentType.Application.Json)
+            setBody(RefreshRequest(refreshToken = loginResp.refreshToken))
+        }
+        assertEquals(HttpStatusCode.NoContent, logoutResp.status)
+
+        val refreshResp = client.post("/auth/refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(RefreshRequest(refreshToken = loginResp.refreshToken))
+        }
+        assertEquals(HttpStatusCode.Unauthorized, refreshResp.status)
     }
 }
