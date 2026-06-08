@@ -29,6 +29,13 @@ class AuthSerializationTest {
     }
 
     @Test
+    fun register_request_round_trip() {
+        val original = RegisterRequest(username = "alice", password = "secret123")
+        val decoded = Json.decodeFromString<RegisterRequest>(Json.encodeToString(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
     fun login_request_fields_map_correctly() {
         val json = """{"username":"bob","password":"hunter2"}"""
         val req = Json.decodeFromString<LoginRequest>(json)

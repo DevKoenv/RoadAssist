@@ -5,6 +5,8 @@ import com.auth0.jwt.algorithms.Algorithm
 import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.LoginRequest
 import dev.koenv.roadassist.core.RefreshRequest
+import dev.koenv.roadassist.core.RegisterRequest
+import dev.koenv.roadassist.core.Role
 import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
 import io.ktor.http.HttpStatusCode
@@ -31,10 +33,45 @@ private const val REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000L
 
 fun Route.configureAuthRouting(jwtSecret: String) {
     route("/auth") {
+        post("/register") { handleRegister(call, jwtSecret) }
         post("/login") { handleLogin(call, jwtSecret) }
         post("/refresh") { handleRefresh(call, jwtSecret) }
         post("/logout") { handleLogout(call) }
     }
+}
+
+private suspend fun handleRegister(call: ApplicationCall, jwtSecret: String) {
+    val request = call.receive<RegisterRequest>()
+    val exists = transaction {
+        UsersTable.selectAll().where { UsersTable.username eq request.username }.count() > 0L
+    }
+    if (exists) {
+        call.respondText("Username already taken", status = HttpStatusCode.Conflict)
+        return
+    }
+    val now = System.currentTimeMillis()
+    val userId = transaction {
+        UsersTable.insert {
+            it[username] = request.username
+            it[passwordHash] = BCrypt.hashpw(request.password, BCrypt.gensalt())
+            it[role] = Role.ROAD_USER
+        } get UsersTable.id
+    }
+    val accessToken = JWT.create()
+        .withSubject(userId.value.toString())
+        .withClaim("role", Role.ROAD_USER.name)
+        .withExpiresAt(Date(now + ACCESS_TOKEN_TTL_MS))
+        .sign(Algorithm.HMAC256(jwtSecret))
+    val refreshToken = generateRefreshToken()
+    transaction {
+        RefreshTokensTable.insert {
+            it[RefreshTokensTable.userId] = userId
+            it[tokenHash] = sha256(refreshToken)
+            it[expiresAt] = now + REFRESH_TOKEN_TTL_MS
+            it[revoked] = false
+        }
+    }
+    call.respond(HttpStatusCode.Created, AuthResponse(token = accessToken, refreshToken = refreshToken, role = Role.ROAD_USER))
 }
 
 private suspend fun handleLogin(call: ApplicationCall, jwtSecret: String) {
