@@ -32,13 +32,22 @@ Targets: Android (API 26+), Desktop (Windows/Linux). Backend: Ktor Server.
 
 ## Development credentials
 
-The server seeds one test account on first startup (when the users table is empty).
+The server seeds two test accounts on first startup.
 
-| Username | Password | Role      |
-| -------- | -------- | --------- |
-| `user`   | `user123` | ROAD_USER |
+| Username     | Password       | Role       |
+| ------------ | -------------- | ---------- |
+| `user`       | `user123`      | ROAD_USER  |
+| `dispatcher` | `dispatch123`  | DISPATCHER |
 
 Passwords are stored as bcrypt hashes. These credentials are for local development only and must not be used in any other environment.
+
+## Environment variables
+
+| Variable | Required | Description |
+| -------- | -------- | ----------- |
+| `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens. Must be set before starting the server. |
+| `DB_MODE` | No | Database backend: `h2` (in-memory, default) or `sqlite` (file). |
+| `DB_PATH` | No | Path to the SQLite file. Only used when `DB_MODE=sqlite`. Defaults to `roadassist.db`. |
 
 ## Branch strategy
 

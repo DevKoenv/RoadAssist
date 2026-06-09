@@ -3,6 +3,7 @@ package dev.koenv.roadassist.server
 import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.LoginRequest
 import dev.koenv.roadassist.core.RefreshRequest
+import dev.koenv.roadassist.core.RegisterRequest
 import dev.koenv.roadassist.core.Role
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.RefreshTokensTable
@@ -27,6 +28,34 @@ class AuthRoutingTest {
         transaction {
             SchemaUtils.drop(RefreshTokensTable, IncidentsTable, UsersTable)
         }
+    }
+
+    @Test
+    fun register_with_new_username_returns_201_and_tokens() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val response = client.post("/auth/register") {
+            contentType(ContentType.Application.Json)
+            setBody(RegisterRequest(username = "newdriver", password = "pass1234"))
+        }
+        assertEquals(HttpStatusCode.Created, response.status)
+        val body = response.body<AuthResponse>()
+        assertEquals(Role.ROAD_USER, body.role)
+        assertTrue(body.token.isNotBlank())
+        assertTrue(body.refreshToken.isNotBlank())
+    }
+
+    @Test
+    fun register_with_duplicate_username_returns_409() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val response = client.post("/auth/register") {
+            contentType(ContentType.Application.Json)
+            setBody(RegisterRequest(username = "user", password = "anything"))
+        }
+        assertEquals(HttpStatusCode.Conflict, response.status)
     }
 
     @Test
