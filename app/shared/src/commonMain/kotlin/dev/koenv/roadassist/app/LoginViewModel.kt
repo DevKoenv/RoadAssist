@@ -1,0 +1,38 @@
+package dev.koenv.roadassist.app
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dev.koenv.roadassist.core.LoginRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+class LoginViewModel(
+    private val apiClient: ApiClient,
+    private val storage: SecureStorage,
+) : ViewModel() {
+
+    private val _state = MutableStateFlow<LoginState>(LoginState.Idle)
+    val state: StateFlow<LoginState> = _state.asStateFlow()
+
+    fun login(username: String, password: String) {
+        viewModelScope.launch {
+            _state.value = LoginState.Loading
+            apiClient.login(LoginRequest(username, password)).fold(
+                onSuccess = { response ->
+                    storage.saveToken(response.token)
+                    storage.saveRefreshToken(response.refreshToken)
+                    _state.value = LoginState.Success(response.role)
+                },
+                onFailure = { error ->
+                    _state.value = when (error) {
+                        is ApiException.Unauthorized -> LoginState.Error("Invalid credentials")
+                        is ApiException.Timeout -> LoginState.Error("Could not reach the server")
+                        else -> LoginState.Error("An unexpected error occurred")
+                    }
+                },
+            )
+        }
+    }
+}
