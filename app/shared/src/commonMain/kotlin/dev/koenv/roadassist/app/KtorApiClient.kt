@@ -23,7 +23,7 @@ import io.ktor.util.AttributeKey
 
 private val retryAfterRefreshKey = AttributeKey<Boolean>("RetryAfterRefresh")
 private const val TIMEOUT_MS = 10_000L
-private val publicPaths = setOf("/auth/login", "/auth/register", "/auth/refresh")
+private val publicPaths = setOf("/auth/login", "/auth/register", "/auth/refresh", "/health")
 
 class KtorApiClient(private val storage: SecureStorage) : ApiClient {
 
@@ -124,7 +124,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun checkConnectivity(): Boolean = try {
         withTimeoutOrNull(3_000L) {
-            httpClient.get("$BASE_URL/auth/login")
+            httpClient.get("$BASE_URL/health")
             true
         } ?: false
     } catch (e: Exception) {

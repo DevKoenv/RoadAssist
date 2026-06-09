@@ -68,7 +68,7 @@ fun RoadUserHomeScreen(
     LaunchedEffect(Unit) {
         while (true) {
             serverReachable = apiClient.checkConnectivity()
-            delay(30_000L)
+            delay(10_000L)
         }
     }
 

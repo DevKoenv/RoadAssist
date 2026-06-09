@@ -43,6 +43,7 @@ private fun Application.configure(jwtSecret: String) {
     install(CallLogging) { level = Level.INFO }
     install(ContentNegotiation) { json() }
     routing {
+        configureHealthRouting()
         configureAuthRouting(jwtSecret)
         authenticate("auth-jwt") {
             configurePingRouting()
