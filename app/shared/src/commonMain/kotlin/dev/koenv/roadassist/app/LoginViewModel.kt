@@ -3,6 +3,7 @@ package dev.koenv.roadassist.app
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.core.LoginRequest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,18 @@ class LoginViewModel(
     private val _state = MutableStateFlow<LoginState>(LoginState.Idle)
     val state: StateFlow<LoginState> = _state.asStateFlow()
 
+    private val _serverReachable = MutableStateFlow(true)
+    val serverReachable: StateFlow<Boolean> = _serverReachable.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            while (true) {
+                _serverReachable.value = apiClient.checkConnectivity()
+                delay(10_000L)
+            }
+        }
+    }
+
     fun login(username: String, password: String) {
         viewModelScope.launch {
             _state.value = LoginState.Loading
@@ -28,7 +41,8 @@ class LoginViewModel(
                 onFailure = { error ->
                     _state.value = when (error) {
                         is ApiException.Unauthorized -> LoginState.Error("Invalid credentials")
-                        is ApiException.Timeout -> LoginState.Error("Could not reach the server")
+                        is ApiException.Timeout,
+                        is ApiException.Network -> LoginState.Error("Could not reach the server")
                         else -> LoginState.Error("An unexpected error occurred")
                     }
                 },

@@ -61,6 +61,7 @@ fun LoginScreen(
     onLoginSuccess: (Role) -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
+    val serverReachable by viewModel.serverReachable.collectAsState()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -80,6 +81,7 @@ fun LoginScreen(
                 onUsernameChange = { username = it },
                 onPasswordChange = { password = it },
                 onLogin = { viewModel.login(username, password) },
+                serverReachable = serverReachable,
             )
         } else {
             MobileLoginLayout(
@@ -89,6 +91,7 @@ fun LoginScreen(
                 onUsernameChange = { username = it },
                 onPasswordChange = { password = it },
                 onLogin = { viewModel.login(username, password) },
+                serverReachable = serverReachable,
             )
         }
     }
@@ -102,42 +105,49 @@ private fun MobileLoginLayout(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLogin: () -> Unit,
+    serverReachable: Boolean,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        RoadAssistAppIcon(size = 72.dp)
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "RoadAssist",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = "Report a breakdown. Track help on the way.",
-            style = MaterialTheme.typography.bodySmall,
-            color = LocalRoadAssistColors.current.mutedForeground,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(28.dp))
-        LoginForm(
-            state = state,
-            username = username,
-            password = password,
-            onUsernameChange = onUsernameChange,
-            onPasswordChange = onPasswordChange,
-            onLogin = onLogin,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "Signed in stays active on this device.",
-            style = MaterialTheme.typography.labelMedium,
-            color = LocalRoadAssistColors.current.mutedForeground,
-        )
+    Column(modifier = Modifier.fillMaxSize()) {
+        ConnectivityBanner(visible = !serverReachable)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            RoadAssistAppIcon(size = 72.dp)
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "RoadAssist",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Report a breakdown. Track help on the way.",
+                style = MaterialTheme.typography.bodySmall,
+                color = LocalRoadAssistColors.current.mutedForeground,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(28.dp))
+            LoginForm(
+                state = state,
+                username = username,
+                password = password,
+                onUsernameChange = onUsernameChange,
+                onPasswordChange = onPasswordChange,
+                onLogin = onLogin,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Signed in stays active on this device.",
+                style = MaterialTheme.typography.labelMedium,
+                color = LocalRoadAssistColors.current.mutedForeground,
+            )
+        }
     }
 }
 
@@ -149,6 +159,7 @@ private fun DesktopLoginLayout(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLogin: () -> Unit,
+    serverReachable: Boolean,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         DesktopBrandPanel(modifier = Modifier.weight(0.42f).fillMaxHeight())
@@ -159,6 +170,7 @@ private fun DesktopLoginLayout(
             onUsernameChange = onUsernameChange,
             onPasswordChange = onPasswordChange,
             onLogin = onLogin,
+            serverReachable = serverReachable,
             modifier = Modifier.weight(0.58f).fillMaxHeight(),
         )
     }
@@ -197,15 +209,22 @@ private fun DesktopFormPanel(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLogin: () -> Unit,
+    serverReachable: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.background(Color.White), contentAlignment = Alignment.Center) {
-        Column(modifier = Modifier.widthIn(max = 400.dp).padding(horizontal = 40.dp)) {
-            Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
-            Spacer(Modifier.height(6.dp))
-            Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
-            Spacer(Modifier.height(24.dp))
-            LoginForm(state = state, username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onLogin = onLogin, modifier = Modifier.fillMaxWidth())
+    Column(modifier = modifier.background(Color.White)) {
+        ConnectivityBanner(visible = !serverReachable)
+        Box(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(modifier = Modifier.widthIn(max = 400.dp).padding(horizontal = 40.dp)) {
+                Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                Spacer(Modifier.height(6.dp))
+                Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
+                Spacer(Modifier.height(24.dp))
+                LoginForm(state = state, username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onLogin = onLogin, modifier = Modifier.fillMaxWidth())
+            }
         }
     }
 }
