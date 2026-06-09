@@ -124,8 +124,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun checkConnectivity(): Boolean = try {
         withTimeoutOrNull(3_000L) {
-            httpClient.get("$BASE_URL/health")
-            true
+            httpClient.get("$BASE_URL/health").status.isSuccess()
         } ?: false
     } catch (e: Exception) {
         false
