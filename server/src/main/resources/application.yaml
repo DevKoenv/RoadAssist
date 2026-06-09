@@ -1,0 +1,8 @@
+ktor:
+  application:
+    modules:
+      - dev.koenv.roadassist.server.ApplicationKt.module
+
+database:
+  mode: h2
+  path: roadassist.db

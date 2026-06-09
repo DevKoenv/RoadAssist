@@ -1,0 +1,5 @@
+database:
+  mode: h2
+
+jwt:
+  secret: test-jwt-secret-do-not-use-in-production
