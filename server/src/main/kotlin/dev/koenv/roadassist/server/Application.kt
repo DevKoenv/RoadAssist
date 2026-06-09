@@ -44,9 +44,7 @@ private fun Application.configure(jwtSecret: String) {
     install(ContentNegotiation) { json() }
     routing {
         configureHealthRouting()
+        configurePingRouting()
         configureAuthRouting(jwtSecret)
-        authenticate("auth-jwt") {
-            configurePingRouting()
-        }
     }
 }
