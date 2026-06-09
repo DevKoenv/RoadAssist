@@ -28,8 +28,8 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Date
 
-private const val ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000L
-private const val REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000L
+private const val ACCESS_TOKEN_TTL_MS = 24 * 60 * 60 * 1000L
+private const val REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000L
 
 fun Route.configureAuthRouting(jwtSecret: String) {
     route("/auth") {

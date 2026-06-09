@@ -41,6 +41,14 @@ The server seeds two test accounts on first startup.
 
 Passwords are stored as bcrypt hashes. These credentials are for local development only and must not be used in any other environment.
 
+## Environment variables
+
+| Variable | Required | Description |
+| -------- | -------- | ----------- |
+| `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens. Must be set before starting the server. |
+| `DB_MODE` | No | Database backend: `h2` (in-memory, default) or `sqlite` (file). |
+| `DB_PATH` | No | Path to the SQLite file. Only used when `DB_MODE=sqlite`. Defaults to `roadassist.db`. |
+
 ## Branch strategy
 
 | Branch | Purpose |

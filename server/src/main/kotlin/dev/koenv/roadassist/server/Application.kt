@@ -16,11 +16,14 @@ fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.module() {
     val config = environment.config
-    val jwtSecret = config.propertyOrNull("jwt.secret")?.getString()
-        ?: System.getenv("JWT_SECRET")
-        ?: error("JWT_SECRET must be set via config or environment variable")
-    val dbMode = config.property("database.mode").getString()
-    val dbPath = config.propertyOrNull("database.path")?.getString()
+    val jwtSecret = System.getenv("JWT_SECRET")
+        ?: config.propertyOrNull("jwt.secret")?.getString()
+        ?: error("JWT_SECRET must be set via the JWT_SECRET environment variable")
+    val dbMode = System.getenv("DB_MODE")
+        ?: config.propertyOrNull("database.mode")?.getString()
+        ?: "h2"
+    val dbPath = System.getenv("DB_PATH")
+        ?: config.propertyOrNull("database.path")?.getString()
     DatabaseFactory.init(dbMode, dbPath)
     DatabaseSeeder.seed()
     configure(jwtSecret)
