@@ -8,4 +8,5 @@ interface ApiClient {
     suspend fun login(request: LoginRequest): Result<AuthResponse>
     suspend fun refresh(request: RefreshRequest): Result<AuthResponse>
     suspend fun logout(request: RefreshRequest)
+    suspend fun checkConnectivity(): Boolean
 }

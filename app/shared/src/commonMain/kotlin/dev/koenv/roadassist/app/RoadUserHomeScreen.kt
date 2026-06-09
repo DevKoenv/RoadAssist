@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.core.RefreshRequest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private enum class RoadUserTab { Active, History }
@@ -62,23 +64,32 @@ fun RoadUserHomeScreen(
         }
     }
 
+    var serverReachable by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            serverReachable = apiClient.checkConnectivity()
+            delay(30_000L)
+        }
+    }
+
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
-            RoadUserDesktopLayout(onLogout = onLogoutClick)
+            RoadUserDesktopLayout(onLogout = onLogoutClick, serverReachable = serverReachable)
         } else {
-            RoadUserMobileLayout(onLogout = onLogoutClick)
+            RoadUserMobileLayout(onLogout = onLogoutClick, serverReachable = serverReachable)
         }
     }
 }
 
 @Composable
-private fun RoadUserMobileLayout(onLogout: () -> Unit) {
+private fun RoadUserMobileLayout(onLogout: () -> Unit, serverReachable: Boolean) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { RoadUserBottomBar(selectedTab = selectedTab, onTabChange = { selectedTab = it }) },
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            ConnectivityBanner(visible = !serverReachable)
             MobileScreenHeader(title = if (selectedTab == RoadUserTab.Active) "Active" else "History", onLogout = onLogout)
             HorizontalDivider(color = LocalRoadAssistColors.current.border, thickness = 0.5.dp)
             when (selectedTab) {
@@ -132,12 +143,13 @@ private fun MobileScreenHeader(title: String, onLogout: () -> Unit) {
 }
 
 @Composable
-private fun RoadUserDesktopLayout(onLogout: () -> Unit) {
+private fun RoadUserDesktopLayout(onLogout: () -> Unit, serverReachable: Boolean) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
     Row(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         RoadUserNavRail(selectedTab = selectedTab, onTabChange = { selectedTab = it }, onLogout = onLogout)
         Box(modifier = Modifier.width(0.5.dp).fillMaxSize().background(LocalRoadAssistColors.current.border))
         Column(modifier = Modifier.weight(1f).fillMaxSize()) {
+            ConnectivityBanner(visible = !serverReachable)
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp)) {
                 Text(
                     text = if (selectedTab == RoadUserTab.Active) "Active incidents" else "History",

@@ -39,7 +39,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -213,7 +218,7 @@ private fun LoginForm(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        CredentialFields(username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange)
+        CredentialFields(username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onDone = onLogin)
         if (state is LoginState.Error) {
             Spacer(Modifier.height(10.dp))
             Text(text = state.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -229,8 +234,10 @@ private fun CredentialFields(
     password: String,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onDone: () -> Unit,
 ) {
     val extColors = LocalRoadAssistColors.current
+    val focusManager = LocalFocusManager.current
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = MaterialTheme.colorScheme.primary,
         unfocusedBorderColor = extColors.border,
@@ -239,11 +246,30 @@ private fun CredentialFields(
     )
     FieldLabel("USERNAME")
     Spacer(Modifier.height(4.dp))
-    OutlinedTextField(value = username, onValueChange = onUsernameChange, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = fieldColors, shape = RoundedCornerShape(9.dp))
+    OutlinedTextField(
+        value = username,
+        onValueChange = onUsernameChange,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        singleLine = true,
+        colors = fieldColors,
+        shape = RoundedCornerShape(9.dp),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+    )
     Spacer(Modifier.height(14.dp))
     FieldLabel("PASSWORD")
     Spacer(Modifier.height(4.dp))
-    OutlinedTextField(value = password, onValueChange = onPasswordChange, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), singleLine = true, colors = fieldColors, shape = RoundedCornerShape(9.dp))
+    OutlinedTextField(
+        value = password,
+        onValueChange = onPasswordChange,
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        singleLine = true,
+        colors = fieldColors,
+        shape = RoundedCornerShape(9.dp),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+    )
 }
 
 @Composable

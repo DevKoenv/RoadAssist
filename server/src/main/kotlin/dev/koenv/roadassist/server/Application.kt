@@ -9,8 +9,10 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
+import org.slf4j.event.Level
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
@@ -38,6 +40,7 @@ private fun Application.configure(jwtSecret: String) {
             }
         }
     }
+    install(CallLogging) { level = Level.INFO }
     install(ContentNegotiation) { json() }
     routing {
         configureAuthRouting(jwtSecret)

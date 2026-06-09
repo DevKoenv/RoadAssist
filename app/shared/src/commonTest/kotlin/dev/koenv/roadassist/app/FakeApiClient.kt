@@ -10,4 +10,5 @@ class FakeApiClient(
     override suspend fun login(request: LoginRequest): Result<AuthResponse> = loginResult
     override suspend fun refresh(request: RefreshRequest): Result<AuthResponse> = Result.failure(ApiException.Unauthorized())
     override suspend fun logout(request: RefreshRequest) {}
+    override suspend fun checkConnectivity(): Boolean = true
 }

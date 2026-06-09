@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.core.RefreshRequest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
@@ -65,23 +67,32 @@ fun DispatcherHomeScreen(
         }
     }
 
+    var serverReachable by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            serverReachable = apiClient.checkConnectivity()
+            delay(30_000L)
+        }
+    }
+
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
-            DispatcherDesktopLayout(onLogout = onLogoutClick)
+            DispatcherDesktopLayout(onLogout = onLogoutClick, serverReachable = serverReachable)
         } else {
-            DispatcherMobileLayout(onLogout = onLogoutClick)
+            DispatcherMobileLayout(onLogout = onLogoutClick, serverReachable = serverReachable)
         }
     }
 }
 
 @Composable
-private fun DispatcherMobileLayout(onLogout: () -> Unit) {
+private fun DispatcherMobileLayout(onLogout: () -> Unit, serverReachable: Boolean) {
     var filter by remember { mutableStateOf(DispatcherFilter.All) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
         ) {
+            ConnectivityBanner(visible = !serverReachable)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -108,42 +119,47 @@ private fun DispatcherMobileLayout(onLogout: () -> Unit) {
 }
 
 @Composable
-private fun DispatcherDesktopLayout(onLogout: () -> Unit) {
+private fun DispatcherNavRail(onLogout: () -> Unit) {
+    NavigationRail(
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = LocalRoadAssistColors.current.mutedForeground,
+    ) {
+        Spacer(Modifier.height(8.dp))
+        Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            RoadAssistAppIcon(size = 40.dp)
+        }
+        Spacer(Modifier.height(16.dp))
+        NavigationRailItem(
+            selected = true,
+            onClick = {},
+            icon = { QueueIcon(selected = true) },
+            label = { Text("Queue", style = MaterialTheme.typography.labelMedium) },
+            colors = NavigationRailItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = RoadAssistColors.Accent,
+            ),
+        )
+        Spacer(Modifier.weight(1f))
+        NavigationRailItem(
+            selected = false,
+            onClick = onLogout,
+            icon = { LogoutIconSmall() },
+            label = null,
+            colors = NavigationRailItemDefaults.colors(
+                unselectedIconColor = LocalRoadAssistColors.current.mutedForeground,
+            ),
+        )
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun DispatcherDesktopLayout(onLogout: () -> Unit, serverReachable: Boolean) {
     var filter by remember { mutableStateOf(DispatcherFilter.All) }
 
     Row(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        NavigationRail(
-            containerColor = MaterialTheme.colorScheme.background,
-            contentColor = LocalRoadAssistColors.current.mutedForeground,
-        ) {
-            Spacer(Modifier.height(8.dp))
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                RoadAssistAppIcon(size = 40.dp)
-            }
-            Spacer(Modifier.height(16.dp))
-            NavigationRailItem(
-                selected = true,
-                onClick = {},
-                icon = { QueueIcon(selected = true) },
-                label = { Text("Queue", style = MaterialTheme.typography.labelMedium) },
-                colors = NavigationRailItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = RoadAssistColors.Accent,
-                ),
-            )
-            Spacer(Modifier.weight(1f))
-            NavigationRailItem(
-                selected = false,
-                onClick = onLogout,
-                icon = { LogoutIconSmall() },
-                label = null,
-                colors = NavigationRailItemDefaults.colors(
-                    unselectedIconColor = LocalRoadAssistColors.current.mutedForeground,
-                ),
-            )
-            Spacer(Modifier.height(8.dp))
-        }
+        DispatcherNavRail(onLogout = onLogout)
         Box(
             modifier = Modifier
                 .width(0.5.dp)
@@ -151,6 +167,7 @@ private fun DispatcherDesktopLayout(onLogout: () -> Unit) {
                 .background(LocalRoadAssistColors.current.border),
         )
         Column(modifier = Modifier.weight(1f).fillMaxSize()) {
+            ConnectivityBanner(visible = !serverReachable)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,

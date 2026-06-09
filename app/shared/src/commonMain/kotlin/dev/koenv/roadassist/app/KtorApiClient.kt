@@ -9,7 +9,9 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.plugin
 import io.ktor.client.request.headers
+import io.ktor.client.request.get
 import io.ktor.client.request.post
+import kotlinx.coroutines.withTimeoutOrNull
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -117,6 +119,16 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
         Result.failure(ApiException.Timeout())
     } catch (e: Exception) {
         Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun checkConnectivity(): Boolean = try {
+        withTimeoutOrNull(3_000L) {
+            httpClient.get("$BASE_URL/auth/login")
+            true
+        } ?: false
+    } catch (e: Exception) {
+        false
     }
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
