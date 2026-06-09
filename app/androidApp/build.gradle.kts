@@ -35,7 +35,7 @@ android {
         val localProps = Properties()
         val localPropsFile = rootProject.file("local.properties")
         if (localPropsFile.exists()) localPropsFile.inputStream().use { localProps.load(it) }
-        resValue("string", "server_url", localProps.getProperty("serverUrl", "http://10.0.2.2:8080"))
+        resValue("string", "server_url", localProps.getProperty("serverUrl", "http://10.10.5.1:8080"))
     }
     buildFeatures {
         resValues = true
