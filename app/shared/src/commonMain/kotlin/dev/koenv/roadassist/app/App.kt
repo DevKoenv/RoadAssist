@@ -1,6 +1,5 @@
 package dev.koenv.roadassist.app
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 
@@ -8,7 +7,7 @@ import androidx.compose.runtime.remember
 fun App() {
     val storage = remember { createSecureStorage() }
     val apiClient = remember { KtorApiClient(storage) }
-    MaterialTheme {
+    RoadAssistTheme {
         AppNavigation(storage = storage, apiClient = apiClient)
     }
 }
