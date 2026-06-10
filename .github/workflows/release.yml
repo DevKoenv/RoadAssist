@@ -12,6 +12,11 @@ jobs:
   build-android:
     name: Android APK
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_FILE: ${{ github.workspace }}/roadassist-release.jks
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,11 +32,6 @@ jobs:
 
       - name: Build release APK
         run: ./gradlew :app:androidApp:assembleRelease --no-daemon
-        env:
-          KEYSTORE_FILE: ${{ github.workspace }}/roadassist-release.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - uses: actions/upload-artifact@v4
         with:
