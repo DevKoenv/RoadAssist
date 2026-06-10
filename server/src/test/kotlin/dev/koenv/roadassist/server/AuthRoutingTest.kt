@@ -102,7 +102,7 @@ class AuthRoutingTest {
     fun secured_route_without_token_returns_401() = testApplication {
         applyTestConfig()
         application { module() }
-        val response = client.get("/ping")
+        val response = client.get("/incidents")
         assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
 
