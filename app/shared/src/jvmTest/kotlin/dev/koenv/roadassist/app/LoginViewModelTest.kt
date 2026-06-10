@@ -59,35 +59,47 @@ class LoginViewModelTest {
     fun login_success_emits_success_state_and_saves_tokens() = runTest {
         val response = AuthResponse(token = "access-tok", refreshToken = "refresh-tok", role = Role.ROAD_USER)
         vm = LoginViewModel(FakeApiClient(Result.success(response)), storage)
+        try {
+            vm!!.login("alice", "secret")
 
-        vm!!.login("alice", "secret")
-
-        val state = vm!!.state.value
-        assertIs<LoginState.Success>(state)
-        assertEquals(Role.ROAD_USER, state.role)
-        assertEquals("access-tok", storage.getToken())
-        assertEquals("refresh-tok", storage.getRefreshToken())
+            val state = vm!!.state.value
+            assertIs<LoginState.Success>(state)
+            assertEquals(Role.ROAD_USER, state.role)
+            assertEquals("access-tok", storage.getToken())
+            assertEquals("refresh-tok", storage.getRefreshToken())
+        } finally {
+            // Cancel the ViewModel's infinite polling loop before runTest's advanceUntilIdle()
+            // runs. runTest shares Dispatchers.Main's TestCoroutineScheduler, so advanceUntilIdle()
+            // would otherwise keep advancing virtual time through the while(true) loop forever.
+            vm!!.viewModelScope.cancel()
+        }
     }
 
     @Test
     fun login_401_emits_invalid_credentials_error() = runTest {
         vm = LoginViewModel(FakeApiClient(Result.failure(ApiException.Unauthorized())), storage)
+        try {
+            vm!!.login("alice", "wrong")
 
-        vm!!.login("alice", "wrong")
-
-        val state = vm!!.state.value
-        assertIs<LoginState.Error>(state)
-        assertEquals("Invalid credentials", state.message)
+            val state = vm!!.state.value
+            assertIs<LoginState.Error>(state)
+            assertEquals("Invalid credentials", state.message)
+        } finally {
+            vm!!.viewModelScope.cancel()
+        }
     }
 
     @Test
     fun login_timeout_emits_server_unreachable_error() = runTest {
         vm = LoginViewModel(FakeApiClient(Result.failure(ApiException.Timeout())), storage)
+        try {
+            vm!!.login("alice", "secret")
 
-        vm!!.login("alice", "secret")
-
-        val state = vm!!.state.value
-        assertIs<LoginState.Error>(state)
-        assertEquals("Could not reach the server", state.message)
+            val state = vm!!.state.value
+            assertIs<LoginState.Error>(state)
+            assertEquals("Could not reach the server", state.message)
+        } finally {
+            vm!!.viewModelScope.cancel()
+        }
     }
 }
