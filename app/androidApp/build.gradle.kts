@@ -45,9 +45,24 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        create("release") {
+            storeFile = file(
+                System.getenv("KEYSTORE_FILE")
+                    ?: error("KEYSTORE_FILE env var is required for release builds")
+            )
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: error("KEYSTORE_PASSWORD env var is required for release builds")
+            keyAlias = System.getenv("KEY_ALIAS")
+                ?: error("KEY_ALIAS env var is required for release builds")
+            keyPassword = System.getenv("KEY_PASSWORD")
+                ?: error("KEY_PASSWORD env var is required for release builds")
+        }
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
