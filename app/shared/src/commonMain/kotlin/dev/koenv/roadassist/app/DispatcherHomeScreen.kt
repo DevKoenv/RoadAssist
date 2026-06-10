@@ -27,11 +27,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,38 +41,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
-import dev.koenv.roadassist.core.RefreshRequest
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
 
 @Composable
 fun DispatcherHomeScreen(
-    apiClient: ApiClient,
-    storage: SecureStorage,
+    viewModel: HomeViewModel,
     onLogout: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-    val onLogoutClick: () -> Unit = {
-        scope.launch {
-            val refreshToken = storage.getRefreshToken()
-            if (refreshToken != null) {
-                apiClient.logout(RefreshRequest(refreshToken))
-            }
-            storage.clearToken()
-            storage.clearRefreshToken()
-            onLogout()
-        }
-    }
-
-    var serverReachable by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            serverReachable = apiClient.checkConnectivity()
-            delay(10_000L)
-        }
-    }
+    val serverReachable by viewModel.serverReachable.collectAsState()
+    val onLogoutClick: () -> Unit = { viewModel.logout(onLogout) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {

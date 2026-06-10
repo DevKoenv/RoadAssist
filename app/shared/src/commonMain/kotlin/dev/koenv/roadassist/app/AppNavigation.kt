@@ -50,9 +50,9 @@ fun AppNavigation(
             )
         }
         composable("road_user_home") {
+            val vm = viewModel { HomeViewModel(apiClient, storage) }
             RoadUserHomeScreen(
-                apiClient = apiClient,
-                storage = storage,
+                viewModel = vm,
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -61,9 +61,9 @@ fun AppNavigation(
             )
         }
         composable("dispatcher_home") {
+            val vm = viewModel { HomeViewModel(apiClient, storage) }
             DispatcherHomeScreen(
-                apiClient = apiClient,
-                storage = storage,
+                viewModel = vm,
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }

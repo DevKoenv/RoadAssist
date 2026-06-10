@@ -1,6 +1,7 @@
 package dev.koenv.roadassist.app
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -12,7 +13,7 @@ fun App() {
     val storage = remember { createSecureStorage() }
     val apiClient = remember { KtorApiClient(storage) }
     RoadAssistTheme {
-        Surface(Modifier.fillMaxSize().statusBarsPadding()) {
+        Surface(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
             AppNavigation(storage = storage, apiClient = apiClient)
         }
     }
