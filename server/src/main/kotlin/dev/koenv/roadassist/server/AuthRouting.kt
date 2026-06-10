@@ -17,6 +17,9 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.Date
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -24,12 +27,9 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.mindrot.jbcrypt.BCrypt
-import java.security.MessageDigest
-import java.security.SecureRandom
-import java.util.Date
 
-private const val ACCESS_TOKEN_TTL_MS = 24 * 60 * 60 * 1000L
-private const val REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000L
+private const val ACCESS_TOKEN_TTL_MS = 24 * 60 * 60 * 1000L  // 1 day
+private const val REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000L  // 7 days
 
 fun Route.configureAuthRouting(jwtSecret: String) {
     route("/auth") {
@@ -141,12 +141,14 @@ private suspend fun handleLogout(call: ApplicationCall) {
     call.respond(HttpStatusCode.NoContent)
 }
 
+// 32 random bytes = 64 hex chars; enough entropy for a non-guessable token
 private fun generateRefreshToken(): String {
     val bytes = ByteArray(32)
     SecureRandom().nextBytes(bytes)
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
+// Only the hash is stored; the raw token is never persisted
 private fun sha256(input: String): String {
     val bytes = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
     return bytes.joinToString("") { "%02x".format(it) }

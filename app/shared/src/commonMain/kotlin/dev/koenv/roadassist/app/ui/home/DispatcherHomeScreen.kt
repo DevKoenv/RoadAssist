@@ -1,10 +1,6 @@
 package dev.koenv.roadassist.app.ui.home
 
 import androidx.compose.foundation.background
-import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
-import dev.koenv.roadassist.app.theme.RoadAssistColors
-import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.login.RoadAssistAppIcon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,6 +41,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
+import dev.koenv.roadassist.app.theme.RoadAssistColors
+import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
+import dev.koenv.roadassist.app.ui.login.RoadAssistAppIcon
 
 private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
 
