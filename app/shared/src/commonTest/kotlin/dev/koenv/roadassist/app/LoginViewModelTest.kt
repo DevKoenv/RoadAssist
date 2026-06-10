@@ -1,29 +1,30 @@
 package dev.koenv.roadassist.app
 
-import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
-import dev.koenv.roadassist.app.ui.login.LoginViewModel
 import dev.koenv.roadassist.app.ui.login.LoginState
+import dev.koenv.roadassist.app.ui.login.LoginViewModel
+import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.Role
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
 
-    private var tempDir: java.io.File? = null
+    private var tempDir: File? = null
     private lateinit var storage: SecureStorage
 
     @BeforeTest

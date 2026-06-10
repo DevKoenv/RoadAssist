@@ -72,6 +72,7 @@ ktor-serverCallLogging = { module = "io.ktor:ktor-server-call-logging-jvm", vers
 ktor-serverConfigYaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -13,6 +13,10 @@ plugins {
     alias(libs.plugins.kover)
 }
 
+dependencies {
+    detektPlugins(libs.detekt.formatting)
+}
+
 val coverageThreshold = 60 // raise as coverage improves
 
 kover {

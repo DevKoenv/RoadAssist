@@ -1,20 +1,20 @@
 package dev.koenv.roadassist.app.data.api
 
-import dev.koenv.roadassist.core.AuthResponse
-import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
+import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.network.createHttpClient
+import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.LoginRequest
 import dev.koenv.roadassist.core.RefreshRequest
 import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.plugin
-import io.ktor.client.request.headers
 import io.ktor.client.request.get
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
-import kotlinx.coroutines.withTimeoutOrNull
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -23,7 +23,9 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.AttributeKey
+import kotlinx.coroutines.withTimeoutOrNull
 
+// Prevents re-entering the refresh flow on the retry request itself
 private val retryAfterRefreshKey = AttributeKey<Boolean>("RetryAfterRefresh")
 private const val TIMEOUT_MS = 10_000L
 private val publicPaths = setOf("/auth/login", "/auth/register", "/auth/refresh", "/health")
@@ -40,6 +42,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     }
 
     init {
+        // Intercept every request: inject the access token, then silently refresh on 401
         httpClient.plugin(HttpSend).intercept { requestBuilder ->
             val urlString = requestBuilder.url.buildString()
             val isPublic = publicPaths.any { urlString.contains(it) }
@@ -75,12 +78,14 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
                         requestBuilder.attributes.put(retryAfterRefreshKey, true)
                         execute(requestBuilder)
                     } else {
+                        // Refresh failed; clear tokens and kick back to login
                         storage.clearToken()
                         storage.clearRefreshToken()
                         AuthEventBus.notifyUnauthorized()
                         call
                     }
                 } else {
+                    // No refresh token stored; nothing to try
                     AuthEventBus.notifyUnauthorized()
                     call
                 }
@@ -101,7 +106,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
-    } catch (e: io.ktor.client.plugins.HttpRequestTimeoutException) {
+    } catch (e: HttpRequestTimeoutException) {
         Result.failure(ApiException.Timeout())
     } catch (e: Exception) {
         Result.failure(ApiException.Network(e))
@@ -118,7 +123,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
-    } catch (e: io.ktor.client.plugins.HttpRequestTimeoutException) {
+    } catch (e: HttpRequestTimeoutException) {
         Result.failure(ApiException.Timeout())
     } catch (e: Exception) {
         Result.failure(ApiException.Network(e))

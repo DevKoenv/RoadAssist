@@ -1,8 +1,9 @@
 package dev.koenv.roadassist.app
 
-import java.nio.file.Files
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
+import java.io.File
+import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -11,7 +12,7 @@ import kotlin.test.assertNull
 
 class SecureStorageTest {
 
-    private var tempDir: java.io.File? = null
+    private var tempDir: File? = null
 
     @BeforeTest
     fun setup() {

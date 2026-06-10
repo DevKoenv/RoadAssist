@@ -1,9 +1,9 @@
 package dev.koenv.roadassist.app.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.storage.SecureStorage
-import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.core.RefreshRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
