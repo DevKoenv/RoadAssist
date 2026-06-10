@@ -46,23 +46,32 @@ android {
         }
     }
     signingConfigs {
-        create("release") {
-            storeFile = file(
-                System.getenv("KEYSTORE_FILE")
-                    ?: error("KEYSTORE_FILE env var is required for release builds")
-            )
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-                ?: error("KEYSTORE_PASSWORD env var is required for release builds")
-            keyAlias = System.getenv("KEY_ALIAS")
-                ?: error("KEY_ALIAS env var is required for release builds")
-            keyPassword = System.getenv("KEY_PASSWORD")
-                ?: error("KEY_PASSWORD env var is required for release builds")
+        val keystoreFile = System.getenv("KEYSTORE_FILE")
+        val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+        val keyAlias = System.getenv("KEY_ALIAS")
+        val keyPassword = System.getenv("KEY_PASSWORD")
+
+        if (keystoreFile != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+            create("release") {
+                storeFile = file(keystoreFile)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
         }
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.findByName("release")
+        }
+    }
+    // Fail explicitly at execution time if release signing env vars are absent
+    tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
+        doFirst {
+            listOf("KEYSTORE_FILE", "KEYSTORE_PASSWORD", "KEY_ALIAS", "KEY_PASSWORD").forEach { key ->
+                requireNotNull(System.getenv(key)) { "$key env var is required for release builds" }
+            }
         }
     }
     compileOptions {
