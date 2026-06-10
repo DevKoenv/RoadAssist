@@ -21,7 +21,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build all modules
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assemble --no-daemon
 
   lint:
     name: Lint
