@@ -1,6 +1,8 @@
 package dev.koenv.roadassist.app
 
 import dev.koenv.roadassist.core.AuthResponse
+import dev.koenv.roadassist.app.data.api.ApiClient
+import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.core.LoginRequest
 import dev.koenv.roadassist.core.RefreshRequest
 

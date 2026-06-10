@@ -1,6 +1,8 @@
 package dev.koenv.roadassist.app
 
 import java.nio.file.Files
+import dev.koenv.roadassist.app.data.storage.SecureStorage
+import dev.koenv.roadassist.app.data.storage.createSecureStorage
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
