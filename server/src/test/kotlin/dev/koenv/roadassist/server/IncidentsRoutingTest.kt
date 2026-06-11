@@ -267,6 +267,28 @@ class IncidentsRoutingTest {
         }
         assertEquals(HttpStatusCode.NotFound, response.status)
     }
+
+    @Test
+    fun patch_status_with_invalid_value_returns_400() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val userToken = loginToken(client, "user", "user123")
+        val dispatcherToken = loginToken(client, "dispatcher", "dispatch123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $userToken") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val response = client.patch("/incidents/${created.id}/status") {
+            headers { append(HttpHeaders.Authorization, "Bearer $dispatcherToken") }
+            contentType(ContentType.Application.Json)
+            setBody("""{"status":"NOT_A_REAL_STATUS","notes":null}""")
+        }
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
 }
 
 private suspend fun loginToken(
