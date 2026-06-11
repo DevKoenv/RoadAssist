@@ -11,6 +11,7 @@ import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.http.content.staticFiles
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -46,6 +47,8 @@ private fun Application.configure(jwtSecret: String) {
     install(CallLogging) { level = Level.INFO }
     install(ContentNegotiation) { json() }
     routing {
+        java.io.File("uploads").mkdirs()
+        staticFiles("/uploads", java.io.File("uploads"))
         configureHealthRouting()
         configurePingRouting()
         configureAuthRouting(jwtSecret)
