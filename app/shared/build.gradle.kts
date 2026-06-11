@@ -59,6 +59,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.clientOkhttp)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.play.services.location)
         }
         commonMain {
             kotlin.srcDir(generateAppVersion)

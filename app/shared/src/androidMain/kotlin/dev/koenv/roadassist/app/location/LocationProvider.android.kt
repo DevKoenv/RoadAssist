@@ -30,13 +30,12 @@ class AndroidLocationProvider : LocationProvider {
         }
 
         return suspendCancellableCoroutine { cont ->
-            val task = LocationServices.getFusedLocationProviderClient(context)
+            LocationServices.getFusedLocationProviderClient(context)
                 .lastLocation
                 .addOnSuccessListener { location ->
                     cont.resume(location?.let { LatLon(it.latitude, it.longitude) })
                 }
                 .addOnFailureListener { cont.resume(null) }
-            cont.invokeOnCancellation { task.cancel() }
         }
     }
 
