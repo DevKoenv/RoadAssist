@@ -1,0 +1,102 @@
+package dev.koenv.roadassist.app.ui.newincident
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.location.LocationProvider
+import dev.koenv.roadassist.app.media.MediaPicker
+import dev.koenv.roadassist.core.CreateIncidentRequest
+import dev.koenv.roadassist.core.IncidentCategory
+import dev.koenv.roadassist.core.LatLon
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+class NewIncidentViewModel(
+    private val repository: IncidentRepository,
+    private val locationProvider: LocationProvider,
+    private val mediaPicker: MediaPicker,
+) : ViewModel() {
+
+    private val _category = MutableStateFlow(IncidentCategory.BREAKDOWN)
+    val category: StateFlow<IncidentCategory> = _category.asStateFlow()
+
+    private val _description = MutableStateFlow("")
+    val description: StateFlow<String> = _description.asStateFlow()
+
+    private val _location = MutableStateFlow<LatLon?>(null)
+    val location: StateFlow<LatLon?> = _location.asStateFlow()
+
+    private val _locationLoading = MutableStateFlow(false)
+    val locationLoading: StateFlow<Boolean> = _locationLoading.asStateFlow()
+
+    private val _photoBytes = MutableStateFlow<ByteArray?>(null)
+    val photoBytes: StateFlow<ByteArray?> = _photoBytes.asStateFlow()
+
+    private val _submitState = MutableStateFlow<SubmitState>(SubmitState.Idle)
+    val submitState: StateFlow<SubmitState> = _submitState.asStateFlow()
+
+    init {
+        refreshLocation()
+    }
+
+    fun updateCategory(value: IncidentCategory) {
+        _category.value = value
+    }
+
+    fun updateDescription(value: String) {
+        _description.value = if (value.length <= 500) value else value.take(500)
+    }
+
+    fun refreshLocation() {
+        viewModelScope.launch {
+            _locationLoading.value = true
+            _location.value = locationProvider.getCurrentLocation()
+            _locationLoading.value = false
+        }
+    }
+
+    fun pickPhoto() {
+        viewModelScope.launch {
+            _photoBytes.value = mediaPicker.pickMedia()
+        }
+    }
+
+    fun removePhoto() {
+        _photoBytes.value = null
+    }
+
+    fun submit() {
+        val loc = _location.value
+        if (loc == null) {
+            _submitState.value = SubmitState.Error("Location is required")
+            return
+        }
+        if (_description.value.isBlank()) {
+            _submitState.value = SubmitState.Error("Description is required")
+            return
+        }
+        viewModelScope.launch {
+            _submitState.value = SubmitState.Loading
+            val request = CreateIncidentRequest(
+                category = _category.value,
+                description = _description.value,
+                latitude = loc.latitude,
+                longitude = loc.longitude,
+            )
+            repository.createIncident(request).fold(
+                onSuccess = { incident ->
+                    val bytes = _photoBytes.value
+                    if (bytes != null) {
+                        repository.uploadPhoto(incident.id, bytes, "image/jpeg")
+                    }
+                    _submitState.value = SubmitState.Success
+                },
+                onFailure = {
+                    _submitState.value = SubmitState.Error("Failed to report incident")
+                },
+            )
+        }
+    }
+}

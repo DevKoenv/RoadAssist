@@ -10,12 +10,17 @@ import androidx.navigation.compose.rememberNavController
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.auth.decodeRoleFromJwt
+import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.data.storage.SecureStorage
+import dev.koenv.roadassist.app.location.createLocationProvider
+import dev.koenv.roadassist.app.media.createMediaPicker
 import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.home.HomeViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.login.LoginScreen
 import dev.koenv.roadassist.app.ui.login.LoginViewModel
+import dev.koenv.roadassist.app.ui.newincident.NewIncidentScreen
+import dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel
 import dev.koenv.roadassist.core.Role
 
 @Composable
@@ -68,6 +73,7 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onNewIncident = { navController.navigate("new_incident") },
             )
         }
         composable("dispatcher_home") {
@@ -79,6 +85,17 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+            )
+        }
+        composable("new_incident") {
+            val locationProvider = remember { createLocationProvider() }
+            val mediaPicker = remember { createMediaPicker() }
+            val repo = remember { IncidentRepository(apiClient) }
+            val vm = viewModel { NewIncidentViewModel(repo, locationProvider, mediaPicker) }
+            NewIncidentScreen(
+                viewModel = vm,
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },
             )
         }
     }

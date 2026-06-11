@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -21,6 +22,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,25 +51,36 @@ private enum class RoadUserTab { Active, History }
 fun RoadUserHomeScreen(
     viewModel: HomeViewModel,
     onLogout: () -> Unit,
+    onNewIncident: () -> Unit,
 ) {
     val serverReachable by viewModel.serverReachable.collectAsState()
     val onLogoutClick: () -> Unit = { viewModel.logout(onLogout) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
-            RoadUserDesktopLayout(onLogout = onLogoutClick, serverReachable = serverReachable)
+            RoadUserDesktopLayout(onLogout = onLogoutClick, serverReachable = serverReachable, onNewIncident = onNewIncident)
         } else {
-            RoadUserMobileLayout(onLogout = onLogoutClick, serverReachable = serverReachable)
+            RoadUserMobileLayout(onLogout = onLogoutClick, serverReachable = serverReachable, onNewIncident = onNewIncident)
         }
     }
 }
 
 @Composable
-private fun RoadUserMobileLayout(onLogout: () -> Unit, serverReachable: Boolean) {
+private fun RoadUserMobileLayout(onLogout: () -> Unit, serverReachable: Boolean, onNewIncident: () -> Unit) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { RoadUserBottomBar(selectedTab = selectedTab, onTabChange = { selectedTab = it }) },
+        floatingActionButton = {
+            if (selectedTab == RoadUserTab.Active) {
+                FloatingActionButton(
+                    onClick = onNewIncident,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    ReportIcon()
+                }
+            }
+        },
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             ConnectivityBanner(visible = !serverReachable)
@@ -124,19 +137,28 @@ private fun MobileScreenHeader(title: String, onLogout: () -> Unit) {
 }
 
 @Composable
-private fun RoadUserDesktopLayout(onLogout: () -> Unit, serverReachable: Boolean) {
+private fun RoadUserDesktopLayout(onLogout: () -> Unit, serverReachable: Boolean, onNewIncident: () -> Unit) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
     Row(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         RoadUserNavRail(selectedTab = selectedTab, onTabChange = { selectedTab = it }, onLogout = onLogout)
         Box(modifier = Modifier.width(0.5.dp).fillMaxSize().background(LocalRoadAssistColors.current.border))
         Column(modifier = Modifier.weight(1f).fillMaxSize()) {
             ConnectivityBanner(visible = !serverReachable)
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = if (selectedTab == RoadUserTab.Active) "Active incidents" else "History",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
+                if (selectedTab == RoadUserTab.Active) {
+                    OutlinedButton(onClick = onNewIncident) {
+                        Text("Report incident")
+                    }
+                }
             }
             HorizontalDivider(color = LocalRoadAssistColors.current.border, thickness = 0.5.dp)
             when (selectedTab) {
@@ -289,6 +311,32 @@ private fun HistoryIcon(selected: Boolean) {
                     end = Offset(cx + r * 0.4f, cy),
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
+                )
+            },
+    )
+}
+
+@Composable
+private fun ReportIcon() {
+    val color = MaterialTheme.colorScheme.onPrimaryContainer
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .drawBehind {
+                val w = size.width
+                val h = size.height
+                val stroke = w * 0.1f
+                drawLine(
+                    color = color,
+                    start = Offset(w * 0.5f, h * 0.15f),
+                    end = Offset(w * 0.5f, h * 0.65f),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(
+                    color = color,
+                    radius = stroke * 0.7f,
+                    center = Offset(w * 0.5f, h * 0.82f),
                 )
             },
     )
