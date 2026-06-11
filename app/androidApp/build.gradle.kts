@@ -1,6 +1,8 @@
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: 0
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
@@ -29,8 +31,8 @@ android {
         applicationId = "dev.koenv.roadassist"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = maxOf(1, buildNumber)
+        versionName = if (buildNumber > 0) "1.0.$buildNumber" else "1.0"
 
         val localProps = Properties()
         val localPropsFile = rootProject.file("local.properties")

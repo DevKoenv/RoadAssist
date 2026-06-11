@@ -13,6 +13,7 @@ jobs:
     name: Android APK
     runs-on: ubuntu-latest
     env:
+      BUILD_NUMBER: ${{ github.run_number }}
       KEYSTORE_FILE: ${{ github.workspace }}/roadassist-release.jks
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -41,6 +42,8 @@ jobs:
   build-linux:
     name: Linux DEB
     runs-on: ubuntu-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,6 +65,8 @@ jobs:
   build-windows:
     name: Windows MSI + EXE
     runs-on: windows-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
 
