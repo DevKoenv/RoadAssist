@@ -22,6 +22,7 @@ object DatabaseFactory {
                     driver = "org.sqlite.JDBC",
                 )
             }
+            // Default to H2 in-memory; data resets on restart, used for local dev/testing
             else -> Database.connect(
                 url = "jdbc:h2:mem:roadassist;DB_CLOSE_DELAY=-1",
                 driver = "org.h2.Driver",

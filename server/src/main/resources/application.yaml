@@ -1,7 +1,12 @@
 ktor:
+  deployment:
+    port: 8080
   application:
     modules:
       - dev.koenv.roadassist.server.ApplicationKt.module
+
+jwt:
+  secret: "dev-local-secret-change-in-production"
 
 database:
   mode: h2

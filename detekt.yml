@@ -9,6 +9,8 @@ complexity:
   LongParameterList:
     functionThreshold: 8
     constructorThreshold: 10
+    ignoreAnnotated:
+      - 'Composable'
   NestedBlockDepth:
     threshold: 5
   TooManyFunctions:
@@ -43,3 +45,134 @@ exceptions:
     active: true
   TooGenericExceptionCaught:
     active: true
+
+# detekt-formatting wraps ktlint rules; all disabled except ImportOrdering.
+# Enable individual rules here as needed.
+formatting:
+  AnnotationOnSeparateLine:
+    active: false
+  AnnotationSpacing:
+    active: false
+  ArgumentListWrapping:
+    active: false
+  BlockCommentInitialStarAlignment:
+    active: false
+  ChainWrapping:
+    active: false
+  CommentSpacing:
+    active: false
+  CommentWrapping:
+    active: false
+  EnumEntryNameCase:
+    active: false
+  EnumWrapping:
+    active: false
+  Filename:
+    active: false
+  FunctionReturnTypeWrapping:
+    active: false
+  FunctionSignature:
+    active: false
+  FunctionStartOfBodySpacing:
+    active: false
+  FunctionTypeReferenceSpacing:
+    active: false
+  IfElseWrapping:
+    active: false
+  ImportOrdering:
+    active: true
+    layout: '*,^'
+  Indentation:
+    active: false
+  KdocWrapping:
+    active: false
+  MaximumLineLength:
+    active: false
+  ModifierListSpacing:
+    active: false
+  ModifierOrdering:
+    active: false
+  MultilineExpressionWrapping:
+    active: false
+  NoBlankLineBeforeRbrace:
+    active: false
+  NoBlankLinesBetweenClassBodyDeclarations:
+    active: false
+  NoConsecutiveBlankLines:
+    active: false
+  NoConsecutiveComments:
+    active: false
+  NoEmptyClassBody:
+    active: false
+  NoEmptyFile:
+    active: false
+  NoLineBreakAfterElse:
+    active: false
+  NoLineBreakBeforeColon:
+    active: false
+  NoMultipleSpaces:
+    active: false
+  NoSemicolons:
+    active: false
+  NoSingleLineBlockComment:
+    active: false
+  NoTrailingWhitespace:
+    active: false
+  NoUnitReturn:
+    active: false
+  NoUnusedImports:
+    active: false
+  NoWildcardImports:
+    active: false
+  PackageName:
+    active: false
+  ParameterListSpacing:
+    active: false
+  ParameterListWrapping:
+    active: false
+  ParameterWrapping:
+    active: false
+  PropertyName:
+    active: false
+  PropertyWrapping:
+    active: false
+  SpacingAroundAngleBrackets:
+    active: false
+  SpacingAroundColon:
+    active: false
+  SpacingAroundComma:
+    active: false
+  SpacingAroundCurly:
+    active: false
+  SpacingAroundDot:
+    active: false
+  SpacingAroundDoubleColon:
+    active: false
+  SpacingAroundKeyword:
+    active: false
+  SpacingAroundOperators:
+    active: false
+  SpacingAroundParens:
+    active: false
+  SpacingAroundRangeOperator:
+    active: false
+  SpacingAroundUnaryOperator:
+    active: false
+  SpacingBetweenDeclarationsWithAnnotations:
+    active: false
+  SpacingBetweenDeclarationsWithComments:
+    active: false
+  SpacingBetweenFunctionNameAndOpeningParenthesis:
+    active: false
+  StringTemplate:
+    active: false
+  TrailingCommaOnCallSite:
+    active: false
+  TrailingCommaOnDeclarationSite:
+    active: false
+  TypeArgumentListSpacing:
+    active: false
+  TypeParameterListSpacing:
+    active: false
+  Wrapping:
+    active: false

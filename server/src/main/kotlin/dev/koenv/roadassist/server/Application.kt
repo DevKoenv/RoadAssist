@@ -4,13 +4,18 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import dev.koenv.roadassist.server.database.DatabaseFactory
 import dev.koenv.roadassist.server.database.DatabaseSeeder
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.netty.EngineMain
+import io.ktor.server.plugins.calllogging.CallLogging
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
+import org.slf4j.event.Level
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
@@ -38,11 +43,14 @@ private fun Application.configure(jwtSecret: String) {
             }
         }
     }
+    install(CallLogging) { level = Level.INFO }
     install(ContentNegotiation) { json() }
     routing {
+        configureHealthRouting()
+        configurePingRouting()
         configureAuthRouting(jwtSecret)
         authenticate("auth-jwt") {
-            configurePingRouting()
+            configureIncidentsRouting()
         }
     }
 }

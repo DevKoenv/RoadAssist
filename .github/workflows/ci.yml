@@ -10,6 +10,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +23,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build all modules
-        run: ./gradlew build -x test -x connectedAndroidTest --no-daemon
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk-${{ github.run_number }}
+          path: app/androidApp/build/outputs/apk/debug/*.apk
+          retention-days: 7
 
   lint:
     name: Lint
@@ -55,7 +64,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
-        run: ./gradlew :core:jvmTest :server:test --no-daemon
+        run: ./gradlew :core:jvmTest :server:test :app:shared:jvmTest --no-daemon
 
       - name: Generate and verify coverage
         run: ./gradlew koverXmlReport koverVerify --no-daemon
