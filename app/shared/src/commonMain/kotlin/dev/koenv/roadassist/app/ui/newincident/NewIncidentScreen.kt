@@ -32,9 +32,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -188,8 +190,12 @@ private fun DesktopLayout(
                     Spacer(Modifier.width(12.dp))
                     Text("New incident", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                     Spacer(Modifier.weight(1f))
-                    TextButton(onClick = onBack) {
-                        Text("Cancel", color = LocalRoadAssistColors.current.mutedForeground)
+                    OutlinedButton(
+                        onClick = onBack,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, LocalRoadAssistColors.current.border),
+                    ) {
+                        Text("Cancel", color = LocalRoadAssistColors.current.mutedForeground, style = MaterialTheme.typography.bodyMedium)
                     }
                     Spacer(Modifier.width(8.dp))
                     SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() })
