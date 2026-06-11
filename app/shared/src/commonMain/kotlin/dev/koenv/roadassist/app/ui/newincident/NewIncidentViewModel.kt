@@ -49,6 +49,10 @@ class NewIncidentViewModel(
         _description.value = if (value.length <= 500) value else value.take(500)
     }
 
+    fun setManualLocation(lat: Double, lon: Double) {
+        _location.value = LatLon(lat, lon)
+    }
+
     fun refreshLocation() {
         viewModelScope.launch {
             _locationLoading.value = true

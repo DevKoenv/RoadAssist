@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -205,7 +207,13 @@ private fun DesktopLayout(
                                 CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
                             }
                             Column(Modifier.weight(1f)) {
-                                LocationSection(location = location, locationLoading = locationLoading, onRefresh = { viewModel.refreshLocation() })
+                                LocationSection(
+                                    location = location,
+                                    locationLoading = locationLoading,
+                                    onRefresh = { viewModel.refreshLocation() },
+                                    isDesktop = true,
+                                    onManualLocation = { lat, lon -> viewModel.setManualLocation(lat, lon) },
+                                )
                             }
                         }
                         Spacer(Modifier.height(12.dp))
@@ -294,9 +302,26 @@ private fun DescriptionSection(description: String, onDescriptionChange: (String
 }
 
 @Composable
-private fun LocationSection(location: LatLon?, locationLoading: Boolean, onRefresh: () -> Unit) {
+private fun LocationSection(
+    location: LatLon?,
+    locationLoading: Boolean,
+    onRefresh: () -> Unit,
+    isDesktop: Boolean = false,
+    onManualLocation: ((Double, Double) -> Unit)? = null,
+) {
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        ManualLocationDialog(
+            onConfirm = { lat, lon ->
+                onManualLocation?.invoke(lat, lon)
+                showDialog = false
+            },
+            onDismiss = { showDialog = false },
+        )
+    }
 
     SectionLabel("LOCATION · AUTO")
     Spacer(Modifier.height(6.dp))
@@ -304,7 +329,7 @@ private fun LocationSection(location: LatLon?, locationLoading: Boolean, onRefre
         modifier = Modifier
             .fillMaxWidth()
             .border(1.dp, borderColor, RoundedCornerShape(8.dp))
-            .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Default.LocationOn, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
@@ -319,10 +344,65 @@ private fun LocationSection(location: LatLon?, locationLoading: Boolean, onRefre
             color = if (location == null && !locationLoading) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
-        IconButton(onClick = onRefresh, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Default.Refresh, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
+        if (locationLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
+        } else {
+            Icon(
+                Icons.Default.Refresh,
+                contentDescription = "Refresh location",
+                tint = mutedColor,
+                modifier = Modifier
+                    .size(18.dp)
+                    .clickable(onClick = if (isDesktop) { { showDialog = true } } else onRefresh),
+            )
         }
     }
+}
+
+@Composable
+private fun ManualLocationDialog(onConfirm: (Double, Double) -> Unit, onDismiss: () -> Unit) {
+    var latText by remember { mutableStateOf("") }
+    var lonText by remember { mutableStateOf("") }
+    val latValid = latText.toDoubleOrNull() != null
+    val lonValid = lonText.toDoubleOrNull() != null
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Enter coordinates") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = latText,
+                    onValueChange = { latText = it },
+                    label = { Text("Latitude") },
+                    isError = latText.isNotEmpty() && !latValid,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = lonText,
+                    onValueChange = { lonText = it },
+                    label = { Text("Longitude") },
+                    isError = lonText.isNotEmpty() && !lonValid,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val lat = latText.toDoubleOrNull() ?: return@TextButton
+                    val lon = lonText.toDoubleOrNull() ?: return@TextButton
+                    onConfirm(lat, lon)
+                },
+                enabled = latValid && lonValid,
+            ) { Text("Confirm") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
 }
 
 @Composable
