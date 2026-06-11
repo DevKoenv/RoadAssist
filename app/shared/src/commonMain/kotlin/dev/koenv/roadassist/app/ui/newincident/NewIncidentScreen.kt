@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -175,13 +176,16 @@ private fun DesktopLayout(
             Box(modifier = Modifier.width(0.5.dp).fillMaxSize().background(LocalRoadAssistColors.current.border))
             Column(modifier = Modifier.weight(1f).fillMaxSize()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.AutoMirrored.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(20.dp).clickable { onBack() },
+                    )
+                    Spacer(Modifier.width(12.dp))
                     Text("New incident", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = onBack) {
@@ -432,22 +436,35 @@ private fun PhotoSection(
                 Text("Remove", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
             }
         }
+    } else if (isDesktop) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onPickPhoto)
+                .padding(vertical = 28.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.CameraAlt, contentDescription = null, tint = mutedColor, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.height(8.dp))
+                Text("Drag a photo here, or click to add", style = MaterialTheme.typography.bodyMedium, color = mutedColor)
+            }
+        }
     } else {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .clickable(onClick = onPickPhoto)
                 .padding(horizontal = 12.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.CameraAlt, contentDescription = null, tint = mutedColor, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
-            Text(
-                text = if (isDesktop) "Drag a photo here, or click to add" else "Add a photo",
-                style = MaterialTheme.typography.bodyMedium,
-                color = mutedColor,
-            )
+            Text("Add a photo", style = MaterialTheme.typography.bodyMedium, color = mutedColor)
         }
     }
 }
