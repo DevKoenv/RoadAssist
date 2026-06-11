@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -176,7 +177,13 @@ internal fun RoadUserNavRail(
     onTabChange: (RoadUserTab) -> Unit,
     onLogout: () -> Unit,
 ) {
-    NavigationRail(containerColor = MaterialTheme.colorScheme.background, contentColor = LocalRoadAssistColors.current.mutedForeground) {
+    Column(
+        modifier = Modifier
+            .width(80.dp)
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.background),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Spacer(Modifier.height(8.dp))
         Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) { RoadAssistAppIcon(size = 40.dp) }
         Spacer(Modifier.height(16.dp))
