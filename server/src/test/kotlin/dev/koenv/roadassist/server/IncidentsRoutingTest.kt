@@ -289,6 +289,159 @@ class IncidentsRoutingTest {
         }
         assertEquals(HttpStatusCode.BadRequest, response.status)
     }
+
+    @Test
+    fun owner_can_upload_jpeg_photo() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val token = loginToken(client, "user", "user123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val jpegBytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte())
+        val response = client.post("/incidents/${created.id}/photo") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            setBody(io.ktor.client.request.forms.MultiPartFormDataContent(
+                io.ktor.client.request.forms.formData {
+                    append("photo", jpegBytes, io.ktor.http.Headers.build {
+                        append(io.ktor.http.HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                        append(io.ktor.http.HttpHeaders.ContentDisposition, "form-data; name=\"photo\"; filename=\"test.jpg\"")
+                    })
+                }
+            ))
+        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        val updated = response.body<Incident>()
+        assertNotNull(updated.photoUrl)
+        assertTrue(updated.photoUrl!!.startsWith("/uploads/"))
+        val filename = updated.photoUrl!!.removePrefix("/uploads/")
+        assertTrue(java.io.File("uploads/$filename").exists())
+    }
+
+    @Test
+    fun owner_can_upload_png_photo() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val token = loginToken(client, "user", "user123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val pngBytes = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
+        val response = client.post("/incidents/${created.id}/photo") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            setBody(io.ktor.client.request.forms.MultiPartFormDataContent(
+                io.ktor.client.request.forms.formData {
+                    append("photo", pngBytes, io.ktor.http.Headers.build {
+                        append(io.ktor.http.HttpHeaders.ContentType, ContentType.Image.PNG.toString())
+                        append(io.ktor.http.HttpHeaders.ContentDisposition, "form-data; name=\"photo\"; filename=\"test.png\"")
+                    })
+                }
+            ))
+        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        val updated = response.body<Incident>()
+        assertNotNull(updated.photoUrl)
+        assertTrue(updated.photoUrl!!.startsWith("/uploads/"))
+    }
+
+    @Test
+    fun non_allowed_type_gif_upload_returns_415() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val token = loginToken(client, "user", "user123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val response = client.post("/incidents/${created.id}/photo") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            setBody(io.ktor.client.request.forms.MultiPartFormDataContent(
+                io.ktor.client.request.forms.formData {
+                    append("photo", byteArrayOf(0x47, 0x49, 0x46), io.ktor.http.Headers.build {
+                        append(io.ktor.http.HttpHeaders.ContentType, "image/gif")
+                        append(io.ktor.http.HttpHeaders.ContentDisposition, "form-data; name=\"photo\"; filename=\"anim.gif\"")
+                    })
+                }
+            ))
+        }
+        assertEquals(HttpStatusCode.UnsupportedMediaType, response.status)
+    }
+
+    @Test
+    fun photo_over_5mb_returns_413() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val token = loginToken(client, "user", "user123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val oversizedBytes = ByteArray(5 * 1024 * 1024 + 1) { 0x00 }.also {
+            it[0] = 0xFF.toByte(); it[1] = 0xD8.toByte(); it[2] = 0xFF.toByte()
+        }
+        val response = client.post("/incidents/${created.id}/photo") {
+            headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            setBody(io.ktor.client.request.forms.MultiPartFormDataContent(
+                io.ktor.client.request.forms.formData {
+                    append("photo", oversizedBytes, io.ktor.http.Headers.build {
+                        append(io.ktor.http.HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                        append(io.ktor.http.HttpHeaders.ContentDisposition, "form-data; name=\"photo\"; filename=\"big.jpg\"")
+                    })
+                }
+            ))
+        }
+        assertEquals(HttpStatusCode.PayloadTooLarge, response.status)
+    }
+
+    @Test
+    fun other_user_cannot_upload_photo_returns_403() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val userToken = loginToken(client, "user", "user123")
+        client.post("/auth/register") {
+            contentType(ContentType.Application.Json)
+            setBody(dev.koenv.roadassist.core.RegisterRequest("intruder", "pass1234"))
+        }
+        val intruderToken = loginToken(client, "intruder", "pass1234")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $userToken") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val response = client.post("/incidents/${created.id}/photo") {
+            headers { append(HttpHeaders.Authorization, "Bearer $intruderToken") }
+            setBody(io.ktor.client.request.forms.MultiPartFormDataContent(
+                io.ktor.client.request.forms.formData {
+                    append("photo", byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()), io.ktor.http.Headers.build {
+                        append(io.ktor.http.HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                        append(io.ktor.http.HttpHeaders.ContentDisposition, "form-data; name=\"photo\"; filename=\"test.jpg\"")
+                    })
+                }
+            ))
+        }
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+    }
 }
 
 private suspend fun loginToken(
