@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +25,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,9 +77,9 @@ private fun RoadUserMobileLayout(onLogout: () -> Unit, serverReachable: Boolean,
             if (selectedTab == RoadUserTab.Active) {
                 FloatingActionButton(
                     onClick = onNewIncident,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = MaterialTheme.colorScheme.primary,
                 ) {
-                    ReportIcon()
+                    ReportIcon(color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         },
@@ -155,8 +157,14 @@ private fun RoadUserDesktopLayout(onLogout: () -> Unit, serverReachable: Boolean
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 if (selectedTab == RoadUserTab.Active) {
-                    OutlinedButton(onClick = onNewIncident) {
-                        Text("Report incident")
+                    Button(
+                        onClick = onNewIncident,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        PlusIcon(color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(Modifier.width(6.dp))
+                        Text("New incident", color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             }
@@ -317,8 +325,21 @@ private fun HistoryIcon(selected: Boolean) {
 }
 
 @Composable
-private fun ReportIcon() {
-    val color = MaterialTheme.colorScheme.onPrimaryContainer
+private fun PlusIcon(color: Color) {
+    Box(
+        modifier = Modifier
+            .size(18.dp)
+            .drawBehind {
+                val cx = size.width / 2f; val cy = size.height / 2f
+                val half = size.width * 0.38f; val s = size.width * 0.12f
+                drawLine(color, Offset(cx - half, cy), Offset(cx + half, cy), s, StrokeCap.Round)
+                drawLine(color, Offset(cx, cy - half), Offset(cx, cy + half), s, StrokeCap.Round)
+            },
+    )
+}
+
+@Composable
+private fun ReportIcon(color: Color = MaterialTheme.colorScheme.onPrimaryContainer) {
     Box(
         modifier = Modifier
             .size(24.dp)
