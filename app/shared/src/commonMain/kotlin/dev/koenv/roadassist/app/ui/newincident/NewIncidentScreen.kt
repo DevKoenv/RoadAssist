@@ -1,5 +1,6 @@
 package dev.koenv.roadassist.app.ui.newincident
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +39,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -46,24 +58,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
+import dev.koenv.roadassist.app.ui.home.RoadUserNavRail
+import dev.koenv.roadassist.app.ui.home.RoadUserTab
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LatLon
 import kotlinx.coroutines.launch
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +74,7 @@ fun NewIncidentScreen(
     viewModel: NewIncidentViewModel,
     onSuccess: () -> Unit,
     onBack: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     val category by viewModel.category.collectAsState()
     val description by viewModel.description.collectAsState()
@@ -90,7 +94,7 @@ fun NewIncidentScreen(
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
-            DesktopLayout(viewModel, category, description, location, locationLoading, photoBytes, submitState, snackbarHostState, onBack)
+            DesktopLayout(viewModel, category, description, location, locationLoading, photoBytes, submitState, snackbarHostState, onBack, onLogout)
         } else {
             MobileLayout(viewModel, category, description, location, locationLoading, photoBytes, submitState, snackbarHostState, onBack)
         }
@@ -120,7 +124,7 @@ private fun MobileLayout(
                 .verticalScroll(rememberScrollState()),
         ) {
             IconButton(onClick = onBack, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) {
-                NiBackArrow(color = MaterialTheme.colorScheme.onBackground)
+                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
             }
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Spacer(Modifier.height(4.dp))
@@ -158,57 +162,64 @@ private fun DesktopLayout(
     submitState: SubmitState,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) { data -> Snackbar(data) } },
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = onBack) { NiBackArrow(color = MaterialTheme.colorScheme.onBackground) }
-                Spacer(Modifier.width(8.dp))
-                Text("New incident", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-                Spacer(Modifier.weight(1f))
-                TextButton(onClick = onBack) {
-                    Text("Cancel", color = LocalRoadAssistColors.current.mutedForeground)
-                }
-                Spacer(Modifier.width(8.dp))
-                SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() })
-            }
-            HorizontalDivider(color = LocalRoadAssistColors.current.border, thickness = 0.5.dp)
-            Box(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-                contentAlignment = Alignment.TopCenter,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = 760.dp)
-                        .fillMaxWidth()
-                        .border(1.dp, LocalRoadAssistColors.current.border, RoundedCornerShape(12.dp))
-                        .padding(20.dp),
+        Row(modifier = Modifier.fillMaxSize().padding(padding)) {
+            RoadUserNavRail(selectedTab = RoadUserTab.Active, onTabChange = {}, onLogout = onLogout)
+            Box(modifier = Modifier.width(0.5.dp).fillMaxSize().background(LocalRoadAssistColors.current.border))
+            Column(modifier = Modifier.weight(1f).fillMaxSize()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Box(Modifier.weight(1f)) {
-                            CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
-                        }
-                        Box(Modifier.weight(1f)) {
-                            LocationSection(location = location, locationLoading = locationLoading, onRefresh = { viewModel.refreshLocation() })
-                        }
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
                     }
-                    Spacer(Modifier.height(12.dp))
-                    DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
-                    Spacer(Modifier.height(12.dp))
-                    PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = true)
-                    if (submitState is SubmitState.Error) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = (submitState as SubmitState.Error).message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                    Spacer(Modifier.width(8.dp))
+                    Text("New incident", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onClick = onBack) {
+                        Text("Cancel", color = LocalRoadAssistColors.current.mutedForeground)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() })
+                }
+                HorizontalDivider(color = LocalRoadAssistColors.current.border, thickness = 0.5.dp)
+                Box(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 760.dp)
+                            .fillMaxWidth()
+                            .border(1.dp, LocalRoadAssistColors.current.border, RoundedCornerShape(12.dp))
+                            .padding(20.dp),
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Column(Modifier.weight(1f)) {
+                                CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
+                            }
+                            Column(Modifier.weight(1f)) {
+                                LocationSection(location = location, locationLoading = locationLoading, onRefresh = { viewModel.refreshLocation() })
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
+                        Spacer(Modifier.height(12.dp))
+                        PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = true)
+                        if (submitState is SubmitState.Error) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = (submitState as SubmitState.Error).message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                 }
             }
@@ -237,7 +248,7 @@ private fun CategorySection(category: IncidentCategory, onCategoryChange: (Incid
             NiCategoryIcon(category = category, color = mutedColor)
             Spacer(Modifier.width(10.dp))
             Text(category.displayName(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-            NiChevronDown(color = mutedColor)
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
         }
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             IncidentCategory.entries.forEach { cat ->
@@ -296,7 +307,7 @@ private fun LocationSection(location: LatLon?, locationLoading: Boolean, onRefre
             .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        NiLocationPin(color = mutedColor)
+        Icon(Icons.Default.LocationOn, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         Text(
             text = when {
@@ -309,7 +320,7 @@ private fun LocationSection(location: LatLon?, locationLoading: Boolean, onRefre
             modifier = Modifier.weight(1f),
         )
         IconButton(onClick = onRefresh, modifier = Modifier.size(36.dp)) {
-            NiRefreshIcon(color = mutedColor)
+            Icon(Icons.Default.Refresh, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -334,7 +345,7 @@ private fun PhotoSection(
                 .padding(horizontal = 12.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NiCameraIcon(color = mutedColor)
+            Icon(Icons.Default.CameraAlt, contentDescription = null, tint = mutedColor, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Text("Photo selected (${photoBytes.size / 1024} KB)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
             TextButton(onClick = onRemovePhoto) {
@@ -350,7 +361,7 @@ private fun PhotoSection(
                 .padding(horizontal = 12.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NiCameraIcon(color = mutedColor)
+            Icon(Icons.Default.CameraAlt, contentDescription = null, tint = mutedColor, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Text(
                 text = if (isDesktop) "Drag a photo here, or click to add" else "Add a photo",
@@ -373,7 +384,7 @@ private fun SubmitButton(submitState: SubmitState, onSubmit: () -> Unit, modifie
         if (submitState is SubmitState.Loading) {
             CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
         } else {
-            Text("Submit report", color = MaterialTheme.colorScheme.onPrimary)
+            Text("Submit report", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -389,101 +400,13 @@ private fun SectionLabel(text: String) {
 
 private fun IncidentCategory.displayName(): String = name.lowercase().replaceFirstChar { it.uppercase() }
 
-// ---- Icons ----
-
 @Composable
-private fun NiBackArrow(color: Color) {
-    Box(Modifier.size(20.dp).drawBehind {
-        val s = size.width * 0.12f
-        drawLine(color, Offset(size.width * 0.62f, size.height * 0.2f), Offset(size.width * 0.25f, size.height * 0.5f), s, StrokeCap.Round)
-        drawLine(color, Offset(size.width * 0.25f, size.height * 0.5f), Offset(size.width * 0.62f, size.height * 0.8f), s, StrokeCap.Round)
-    })
-}
-
-@Composable
-private fun NiChevronDown(color: Color) {
-    Box(Modifier.size(14.dp).drawBehind {
-        val s = size.width * 0.14f
-        drawLine(color, Offset(size.width * 0.2f, size.height * 0.38f), Offset(size.width * 0.5f, size.height * 0.65f), s, StrokeCap.Round)
-        drawLine(color, Offset(size.width * 0.5f, size.height * 0.65f), Offset(size.width * 0.8f, size.height * 0.38f), s, StrokeCap.Round)
-    })
-}
-
-@Composable
-private fun NiCategoryIcon(category: IncidentCategory, color: Color) {
-    Box(Modifier.size(18.dp).drawBehind {
-        val s = size.width * 0.1f
-        val w = size.width; val h = size.height
-        when (category) {
-            IncidentCategory.BREAKDOWN -> {
-                drawLine(color, Offset(w * 0.25f, h * 0.75f), Offset(w * 0.75f, h * 0.25f), s * 1.3f, StrokeCap.Round)
-                drawCircle(color, w * 0.19f, Offset(w * 0.76f, h * 0.22f), style = Stroke(width = s))
-                drawCircle(color, w * 0.19f, Offset(w * 0.24f, h * 0.78f), style = Stroke(width = s))
-            }
-            IncidentCategory.ACCIDENT -> {
-                val path = Path().apply {
-                    moveTo(w * 0.5f, h * 0.1f); lineTo(w * 0.92f, h * 0.87f); lineTo(w * 0.08f, h * 0.87f); close()
-                }
-                drawPath(path, color, style = Stroke(width = s, join = StrokeJoin.Round, cap = StrokeCap.Round))
-                drawLine(color, Offset(w * 0.5f, h * 0.38f), Offset(w * 0.5f, h * 0.62f), s, StrokeCap.Round)
-                drawCircle(color, s * 0.65f, Offset(w * 0.5f, h * 0.73f))
-            }
-            IncidentCategory.OBSTRUCTION -> {
-                val path = Path().apply {
-                    moveTo(w * 0.1f, h * 0.45f); lineTo(w * 0.5f, h * 0.15f)
-                    lineTo(w * 0.9f, h * 0.45f); lineTo(w * 0.9f, h * 0.85f)
-                    lineTo(w * 0.1f, h * 0.85f); close()
-                }
-                drawPath(path, color, style = Stroke(width = s, join = StrokeJoin.Round))
-            }
-            IncidentCategory.OTHER -> {
-                val cx = w / 2f; val cy = h / 2f
-                drawCircle(color, cx * 0.85f, Offset(cx, cy), style = Stroke(width = s))
-                drawLine(color, Offset(cx, cy - s * 0.6f), Offset(cx, cy + s * 0.8f), s, StrokeCap.Round)
-                drawCircle(color, s * 0.6f, Offset(cx, cy + s * 2f))
-            }
-        }
-    })
-}
-
-@Composable
-private fun NiLocationPin(color: Color) {
-    Box(Modifier.size(18.dp).drawBehind {
-        val cx = size.width / 2f
-        val r = size.width * 0.32f
-        val cy = size.height * 0.36f
-        val s = size.width * 0.1f
-        drawCircle(color, r, Offset(cx, cy), style = Stroke(width = s))
-        drawCircle(color, r * 0.32f, Offset(cx, cy))
-        drawLine(color, Offset(cx - r * 0.85f, cy + r * 0.55f), Offset(cx, size.height * 0.92f), s, StrokeCap.Round)
-        drawLine(color, Offset(cx + r * 0.85f, cy + r * 0.55f), Offset(cx, size.height * 0.92f), s, StrokeCap.Round)
-    })
-}
-
-@Composable
-private fun NiRefreshIcon(color: Color) {
-    Box(Modifier.size(18.dp).drawBehind {
-        val cx = size.width / 2f; val cy = size.height / 2f
-        val r = size.width * 0.36f; val s = size.width * 0.11f
-        drawArc(color, startAngle = -50f, sweepAngle = 280f, useCenter = false,
-            topLeft = Offset(cx - r, cy - r), size = Size(r * 2, r * 2),
-            style = Stroke(width = s, cap = StrokeCap.Round))
-        val endRad = (-50 + 280).toDouble() * PI / 180.0
-        val ex = (cx + r * cos(endRad)).toFloat(); val ey = (cy + r * sin(endRad)).toFloat()
-        drawLine(color, Offset(ex, ey), Offset(ex - s * 1.3f, ey - s * 1.6f), s, StrokeCap.Round)
-        drawLine(color, Offset(ex, ey), Offset(ex + s * 1.6f, ey - s * 0.7f), s, StrokeCap.Round)
-    })
-}
-
-@Composable
-private fun NiCameraIcon(color: Color) {
-    Box(Modifier.size(20.dp).drawBehind {
-        val w = size.width; val h = size.height; val s = w * 0.1f
-        drawRoundRect(color, topLeft = Offset(w * 0.05f, h * 0.32f), size = Size(w * 0.9f, h * 0.55f),
-            cornerRadius = CornerRadius(w * 0.08f), style = Stroke(width = s))
-        drawCircle(color, w * 0.18f, Offset(w * 0.5f, h * 0.595f), style = Stroke(width = s))
-        drawLine(color, Offset(w * 0.33f, h * 0.32f), Offset(w * 0.41f, h * 0.2f), s, StrokeCap.Round)
-        drawLine(color, Offset(w * 0.41f, h * 0.2f), Offset(w * 0.59f, h * 0.2f), s, StrokeCap.Round)
-        drawLine(color, Offset(w * 0.59f, h * 0.2f), Offset(w * 0.67f, h * 0.32f), s, StrokeCap.Round)
-    })
+private fun NiCategoryIcon(category: IncidentCategory, color: Color, modifier: Modifier = Modifier.size(18.dp)) {
+    val icon = when (category) {
+        IncidentCategory.BREAKDOWN -> Icons.Default.Build
+        IncidentCategory.ACCIDENT -> Icons.Default.WarningAmber
+        IncidentCategory.OBSTRUCTION -> Icons.Default.Inventory2
+        IncidentCategory.OTHER -> Icons.Default.Help
+    }
+    Icon(icon, contentDescription = null, tint = color, modifier = modifier)
 }

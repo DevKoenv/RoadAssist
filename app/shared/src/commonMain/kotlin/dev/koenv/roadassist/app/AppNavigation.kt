@@ -96,6 +96,11 @@ fun AppNavigation(
                 viewModel = vm,
                 onSuccess = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
     }
