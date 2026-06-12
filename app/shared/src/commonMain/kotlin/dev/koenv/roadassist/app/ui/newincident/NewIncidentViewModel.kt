@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class NewIncidentViewModel(
     private val repository: IncidentRepository,
@@ -43,8 +44,16 @@ class NewIncidentViewModel(
     private val _submitState = MutableStateFlow<SubmitState>(SubmitState.Idle)
     val submitState: StateFlow<SubmitState> = _submitState.asStateFlow()
 
+    private var locationSetManually = false
+
     init {
-        refreshLocation()
+        viewModelScope.launch {
+            val latLon = withTimeoutOrNull(10_000L) { locationProvider.getCurrentLocation() }
+            if (latLon != null && !locationSetManually) {
+                _location.value = latLon
+                _locationLabel.value = geocodingService.reverse(latLon)
+            }
+        }
     }
 
     fun updateCategory(value: IncidentCategory) {
@@ -58,7 +67,7 @@ class NewIncidentViewModel(
     fun refreshLocation() {
         viewModelScope.launch {
             _locationLoading.value = true
-            val latLon = locationProvider.getCurrentLocation()
+            val latLon = withTimeoutOrNull(15_000L) { locationProvider.getCurrentLocation() }
             _location.value = latLon
             _locationLabel.value = if (latLon != null) geocodingService.reverse(latLon) else null
             _locationLoading.value = false
@@ -66,6 +75,7 @@ class NewIncidentViewModel(
     }
 
     fun setManualLocation(lat: Double, lon: Double, label: String) {
+        locationSetManually = true
         _location.value = LatLon(lat, lon)
         _locationLabel.value = label
     }

@@ -188,4 +188,19 @@ class NewIncidentViewModelTest {
         assertEquals(LatLon(51.9, 4.5), vm.location.value)
         assertEquals("Rotterdam, Netherlands", vm.locationLabel.value)
     }
+
+    @Test
+    fun background_gps_does_not_override_manual_location() = runTest {
+        // GPS provides a location but user already picked one manually before it resolves.
+        val vm = dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel(
+            IncidentRepository(FakeApiClient()),
+            FakeLocationProvider(LatLon(52.0, 4.5)),
+            FakeMediaPicker(),
+            FakeGeocodingService(reverseResult = "Amsterdam, Netherlands"),
+        )
+        vm.setManualLocation(51.9, 4.5, "Rotterdam, Netherlands")
+        // GPS result should be ignored because location was already set manually.
+        assertEquals(LatLon(51.9, 4.5), vm.location.value)
+        assertEquals("Rotterdam, Netherlands", vm.locationLabel.value)
+    }
 }
