@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -58,7 +60,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
@@ -69,6 +73,7 @@ import dev.koenv.roadassist.app.ui.home.RoadUserNavRail
 import dev.koenv.roadassist.app.ui.home.RoadUserTab
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LatLon
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +88,7 @@ fun NewIncidentScreen(
     val description by viewModel.description.collectAsState()
     val location by viewModel.location.collectAsState()
     val locationLoading by viewModel.locationLoading.collectAsState()
+    val locationLabel by viewModel.locationLabel.collectAsState()
     val photoBytes by viewModel.photoBytes.collectAsState()
     val submitState by viewModel.submitState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -97,9 +103,9 @@ fun NewIncidentScreen(
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
-            DesktopLayout(viewModel, category, description, location, locationLoading, photoBytes, submitState, snackbarHostState, onBack, onLogout)
+            DesktopLayout(viewModel, category, description, location, locationLabel, locationLoading, photoBytes, submitState, snackbarHostState, onBack, onLogout)
         } else {
-            MobileLayout(viewModel, category, description, location, locationLoading, photoBytes, submitState, snackbarHostState, onBack)
+            MobileLayout(viewModel, category, description, location, locationLabel, locationLoading, photoBytes, submitState, snackbarHostState, onBack)
         }
     }
 }
@@ -110,6 +116,7 @@ private fun MobileLayout(
     category: IncidentCategory,
     description: String,
     location: LatLon?,
+    locationLabel: String?,
     locationLoading: Boolean,
     photoBytes: ByteArray?,
     submitState: SubmitState,
@@ -134,7 +141,12 @@ private fun MobileLayout(
                 Spacer(Modifier.height(12.dp))
                 DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
                 Spacer(Modifier.height(12.dp))
-                LocationSection(location = location, locationLoading = locationLoading, onRefresh = { viewModel.refreshLocation() })
+                LocationSection(
+                    location = location,
+                    locationLabel = locationLabel,
+                    locationLoading = locationLoading,
+                    onRefresh = { viewModel.refreshLocation() },
+                )
                 Spacer(Modifier.height(12.dp))
                 PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = false)
                 Spacer(Modifier.height(16.dp))
@@ -159,6 +171,7 @@ private fun DesktopLayout(
     category: IncidentCategory,
     description: String,
     location: LatLon?,
+    locationLabel: String?,
     locationLoading: Boolean,
     photoBytes: ByteArray?,
     submitState: SubmitState,
@@ -212,10 +225,12 @@ private fun DesktopLayout(
                             Column(Modifier.weight(1f)) {
                                 LocationSection(
                                     location = location,
+                                    locationLabel = locationLabel,
                                     locationLoading = locationLoading,
                                     onRefresh = { viewModel.refreshLocation() },
                                     isDesktop = true,
-                                    onManualLocation = { lat, lon -> viewModel.setManualLocation(lat, lon, "") },
+                                    onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
+                                    onSearch = { query -> viewModel.searchLocations(query) },
                                 )
                             }
                         }
@@ -307,22 +322,25 @@ private fun DescriptionSection(description: String, onDescriptionChange: (String
 @Composable
 private fun LocationSection(
     location: LatLon?,
+    locationLabel: String?,
     locationLoading: Boolean,
     onRefresh: () -> Unit,
     isDesktop: Boolean = false,
-    onManualLocation: ((Double, Double) -> Unit)? = null,
+    onManualLocation: ((Double, Double, String) -> Unit)? = null,
+    onSearch: (suspend (String) -> List<GeocodingResult>)? = null,
 ) {
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
-        ManualLocationDialog(
-            onConfirm = { lat, lon ->
-                onManualLocation?.invoke(lat, lon)
+        LocationSearchDialog(
+            onConfirm = { result ->
+                onManualLocation?.invoke(result.location.latitude, result.location.longitude, result.label)
                 showDialog = false
             },
             onDismiss = { showDialog = false },
+            onSearch = onSearch ?: { emptyList() },
         )
     }
 
@@ -340,12 +358,15 @@ private fun LocationSection(
         Text(
             text = when {
                 locationLoading -> "Fetching location..."
+                locationLabel != null -> locationLabel
                 location != null -> "%.4f, %.4f".format(location.latitude, location.longitude)
                 else -> "Location unavailable"
             },
             style = MaterialTheme.typography.bodyMedium,
             color = if (location == null && !locationLoading) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         if (locationLoading) {
             CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
@@ -363,48 +384,86 @@ private fun LocationSection(
 }
 
 @Composable
-private fun ManualLocationDialog(onConfirm: (Double, Double) -> Unit, onDismiss: () -> Unit) {
-    var latText by remember { mutableStateOf("") }
-    var lonText by remember { mutableStateOf("") }
-    val latValid = latText.toDoubleOrNull() != null
-    val lonValid = lonText.toDoubleOrNull() != null
+private fun LocationSearchDialog(
+    onConfirm: (GeocodingResult) -> Unit,
+    onDismiss: () -> Unit,
+    onSearch: suspend (String) -> List<GeocodingResult>,
+) {
+    var query by remember { mutableStateOf("") }
+    var results by remember { mutableStateOf<List<GeocodingResult>>(emptyList()) }
+    var searching by remember { mutableStateOf(false) }
+    val borderColor = LocalRoadAssistColors.current.border
+    val mutedColor = LocalRoadAssistColors.current.mutedForeground
+
+    LaunchedEffect(query) {
+        results = emptyList()
+        searching = false
+        if (query.length >= 3) {
+            delay(400)
+            searching = true
+            try {
+                results = onSearch(query)
+            } finally {
+                searching = false
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Enter coordinates") },
+        title = { Text("Search location") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
-                    value = latText,
-                    onValueChange = { latText = it },
-                    label = { Text("Latitude") },
-                    isError = latText.isNotEmpty() && !latValid,
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text("Address or place name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        if (searching) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp)
+                        }
+                    },
                 )
-                OutlinedTextField(
-                    value = lonText,
-                    onValueChange = { lonText = it },
-                    label = { Text("Longitude") },
-                    isError = lonText.isNotEmpty() && !lonValid,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (results.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 240.dp)
+                            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp)),
+                    ) {
+                        results.forEachIndexed { index, result ->
+                            Text(
+                                text = result.label,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onConfirm(result) }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (index < results.lastIndex) {
+                                HorizontalDivider(color = borderColor, thickness = 0.5.dp)
+                            }
+                        }
+                    }
+                } else if (!searching && query.length >= 3) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "No results found.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = mutedColor,
+                    )
+                }
             }
         },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val lat = latText.toDoubleOrNull() ?: return@TextButton
-                    val lon = lonText.toDoubleOrNull() ?: return@TextButton
-                    onConfirm(lat, lon)
-                },
-                enabled = latValid && lonValid,
-            ) { Text("Confirm") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
