@@ -364,7 +364,7 @@ private fun LocationSection(
         if (searchMode) focusRequester.requestFocus()
     }
 
-    SectionLabel("LOCATION · AUTO")
+    SectionLabel("LOCATION")
     Spacer(Modifier.height(6.dp))
 
     Column(
@@ -377,7 +377,7 @@ private fun LocationSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(if (locationMissing) Modifier.clickable { searchMode = true } else Modifier)
+                    .clickable(enabled = !locationLoading) { searchMode = true }
                     .padding(horizontal = 12.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -393,7 +393,7 @@ private fun LocationSection(
                         locationLoading -> "Fetching location..."
                         locationLabel != null -> locationLabel
                         location != null -> "%.4f, %.4f".format(location.latitude, location.longitude)
-                        else -> "Location unavailable — tap to search"
+                        else -> "Location unavailable"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (locationMissing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
