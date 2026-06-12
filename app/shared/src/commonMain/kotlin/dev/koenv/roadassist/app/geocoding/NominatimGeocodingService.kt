@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private const val BASE_URL = "https://nominatim.openstreetmap.org"
-private const val USER_AGENT = "RoadAssist/1.0.0 (Koenv.DEV)"
+private const val USER_AGENT = "RoadAssist/1.0.0 (roadassist@koenv.dev)"
 
 @Serializable
 private data class NominatimPlace(

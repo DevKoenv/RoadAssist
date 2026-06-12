@@ -29,10 +29,12 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WarningAmber
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,7 +43,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -59,7 +60,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.geocoding.GeocodingResult
@@ -146,6 +150,8 @@ private fun MobileLayout(
                     locationLabel = locationLabel,
                     locationLoading = locationLoading,
                     onRefresh = { viewModel.refreshLocation() },
+                    onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
+                    onSearch = { query -> viewModel.searchLocations(query) },
                 )
                 Spacer(Modifier.height(12.dp))
                 PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = false)
@@ -331,140 +337,203 @@ private fun LocationSection(
 ) {
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
-    var showDialog by remember { mutableStateOf(false) }
-
-    if (showDialog) {
-        LocationSearchDialog(
-            onConfirm = { result ->
-                onManualLocation?.invoke(result.location.latitude, result.location.longitude, result.label)
-                showDialog = false
-            },
-            onDismiss = { showDialog = false },
-            onSearch = onSearch ?: { emptyList() },
-        )
-    }
-
-    SectionLabel("LOCATION · AUTO")
-    Spacer(Modifier.height(6.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Default.LocationOn, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = when {
-                locationLoading -> "Fetching location..."
-                locationLabel != null -> locationLabel
-                location != null -> "%.4f, %.4f".format(location.latitude, location.longitude)
-                else -> "Location unavailable"
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (location == null && !locationLoading) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (locationLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
-        } else {
-            Icon(
-                Icons.Default.Refresh,
-                contentDescription = "Refresh location",
-                tint = mutedColor,
-                modifier = Modifier
-                    .size(18.dp)
-                    .clickable(onClick = if (isDesktop) { { showDialog = true } } else onRefresh),
-            )
-        }
-    }
-}
-
-@Composable
-private fun LocationSearchDialog(
-    onConfirm: (GeocodingResult) -> Unit,
-    onDismiss: () -> Unit,
-    onSearch: suspend (String) -> List<GeocodingResult>,
-) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    var searchMode by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<GeocodingResult>>(emptyList()) }
     var searching by remember { mutableStateOf(false) }
-    val borderColor = LocalRoadAssistColors.current.border
-    val mutedColor = LocalRoadAssistColors.current.mutedForeground
+    val focusRequester = remember { FocusRequester() }
+    val locationMissing = location == null && !locationLoading
 
-    LaunchedEffect(query) {
+    LaunchedEffect(query, searchMode) {
+        if (!searchMode) return@LaunchedEffect
         results = emptyList()
         searching = false
         if (query.length >= 3) {
             delay(400)
             searching = true
             try {
-                results = onSearch(query)
+                results = onSearch?.invoke(query) ?: emptyList()
             } finally {
                 searching = false
             }
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Search location") },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = { Text("Address or place name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        if (searching) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp)
-                        }
-                    },
+    LaunchedEffect(searchMode) {
+        if (searchMode) focusRequester.requestFocus()
+    }
+
+    SectionLabel("LOCATION · AUTO")
+    Spacer(Modifier.height(6.dp))
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, if (searchMode) primaryColor else borderColor, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp)),
+    ) {
+        if (!searchMode) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (locationMissing) Modifier.clickable { searchMode = true } else Modifier)
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = if (locationMissing) MaterialTheme.colorScheme.error else mutedColor,
+                    modifier = Modifier.size(18.dp),
                 )
-                if (results.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 240.dp)
-                            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
-                            .clip(RoundedCornerShape(8.dp)),
-                    ) {
-                        results.forEachIndexed { index, result ->
-                            Text(
-                                text = result.label,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onConfirm(result) }
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (index < results.lastIndex) {
-                                HorizontalDivider(color = borderColor, thickness = 0.5.dp)
-                            }
-                        }
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = when {
+                        locationLoading -> "Fetching location..."
+                        locationLabel != null -> locationLabel
+                        location != null -> "%.4f, %.4f".format(location.latitude, location.longitude)
+                        else -> "Location unavailable — tap to search"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (locationMissing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (locationLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
+                } else {
+                    if (!isDesktop) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Retry GPS",
+                            tint = mutedColor,
+                            modifier = Modifier.size(18.dp).clickable(onClick = onRefresh),
+                        )
+                        Spacer(Modifier.width(10.dp))
                     }
-                } else if (!searching && query.length >= 3) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "No results found.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = mutedColor,
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Search for address",
+                        tint = mutedColor,
+                        modifier = Modifier.size(18.dp).clickable { searchMode = true },
                     )
                 }
             }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Search, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(10.dp))
+                BasicTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+                    cursorBrush = SolidColor(primaryColor),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (query.isEmpty()) {
+                                Text(
+                                    "Search for address...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = mutedColor,
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                )
+                Spacer(Modifier.width(8.dp))
+                if (searching) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
+                } else {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Cancel search",
+                        tint = mutedColor,
+                        modifier = Modifier.size(18.dp).clickable {
+                            searchMode = false
+                            query = ""
+                            results = emptyList()
+                        },
+                    )
+                }
+            }
+
+            if (results.isNotEmpty()) {
+                HorizontalDivider(color = borderColor, thickness = 0.5.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 240.dp),
+                ) {
+                    results.forEachIndexed { index, result ->
+                        Text(
+                            text = result.label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onManualLocation?.invoke(result.location.latitude, result.location.longitude, result.label)
+                                    searchMode = false
+                                    query = ""
+                                    results = emptyList()
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (index < results.lastIndex) {
+                            HorizontalDivider(color = borderColor, thickness = 0.5.dp)
+                        }
+                    }
+                }
+            } else if (!searching && query.length >= 3) {
+                HorizontalDivider(color = borderColor, thickness = 0.5.dp)
+                Text(
+                    "No results found.",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = mutedColor,
+                )
+            }
+
+            HorizontalDivider(color = borderColor, thickness = 0.5.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.Map,
+                    contentDescription = null,
+                    tint = mutedColor.copy(alpha = 0.4f),
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "Select on map",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = mutedColor.copy(alpha = 0.4f),
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    "Coming soon",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = mutedColor.copy(alpha = 0.4f),
+                )
+            }
+        }
+    }
 }
 
 @Composable
