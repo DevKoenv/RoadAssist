@@ -12,6 +12,7 @@ import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.auth.decodeRoleFromJwt
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.data.storage.SecureStorage
+import dev.koenv.roadassist.app.geocoding.NoOpGeocodingService
 import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
 import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
@@ -91,7 +92,7 @@ fun AppNavigation(
             val locationProvider = remember { createLocationProvider() }
             val mediaPicker = remember { createMediaPicker() }
             val repo = remember { IncidentRepository(apiClient) }
-            val vm = viewModel { NewIncidentViewModel(repo, locationProvider, mediaPicker) }
+            val vm = viewModel { NewIncidentViewModel(repo, locationProvider, mediaPicker, NoOpGeocodingService()) }
             NewIncidentScreen(
                 viewModel = vm,
                 onSuccess = { navController.popBackStack() },

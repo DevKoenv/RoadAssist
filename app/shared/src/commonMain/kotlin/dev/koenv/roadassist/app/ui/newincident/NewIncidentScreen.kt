@@ -215,7 +215,7 @@ private fun DesktopLayout(
                                     locationLoading = locationLoading,
                                     onRefresh = { viewModel.refreshLocation() },
                                     isDesktop = true,
-                                    onManualLocation = { lat, lon -> viewModel.setManualLocation(lat, lon) },
+                                    onManualLocation = { lat, lon -> viewModel.setManualLocation(lat, lon, "") },
                                 )
                             }
                         }

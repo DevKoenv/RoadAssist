@@ -3,6 +3,8 @@ package dev.koenv.roadassist.app.ui.newincident
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.geocoding.GeocodingResult
+import dev.koenv.roadassist.app.geocoding.GeocodingService
 import dev.koenv.roadassist.app.location.LocationProvider
 import dev.koenv.roadassist.app.media.MediaPicker
 import dev.koenv.roadassist.core.CreateIncidentRequest
@@ -17,6 +19,7 @@ class NewIncidentViewModel(
     private val repository: IncidentRepository,
     private val locationProvider: LocationProvider,
     private val mediaPicker: MediaPicker,
+    private val geocodingService: GeocodingService,
 ) : ViewModel() {
 
     private val _category = MutableStateFlow(IncidentCategory.BREAKDOWN)
@@ -27,6 +30,9 @@ class NewIncidentViewModel(
 
     private val _location = MutableStateFlow<LatLon?>(null)
     val location: StateFlow<LatLon?> = _location.asStateFlow()
+
+    private val _locationLabel = MutableStateFlow<String?>(null)
+    val locationLabel: StateFlow<String?> = _locationLabel.asStateFlow()
 
     private val _locationLoading = MutableStateFlow(false)
     val locationLoading: StateFlow<Boolean> = _locationLoading.asStateFlow()
@@ -49,17 +55,23 @@ class NewIncidentViewModel(
         _description.value = if (value.length <= 500) value else value.take(500)
     }
 
-    fun setManualLocation(lat: Double, lon: Double) {
-        _location.value = LatLon(lat, lon)
-    }
-
     fun refreshLocation() {
         viewModelScope.launch {
             _locationLoading.value = true
-            _location.value = locationProvider.getCurrentLocation()
+            val latLon = locationProvider.getCurrentLocation()
+            _location.value = latLon
+            _locationLabel.value = if (latLon != null) geocodingService.reverse(latLon) else null
             _locationLoading.value = false
         }
     }
+
+    fun setManualLocation(lat: Double, lon: Double, label: String) {
+        _location.value = LatLon(lat, lon)
+        _locationLabel.value = label
+    }
+
+    suspend fun searchLocations(query: String): List<GeocodingResult> =
+        geocodingService.search(query)
 
     fun pickPhoto() {
         viewModelScope.launch {
