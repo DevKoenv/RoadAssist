@@ -4,7 +4,10 @@ import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.network.createHttpClient
 import dev.koenv.roadassist.core.AuthResponse
+import dev.koenv.roadassist.core.CreateIncidentRequest
+import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.LoginRequest
+import dev.koenv.roadassist.core.PatchIncidentStatusRequest
 import dev.koenv.roadassist.core.RefreshRequest
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -12,11 +15,15 @@ import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.plugin
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -148,5 +155,94 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
         } catch (e: Exception) {
             // fire and forget: logout failure is non-blocking
         }
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun createIncident(request: CreateIncidentRequest): Result<Incident> = try {
+        val response = httpClient.post("$BASE_URL/incidents") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        when {
+            response.status.isSuccess() -> Result.success(response.body())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun getIncidents(): Result<List<Incident>> = try {
+        val response = httpClient.get("$BASE_URL/incidents")
+        when {
+            response.status.isSuccess() -> Result.success(response.body())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun getIncident(id: Int): Result<Incident> = try {
+        val response = httpClient.get("$BASE_URL/incidents/$id")
+        when {
+            response.status.isSuccess() -> Result.success(response.body())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun patchIncidentStatus(id: Int, request: PatchIncidentStatusRequest): Result<Incident> = try {
+        val response = httpClient.patch("$BASE_URL/incidents/$id/status") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        when {
+            response.status.isSuccess() -> Result.success(response.body())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun uploadPhoto(incidentId: Int, imageBytes: ByteArray, mimeType: String): Result<Incident> = try {
+        val ext = if (mimeType == "image/png") "png" else "jpg"
+        val response = httpClient.post("$BASE_URL/incidents/$incidentId/photo") {
+            setBody(
+                MultiPartFormDataContent(formData {
+                    append("photo", imageBytes, Headers.build {
+                        append(io.ktor.http.HttpHeaders.ContentType, mimeType)
+                        append(
+                            io.ktor.http.HttpHeaders.ContentDisposition,
+                            "form-data; name=\"photo\"; filename=\"photo.$ext\"",
+                        )
+                    })
+                })
+            )
+        }
+        when {
+            response.status.isSuccess() -> Result.success(response.body())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,8 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.theme.RoadAssistColors
 import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
+import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.core.Role
 
 @Composable
@@ -116,6 +116,7 @@ private fun MobileLoginLayout(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .imePadding()
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -181,7 +182,7 @@ private fun DesktopLoginLayout(
 
 @Composable
 private fun DesktopBrandPanel(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.background(Color(0xFF1A1D23)), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.background(RoadAssistColors.BrandDark), contentAlignment = Alignment.Center) {
         Column(modifier = Modifier.padding(40.dp)) {
             RoadAssistAppIcon(size = 56.dp, lightScheme = false)
             Spacer(Modifier.height(40.dp))
@@ -311,7 +312,7 @@ private fun CompactOutlinedField(
         decorationBox = { innerTextField ->
             Box(
                 modifier = Modifier
-                    .border(1.dp, borderColor, RoundedCornerShape(9.dp))
+                    .border(1.dp, borderColor, RoundedCornerShape(8.dp))
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -323,17 +324,10 @@ private fun CompactOutlinedField(
 
 @Composable
 private fun LoginButton(loading: Boolean, onLogin: () -> Unit) {
-    Button(
+    PrimaryButton(
         onClick = onLogin,
         enabled = !loading,
         modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(9.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-        ),
     ) {
         if (loading) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
@@ -354,7 +348,7 @@ private fun FieldLabel(text: String) {
 
 @Composable
 fun RoadAssistAppIcon(size: Dp, lightScheme: Boolean = true) {
-    val bg = if (lightScheme) Color(0xFF1A1D23) else Color(0xFF2A2E38)
+    val bg = if (lightScheme) RoadAssistColors.BrandDark else RoadAssistColors.BrandDarkSurface
     val cornerRadius = size * 0.22f
     Box(
         modifier = Modifier
@@ -372,13 +366,13 @@ fun RoadAssistAppIcon(size: Dp, lightScheme: Boolean = true) {
                 val innerRadius = this.size.width * 0.1f
                 val strokeW = this.size.width * 0.075f
                 drawCircle(
-                    color = Color(0xFFE0590B),
+                    color = RoadAssistColors.Primary,
                     radius = outerRadius,
                     center = center,
                     style = Stroke(width = strokeW, cap = StrokeCap.Round),
                 )
                 drawCircle(
-                    color = Color(0xFFE0590B),
+                    color = RoadAssistColors.Primary,
                     radius = innerRadius,
                     center = center,
                 )

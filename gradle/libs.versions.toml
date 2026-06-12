@@ -26,6 +26,7 @@ sqlite-jdbc = "3.53.2.0"
 material3 = "1.11.0-alpha07"
 detekt = "1.23.8"
 kover = "0.9.8"
+play-services-location = "21.3.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -73,6 +74,7 @@ ktor-serverConfigYaml = { module = "io.ktor:ktor-server-config-yaml", version.re
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -59,6 +59,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.clientOkhttp)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.play.services.location)
         }
         commonMain {
             kotlin.srcDir(generateAppVersion)
@@ -78,6 +79,7 @@ kotlin {
             implementation(libs.ktor.clientCore)
             implementation(libs.ktor.clientContentNegotiation)
             implementation(libs.ktor.serializationKotlinxJsonKmp)
+            implementation(compose.materialIconsExtended)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

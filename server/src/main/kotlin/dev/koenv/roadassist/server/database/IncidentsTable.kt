@@ -12,6 +12,7 @@ object IncidentsTable : IntIdTable("incidents") {
     val longitude = double("longitude")
     val photoUrl = varchar("photo_url", 500).nullable()
     val status = enumerationByName<IncidentStatus>("status", 50)
+    val notes = text("notes").nullable()
     val createdAt = varchar("created_at", 50)
     val updatedAt = varchar("updated_at", 50)
 }

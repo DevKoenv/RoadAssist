@@ -167,3 +167,7 @@ local.properties
 
 # Local workspace (notes, scratch, plans)
 .workspace/
+
+# SQLite dev database
+server/roadassist.db
+server/uploads/
