@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import dev.koenv.roadassist.app.data.storage.ActivityHolder
 import dev.koenv.roadassist.app.data.storage.AndroidContextHolder
 import dev.koenv.roadassist.core.LatLon
@@ -29,13 +31,15 @@ class AndroidLocationProvider : LocationProvider {
             if (!granted) return null
         }
 
+        val cts = CancellationTokenSource()
         return suspendCancellableCoroutine { cont ->
             LocationServices.getFusedLocationProviderClient(context)
-                .lastLocation
+                .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
                 .addOnSuccessListener { location ->
                     cont.resume(location?.let { LatLon(it.latitude, it.longitude) })
                 }
                 .addOnFailureListener { cont.resume(null) }
+            cont.invokeOnCancellation { cts.cancel() }
         }
     }
 

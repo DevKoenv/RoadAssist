@@ -30,6 +30,8 @@ import roadassist.app.shared.generated.resources.space_grotesk_semibold
 object RoadAssistColors {
     val Primary = Color(0xFFE0590B)
     val PrimaryForeground = Color(0xFFFFFFFF)
+    val BrandDark = Color(0xFF1A1D23)
+    val BrandDarkSurface = Color(0xFF2A2E38)
     val Background = Color(0xFFFFFFFF)
     val Foreground = Color(0xFF15171C)
     val Card = Color(0xFFFFFFFF)

@@ -32,19 +32,14 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.WarningAmber
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.HorizontalDivider
+import dev.koenv.roadassist.app.ui.components.AppDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.OutlinedTextField
@@ -65,8 +60,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
+import dev.koenv.roadassist.app.ui.components.MobileAppBar
+import dev.koenv.roadassist.app.ui.components.PrimaryButton
+import dev.koenv.roadassist.app.ui.components.SecondaryButton
+import dev.koenv.roadassist.app.ui.components.SectionLabel
 import dev.koenv.roadassist.app.ui.home.RoadUserNavRail
 import dev.koenv.roadassist.app.ui.home.RoadUserTab
 import dev.koenv.roadassist.core.IncidentCategory
@@ -128,11 +126,10 @@ private fun MobileLayout(
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) {
-                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
-            }
+            MobileAppBar(title = "New incident", onBack = onBack)
+            AppDivider()
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(12.dp))
                 CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
                 Spacer(Modifier.height(12.dp))
                 DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
@@ -190,17 +187,13 @@ private fun DesktopLayout(
                     Spacer(Modifier.width(12.dp))
                     Text("New incident", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                     Spacer(Modifier.weight(1f))
-                    OutlinedButton(
-                        onClick = onBack,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, LocalRoadAssistColors.current.border),
-                    ) {
+                    SecondaryButton(onClick = onBack) {
                         Text("Cancel", color = LocalRoadAssistColors.current.mutedForeground, style = MaterialTheme.typography.bodyMedium)
                     }
                     Spacer(Modifier.width(8.dp))
                     SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() })
                 }
-                HorizontalDivider(color = LocalRoadAssistColors.current.border, thickness = 0.5.dp)
+                AppDivider()
                 Box(
                     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
                     contentAlignment = Alignment.TopCenter,
@@ -477,28 +470,17 @@ private fun PhotoSection(
 
 @Composable
 private fun SubmitButton(submitState: SubmitState, onSubmit: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
+    PrimaryButton(
         onClick = onSubmit,
         enabled = submitState !is SubmitState.Loading,
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
     ) {
         if (submitState is SubmitState.Loading) {
             CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
         } else {
-            Text("Submit report", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodyMedium)
+            Text("Submit report", style = MaterialTheme.typography.bodyMedium)
         }
     }
-}
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp),
-        color = LocalRoadAssistColors.current.mutedForeground,
-    )
 }
 
 private fun IncidentCategory.displayName(): String = name.lowercase().replaceFirstChar { it.uppercase() }
