@@ -1,6 +1,7 @@
 package dev.koenv.roadassist.app
 
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.ui.newincident.SubmitState
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentCategory
@@ -44,6 +45,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(FakeApiClient()),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         assertEquals(IncidentCategory.BREAKDOWN, vm.category.value)
     }
@@ -54,6 +56,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(FakeApiClient()),
             FakeLocationProvider(LatLon(52.0, 4.5)),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         assertEquals(LatLon(52.0, 4.5), vm.location.value)
     }
@@ -64,6 +67,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(FakeApiClient()),
             FakeLocationProvider(null),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         assertNull(vm.location.value)
     }
@@ -74,6 +78,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(FakeApiClient()),
             FakeLocationProvider(null),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         vm.updateDescription("breakdown on A10")
         vm.submit()
@@ -86,6 +91,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(FakeApiClient()),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         vm.submit()
         assertIs<SubmitState.Error>(vm.submitState.value)
@@ -99,6 +105,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(fakeApi),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         vm.updateDescription("engine failure")
         vm.submit()
@@ -116,6 +123,7 @@ class NewIncidentViewModelTest {
             IncidentRepository(fakeApi),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         vm.updateDescription("car broken")
         vm.submit()
@@ -128,9 +136,56 @@ class NewIncidentViewModelTest {
             IncidentRepository(FakeApiClient()),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
+            FakeGeocodingService(),
         )
         val overlong = "a".repeat(600)
         vm.updateDescription(overlong)
         assertEquals(500, vm.description.value.length)
+    }
+
+    @Test
+    fun locationLabel_populated_from_reverse_geocode() = runTest {
+        val vm = dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel(
+            IncidentRepository(FakeApiClient()),
+            FakeLocationProvider(LatLon(52.0, 4.5)),
+            FakeMediaPicker(),
+            FakeGeocodingService(reverseResult = "Amsterdam, Netherlands"),
+        )
+        assertEquals("Amsterdam, Netherlands", vm.locationLabel.value)
+    }
+
+    @Test
+    fun locationLabel_null_when_provider_returns_null() = runTest {
+        val vm = dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel(
+            IncidentRepository(FakeApiClient()),
+            FakeLocationProvider(null),
+            FakeMediaPicker(),
+            FakeGeocodingService(reverseResult = "Should not be called"),
+        )
+        assertNull(vm.locationLabel.value)
+    }
+
+    @Test
+    fun locationLabel_null_when_reverse_returns_null() = runTest {
+        val vm = dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel(
+            IncidentRepository(FakeApiClient()),
+            FakeLocationProvider(LatLon(52.0, 4.5)),
+            FakeMediaPicker(),
+            FakeGeocodingService(reverseResult = null),
+        )
+        assertNull(vm.locationLabel.value)
+    }
+
+    @Test
+    fun setManualLocation_updates_location_and_label() = runTest {
+        val vm = dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel(
+            IncidentRepository(FakeApiClient()),
+            FakeLocationProvider(null),
+            FakeMediaPicker(),
+            FakeGeocodingService(),
+        )
+        vm.setManualLocation(51.9, 4.5, "Rotterdam, Netherlands")
+        assertEquals(LatLon(51.9, 4.5), vm.location.value)
+        assertEquals("Rotterdam, Netherlands", vm.locationLabel.value)
     }
 }
