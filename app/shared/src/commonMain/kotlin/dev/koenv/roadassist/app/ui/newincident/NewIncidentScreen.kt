@@ -127,6 +127,8 @@ private fun MobileLayout(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
 ) {
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) { data -> Snackbar(data) } },
@@ -152,6 +154,9 @@ private fun MobileLayout(
                     onRefresh = { viewModel.refreshLocation() },
                     onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
                     onSearch = { query -> viewModel.searchLocations(query) },
+                    searchResults = searchResults,
+                    isSearching = isSearching,
+                    onClearSearch = { viewModel.clearSearch() },
                 )
                 Spacer(Modifier.height(12.dp))
                 PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = false)
@@ -185,6 +190,8 @@ private fun DesktopLayout(
     onBack: () -> Unit,
     onLogout: () -> Unit,
 ) {
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) { data -> Snackbar(data) } },
@@ -237,6 +244,9 @@ private fun DesktopLayout(
                                     isDesktop = true,
                                     onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
                                     onSearch = { query -> viewModel.searchLocations(query) },
+                                    searchResults = searchResults,
+                                    isSearching = isSearching,
+                                    onClearSearch = { viewModel.clearSearch() },
                                 )
                             }
                         }
@@ -333,30 +343,28 @@ private fun LocationSection(
     onRefresh: () -> Unit,
     isDesktop: Boolean = false,
     onManualLocation: ((Double, Double, String) -> Unit)? = null,
-    onSearch: (suspend (String) -> List<GeocodingResult>)? = null,
+    onSearch: ((String) -> Unit)? = null,
+    searchResults: List<GeocodingResult> = emptyList(),
+    isSearching: Boolean = false,
+    onClearSearch: () -> Unit = {},
 ) {
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
     val primaryColor = MaterialTheme.colorScheme.primary
     var searchMode by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
-    var results by remember { mutableStateOf<List<GeocodingResult>>(emptyList()) }
-    var searching by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val locationMissing = location == null && !locationLoading
 
     LaunchedEffect(query, searchMode) {
-        if (!searchMode) return@LaunchedEffect
-        results = emptyList()
-        searching = false
+        if (!searchMode) {
+            onClearSearch()
+            return@LaunchedEffect
+        }
+        onClearSearch()
         if (query.length >= 3) {
             delay(400)
-            searching = true
-            try {
-                results = onSearch?.invoke(query) ?: emptyList()
-            } finally {
-                searching = false
-            }
+            onSearch?.invoke(query)
         }
     }
 
@@ -451,7 +459,7 @@ private fun LocationSection(
                     },
                 )
                 Spacer(Modifier.width(8.dp))
-                if (searching) {
+                if (isSearching) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
                 } else {
                     Icon(
@@ -461,20 +469,20 @@ private fun LocationSection(
                         modifier = Modifier.size(18.dp).clickable {
                             searchMode = false
                             query = ""
-                            results = emptyList()
+                            onClearSearch()
                         },
                     )
                 }
             }
 
-            if (results.isNotEmpty()) {
+            if (searchResults.isNotEmpty()) {
                 HorizontalDivider(color = borderColor, thickness = 0.5.dp)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 240.dp),
                 ) {
-                    results.forEachIndexed { index, result ->
+                    searchResults.forEachIndexed { index, result ->
                         Text(
                             text = result.label,
                             modifier = Modifier
@@ -483,7 +491,7 @@ private fun LocationSection(
                                     onManualLocation?.invoke(result.location.latitude, result.location.longitude, result.label)
                                     searchMode = false
                                     query = ""
-                                    results = emptyList()
+                                    onClearSearch()
                                 }
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                             style = MaterialTheme.typography.bodyMedium,
@@ -491,12 +499,12 @@ private fun LocationSection(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        if (index < results.lastIndex) {
+                        if (index < searchResults.lastIndex) {
                             HorizontalDivider(color = borderColor, thickness = 0.5.dp)
                         }
                     }
                 }
-            } else if (!searching && query.length >= 3) {
+            } else if (!isSearching && query.length >= 3) {
                 HorizontalDivider(color = borderColor, thickness = 0.5.dp)
                 Text(
                     "No results found.",

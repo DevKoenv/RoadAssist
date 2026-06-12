@@ -44,6 +44,12 @@ class NewIncidentViewModel(
     private val _submitState = MutableStateFlow<SubmitState>(SubmitState.Idle)
     val submitState: StateFlow<SubmitState> = _submitState.asStateFlow()
 
+    private val _searchResults = MutableStateFlow<List<GeocodingResult>>(emptyList())
+    val searchResults: StateFlow<List<GeocodingResult>> = _searchResults.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
+
     private var locationSetManually = false
 
     init {
@@ -51,7 +57,10 @@ class NewIncidentViewModel(
             val latLon = withTimeoutOrNull(10_000L) { locationProvider.getCurrentLocation() }
             if (latLon != null && !locationSetManually) {
                 _location.value = latLon
-                _locationLabel.value = geocodingService.reverse(latLon)
+                val label = geocodingService.reverse(latLon)
+                if (!locationSetManually) {
+                    _locationLabel.value = label
+                }
             }
         }
     }
@@ -80,8 +89,23 @@ class NewIncidentViewModel(
         _locationLabel.value = label
     }
 
-    suspend fun searchLocations(query: String): List<GeocodingResult> =
-        geocodingService.search(query)
+    fun searchLocations(query: String) {
+        viewModelScope.launch {
+            _isSearching.value = true
+            _searchResults.value = geocodingService.search(query)
+            _isSearching.value = false
+        }
+    }
+
+    fun clearSearch() {
+        _searchResults.value = emptyList()
+        _isSearching.value = false
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        (geocodingService as? Closeable)?.close()
+    }
 
     fun pickPhoto() {
         viewModelScope.launch {

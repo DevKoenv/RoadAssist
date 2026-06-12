@@ -23,7 +23,7 @@ private data class NominatimPlace(
     val lon: String,
 )
 
-class NominatimGeocodingService : GeocodingService {
+class NominatimGeocodingService : GeocodingService, Closeable {
 
     private val client = createHttpClient().config {
         install(ContentNegotiation) {
@@ -59,4 +59,6 @@ class NominatimGeocodingService : GeocodingService {
     } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") e: Exception) {
         null
     }
+
+    override fun close() = client.close()
 }
