@@ -384,7 +384,7 @@ private fun LocationSection(
                 Icon(
                     Icons.Default.LocationOn,
                     contentDescription = null,
-                    tint = if (locationMissing) MaterialTheme.colorScheme.error else mutedColor,
+                    tint = mutedColor,
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(10.dp))
@@ -393,10 +393,10 @@ private fun LocationSection(
                         locationLoading -> "Fetching location..."
                         locationLabel != null -> locationLabel
                         location != null -> "%.4f, %.4f".format(location.latitude, location.longitude)
-                        else -> "Location unavailable"
+                        else -> "Search for address..."
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (locationMissing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    color = if (locationMissing) mutedColor else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
