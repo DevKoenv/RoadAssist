@@ -43,7 +43,8 @@ class NominatimGeocodingService : GeocodingService {
                 location = LatLon(it.lat.toDouble(), it.lon.toDouble()),
             )
         }
-    } catch (e: Exception) {
+    // KMP Ktor can throw platform-specific IO exceptions not expressible in commonMain.
+    } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") e: Exception) {
         emptyList()
     }
 
@@ -54,7 +55,8 @@ class NominatimGeocodingService : GeocodingService {
             parameter("format", "json")
             header(HttpHeaders.UserAgent, USER_AGENT)
         }.body<NominatimPlace>().displayName
-    } catch (e: Exception) {
+    // KMP Ktor can throw platform-specific IO exceptions not expressible in commonMain.
+    } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") e: Exception) {
         null
     }
 }
