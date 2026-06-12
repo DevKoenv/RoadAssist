@@ -3,11 +3,14 @@ package dev.koenv.roadassist.app.location
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.os.Looper
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
 import dev.koenv.roadassist.app.data.storage.ActivityHolder
 import dev.koenv.roadassist.app.data.storage.AndroidContextHolder
 import dev.koenv.roadassist.core.LatLon
@@ -31,15 +34,26 @@ class AndroidLocationProvider : LocationProvider {
             if (!granted) return null
         }
 
-        val cts = CancellationTokenSource()
+        val client = LocationServices.getFusedLocationProviderClient(context)
+
+        // requestLocationUpdates with maxUpdates(1) actively waits for a fix rather than
+        // returning null immediately when no cached location exists (unlike getCurrentLocation).
+        // setWaitForAccurateLocation(false) accepts the first available signal (network or GPS).
+        val request = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 10_000L)
+            .setWaitForAccurateLocation(false)
+            .setMinUpdateIntervalMillis(0)
+            .setMaxUpdates(1)
+            .build()
+
         return suspendCancellableCoroutine { cont ->
-            LocationServices.getFusedLocationProviderClient(context)
-                .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
-                .addOnSuccessListener { location ->
-                    cont.resume(location?.let { LatLon(it.latitude, it.longitude) })
+            val callback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    cont.resume(result.lastLocation?.let { LatLon(it.latitude, it.longitude) })
                 }
+            }
+            client.requestLocationUpdates(request, callback, Looper.getMainLooper())
                 .addOnFailureListener { cont.resume(null) }
-            cont.invokeOnCancellation { cts.cancel() }
+            cont.invokeOnCancellation { client.removeLocationUpdates(callback) }
         }
     }
 
