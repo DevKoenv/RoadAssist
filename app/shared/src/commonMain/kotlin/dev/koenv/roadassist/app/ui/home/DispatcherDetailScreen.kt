@@ -58,7 +58,6 @@ import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
-import dev.koenv.roadassist.app.ui.components.DispatcherNoteCard
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
@@ -253,8 +252,6 @@ private fun DispatcherDetailContent(
 
         LocationRow(latitude = incident.latitude, longitude = incident.longitude)
 
-        DispatcherNoteCard(notes = incident.notes)
-
         IncidentActivitySection(incident = incident)
     }
 }
@@ -353,7 +350,7 @@ private fun UpdateStatusDialog(
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    "NOTE TO ROAD USER · OPTIONAL",
+                    "MESSAGE · OPTIONAL",
                     style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp),
                     color = muted,
                 )
@@ -370,7 +367,7 @@ private fun UpdateStatusDialog(
                     decorationBox = { innerTextField ->
                         Box {
                             if (notes.isEmpty()) {
-                                Text("Add a note for the road user...", style = MaterialTheme.typography.bodySmall, color = muted)
+                                Text("Add a message visible to the road user...", style = MaterialTheme.typography.bodySmall, color = muted)
                             }
                             innerTextField()
                         }

@@ -40,7 +40,6 @@ import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
-import dev.koenv.roadassist.app.ui.components.DispatcherNoteCard
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
@@ -161,8 +160,6 @@ internal fun RoadUserDetailContent(incident: Incident) {
         }
 
         LocationRow(latitude = incident.latitude, longitude = incident.longitude)
-
-        DispatcherNoteCard(notes = incident.notes)
 
         IncidentActivitySection(incident = incident)
     }

@@ -14,11 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
@@ -72,7 +70,6 @@ fun RoadUserHomeScreen(
                 onLogout = onLogoutClick,
                 onNewIncident = onNewIncident,
                 onIncidentClick = onIncidentClick,
-                onRefresh = viewModel::refreshIncidents,
             )
         } else {
             RoadUserMobileLayout(
@@ -164,7 +161,6 @@ private fun RoadUserDesktopLayout(
     onLogout: () -> Unit,
     onNewIncident: () -> Unit,
     onIncidentClick: (Int) -> Unit,
-    onRefresh: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
     val filtered = filterByTab(incidents, selectedTab)
@@ -203,9 +199,6 @@ private fun RoadUserDesktopLayout(
             DesktopPageHeader(
                 title = if (selectedTab == RoadUserTab.Active) "Active incidents" else "History",
                 trailing = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LocalRoadAssistColors.current.mutedForeground)
-                    }
                     if (selectedTab == RoadUserTab.Active) {
                         PrimaryButton(onClick = onNewIncident) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))

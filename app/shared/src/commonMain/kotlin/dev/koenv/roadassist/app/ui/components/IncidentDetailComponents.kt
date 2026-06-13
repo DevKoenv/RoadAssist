@@ -99,7 +99,7 @@ fun IncidentActivitySection(incident: Incident) {
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             "ACTIVITY",
@@ -113,17 +113,10 @@ fun IncidentActivitySection(incident: Incident) {
             dotColor = colors.statusNew,
         )
 
-        if (incident.updatedAt != incident.createdAt) {
-            val dotColor = when (incident.status) {
-                IncidentStatus.NEW -> colors.statusNew
-                IncidentStatus.IN_PROGRESS -> colors.statusInProgress
-                IncidentStatus.EN_ROUTE -> colors.statusEnRoute
-                IncidentStatus.RESOLVED -> colors.statusResolved
-            }
-            ActivityEntry(
-                label = "Status updated to ${incident.status.displayName()}",
+        if (!incident.notes.isNullOrBlank()) {
+            DispatcherMessageEntry(
+                message = incident.notes!!,
                 timestamp = timeAgo(incident.updatedAt, nowMillis),
-                dotColor = dotColor,
             )
         }
     }
@@ -140,6 +133,40 @@ private fun ActivityEntry(label: String, timestamp: String, dotColor: Color) {
         Box(Modifier.size(7.dp).background(dotColor, CircleShape))
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            Text(timestamp, style = MaterialTheme.typography.labelSmall, color = muted)
+        }
+    }
+}
+
+@Composable
+private fun DispatcherMessageEntry(message: String, timestamp: String) {
+    val muted = LocalRoadAssistColors.current.mutedForeground
+    val colors = LocalRoadAssistColors.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 3.dp)
+                .size(7.dp)
+                .background(colors.accentForeground, CircleShape),
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                "Dispatcher message",
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
+                color = colors.accentForeground,
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.accent, RoundedCornerShape(6.dp))
+                    .padding(10.dp),
+            ) {
+                Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            }
             Text(timestamp, style = MaterialTheme.typography.labelSmall, color = muted)
         }
     }

@@ -3,10 +3,12 @@ package dev.koenv.roadassist.app
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
@@ -35,6 +37,7 @@ fun AppNavigation(
     apiClient: ApiClient,
 ) {
     val navController = rememberNavController()
+    val currentEntry by navController.currentBackStackEntryAsState()
 
     val startDestination = remember {
         val token = storage.getToken()
@@ -73,6 +76,12 @@ fun AppNavigation(
         composable("road_user_home") {
             val repo = remember { IncidentRepository(apiClient) }
             val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
+            // Refresh whenever this screen becomes the active destination (e.g. navigating back from detail)
+            LaunchedEffect(currentEntry?.destination?.route) {
+                if (currentEntry?.destination?.route == "road_user_home") {
+                    vm.refreshIncidents()
+                }
+            }
             RoadUserHomeScreen(
                 viewModel = vm,
                 onLogout = {
@@ -101,6 +110,12 @@ fun AppNavigation(
         composable("dispatcher_home") {
             val repo = remember { IncidentRepository(apiClient) }
             val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
+            // Refresh whenever this screen becomes the active destination (e.g. navigating back from detail)
+            LaunchedEffect(currentEntry?.destination?.route) {
+                if (currentEntry?.destination?.route == "dispatcher_home") {
+                    vm.refreshIncidents()
+                }
+            }
             DispatcherHomeScreen(
                 viewModel = vm,
                 onLogout = {
