@@ -16,6 +16,7 @@ import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
 import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.home.HomeViewModel
+import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.login.LoginScreen
 import dev.koenv.roadassist.app.ui.login.LoginViewModel
@@ -65,7 +66,8 @@ fun AppNavigation(
             )
         }
         composable("road_user_home") {
-            val vm = viewModel { HomeViewModel(apiClient, storage) }
+            val repo = remember { IncidentRepository(apiClient) }
+            val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
             RoadUserHomeScreen(
                 viewModel = vm,
                 onLogout = {
@@ -74,10 +76,21 @@ fun AppNavigation(
                     }
                 },
                 onNewIncident = { navController.navigate("new_incident") },
+                onIncidentClick = { id -> navController.navigate("road_user_detail/$id") },
+            )
+        }
+        composable("road_user_detail/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
+            val repo = remember { IncidentRepository(apiClient) }
+            RoadUserDetailScreen(
+                incidentId = id,
+                repository = repo,
+                onBack = { navController.popBackStack() },
             )
         }
         composable("dispatcher_home") {
-            val vm = viewModel { HomeViewModel(apiClient, storage) }
+            val repo = remember { IncidentRepository(apiClient) }
+            val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
             DispatcherHomeScreen(
                 viewModel = vm,
                 onLogout = {
