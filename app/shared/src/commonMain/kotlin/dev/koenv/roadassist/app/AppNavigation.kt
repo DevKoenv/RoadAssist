@@ -1,6 +1,7 @@
 package dev.koenv.roadassist.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -93,6 +94,7 @@ fun AppNavigation(
             val mediaPicker = remember { createMediaPicker() }
             val repo = remember { IncidentRepository(apiClient) }
             val geocodingService = remember { NominatimGeocodingService() }
+            DisposableEffect(Unit) { onDispose { geocodingService.close() } }
             val vm = viewModel { NewIncidentViewModel(repo, locationProvider, mediaPicker, geocodingService) }
             NewIncidentScreen(
                 viewModel = vm,

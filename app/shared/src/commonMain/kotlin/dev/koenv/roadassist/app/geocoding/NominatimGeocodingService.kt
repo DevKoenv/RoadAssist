@@ -23,7 +23,7 @@ private data class NominatimPlace(
     val lon: String,
 )
 
-class NominatimGeocodingService : GeocodingService, Closeable {
+class NominatimGeocodingService : GeocodingService {
 
     private val client = createHttpClient().config {
         install(ContentNegotiation) {
@@ -60,5 +60,5 @@ class NominatimGeocodingService : GeocodingService, Closeable {
         null
     }
 
-    override fun close() = client.close()
+    fun close() = client.close()
 }

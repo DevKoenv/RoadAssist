@@ -102,11 +102,6 @@ class NewIncidentViewModel(
         _isSearching.value = false
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        (geocodingService as? Closeable)?.close()
-    }
-
     fun pickPhoto() {
         viewModelScope.launch {
             _photoBytes.value = mediaPicker.pickMedia()
