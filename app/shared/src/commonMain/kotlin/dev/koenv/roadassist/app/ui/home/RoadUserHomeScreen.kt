@@ -1,16 +1,10 @@
 package dev.koenv.roadassist.app.ui.home
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,19 +27,19 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
+import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
-import dev.koenv.roadassist.app.ui.components.AppNavRail
 import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
 import dev.koenv.roadassist.app.ui.components.DesktopPageHeader
 import dev.koenv.roadassist.app.ui.components.EmptyState
+import dev.koenv.roadassist.app.ui.components.IncidentListItem
 import dev.koenv.roadassist.app.ui.components.LogoutTextButton
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.NavItemContent
@@ -67,12 +61,14 @@ fun RoadUserHomeScreen(
     val incidents by viewModel.incidents.collectAsState()
     val incidentsLoading by viewModel.incidentsLoading.collectAsState()
     val onLogoutClick: () -> Unit = { viewModel.logout(onLogout) }
+    val nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
             RoadUserDesktopLayout(
                 incidents = incidents,
                 serverReachable = serverReachable,
+                nowMillis = nowMillis,
                 onLogout = onLogoutClick,
                 onNewIncident = onNewIncident,
                 onIncidentClick = onIncidentClick,
@@ -83,6 +79,7 @@ fun RoadUserHomeScreen(
                 incidents = incidents,
                 incidentsLoading = incidentsLoading,
                 serverReachable = serverReachable,
+                nowMillis = nowMillis,
                 onLogout = onLogoutClick,
                 onNewIncident = onNewIncident,
                 onIncidentClick = onIncidentClick,
@@ -98,16 +95,14 @@ private fun RoadUserMobileLayout(
     incidents: List<Incident>,
     incidentsLoading: Boolean,
     serverReachable: Boolean,
+    nowMillis: Long,
     onLogout: () -> Unit,
     onNewIncident: () -> Unit,
     onIncidentClick: (Int) -> Unit,
     onRefresh: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
-    val filtered = when (selectedTab) {
-        RoadUserTab.Active -> incidents.filter { it.status != IncidentStatus.RESOLVED }
-        RoadUserTab.History -> incidents.filter { it.status == IncidentStatus.RESOLVED }
-    }
+    val filtered = filterByTab(incidents, selectedTab)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -137,13 +132,21 @@ private fun RoadUserMobileLayout(
             ) {
                 if (filtered.isEmpty() && !incidentsLoading) {
                     when (selectedTab) {
-                        RoadUserTab.Active -> EmptyState("No active incidents", "Your open reports will appear here.")
+                        RoadUserTab.Active -> EmptyState(
+                            title = "No active incidents",
+                            subtitle = "Your open reports will appear here.",
+                            action = { PrimaryButton(onClick = onNewIncident) { Text("Report an incident") } },
+                        )
                         RoadUserTab.History -> EmptyState("No resolved incidents", "Past incidents will appear here once resolved.")
                     }
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(filtered, key = { it.id }) { incident ->
-                            IncidentRow(incident = incident, onClick = { onIncidentClick(incident.id) })
+                            IncidentListItem(
+                                incident = incident,
+                                nowMillis = nowMillis,
+                                onClick = { onIncidentClick(incident.id) },
+                            )
                             AppDivider()
                         }
                     }
@@ -157,21 +160,45 @@ private fun RoadUserMobileLayout(
 private fun RoadUserDesktopLayout(
     incidents: List<Incident>,
     serverReachable: Boolean,
+    nowMillis: Long,
     onLogout: () -> Unit,
     onNewIncident: () -> Unit,
     onIncidentClick: (Int) -> Unit,
     onRefresh: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(RoadUserTab.Active) }
-    val filtered = when (selectedTab) {
-        RoadUserTab.Active -> incidents.filter { it.status != IncidentStatus.RESOLVED }
-        RoadUserTab.History -> incidents.filter { it.status == IncidentStatus.RESOLVED }
-    }
+    val filtered = filterByTab(incidents, selectedTab)
 
-    Row(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        RoadUserNavRail(selectedTab = selectedTab, onTabChange = { selectedTab = it }, onLogout = onLogout)
-        Box(modifier = Modifier.width(0.5.dp).fillMaxSize().background(LocalRoadAssistColors.current.border))
-        Column(modifier = Modifier.weight(1f).fillMaxSize()) {
+    AppDesktopShell(
+        onLogout = onLogout,
+        navContent = {
+            NavRailItem(
+                selected = selectedTab == RoadUserTab.Active,
+                onClick = { selectedTab = RoadUserTab.Active },
+                icon = {
+                    Icon(
+                        Icons.Default.List,
+                        contentDescription = null,
+                        tint = if (selectedTab == RoadUserTab.Active) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
+                    )
+                },
+                label = "Active",
+            )
+            NavRailItem(
+                selected = selectedTab == RoadUserTab.History,
+                onClick = { selectedTab = RoadUserTab.History },
+                icon = {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        tint = if (selectedTab == RoadUserTab.History) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
+                    )
+                },
+                label = "History",
+            )
+        },
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             ConnectivityBanner(visible = !serverReachable)
             DesktopPageHeader(
                 title = if (selectedTab == RoadUserTab.Active) "Active incidents" else "History",
@@ -191,13 +218,21 @@ private fun RoadUserDesktopLayout(
             AppDivider()
             if (filtered.isEmpty()) {
                 when (selectedTab) {
-                    RoadUserTab.Active -> EmptyState("No active incidents", "Your open reports will appear here.")
+                    RoadUserTab.Active -> EmptyState(
+                        title = "No active incidents",
+                        subtitle = "Your open reports will appear here.",
+                        action = { PrimaryButton(onClick = onNewIncident) { Text("Report an incident") } },
+                    )
                     RoadUserTab.History -> EmptyState("No resolved incidents", "Past incidents will appear here once resolved.")
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(filtered, key = { it.id }) { incident ->
-                        IncidentRow(incident = incident, onClick = { onIncidentClick(incident.id) })
+                        IncidentListItem(
+                            incident = incident,
+                            nowMillis = nowMillis,
+                            onClick = { onIncidentClick(incident.id) },
+                        )
                         AppDivider()
                     }
                 }
@@ -207,34 +242,35 @@ private fun RoadUserDesktopLayout(
 }
 
 @Composable
-private fun IncidentRow(incident: Incident, onClick: () -> Unit) {
-    val mutedColor = LocalRoadAssistColors.current.mutedForeground
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = incident.category.name.lowercase().replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.labelSmall,
-                color = mutedColor,
-            )
-            Text(
-                text = incident.description,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-        Text(
-            text = incident.status.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.labelSmall,
-            color = mutedColor,
+internal fun RoadUserNavRail(
+    selectedTab: RoadUserTab,
+    onTabChange: (RoadUserTab) -> Unit,
+    onLogout: () -> Unit,
+) {
+    dev.koenv.roadassist.app.ui.components.AppNavRail(onLogout = onLogout) {
+        NavRailItem(
+            selected = selectedTab == RoadUserTab.Active,
+            onClick = { onTabChange(RoadUserTab.Active) },
+            icon = {
+                Icon(
+                    Icons.Default.List,
+                    contentDescription = null,
+                    tint = if (selectedTab == RoadUserTab.Active) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
+                )
+            },
+            label = "Active",
+        )
+        NavRailItem(
+            selected = selectedTab == RoadUserTab.History,
+            onClick = { onTabChange(RoadUserTab.History) },
+            icon = {
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = null,
+                    tint = if (selectedTab == RoadUserTab.History) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
+                )
+            },
+            label = "History",
         )
     }
 }
@@ -273,40 +309,6 @@ private fun RoadUserBottomBar(selectedTab: RoadUserTab, onTabChange: (RoadUserTa
 }
 
 @Composable
-internal fun RoadUserNavRail(
-    selectedTab: RoadUserTab,
-    onTabChange: (RoadUserTab) -> Unit,
-    onLogout: () -> Unit,
-) {
-    AppNavRail(onLogout = onLogout) {
-        NavRailItem(
-            selected = selectedTab == RoadUserTab.Active,
-            onClick = { onTabChange(RoadUserTab.Active) },
-            icon = {
-                Icon(
-                    Icons.Default.List,
-                    contentDescription = null,
-                    tint = if (selectedTab == RoadUserTab.Active) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                )
-            },
-            label = "Active",
-        )
-        NavRailItem(
-            selected = selectedTab == RoadUserTab.History,
-            onClick = { onTabChange(RoadUserTab.History) },
-            icon = {
-                Icon(
-                    Icons.Default.History,
-                    contentDescription = null,
-                    tint = if (selectedTab == RoadUserTab.History) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                )
-            },
-            label = "History",
-        )
-    }
-}
-
-@Composable
 private fun RowScope.BottomNavItem(
     selected: Boolean,
     onClick: () -> Unit,
@@ -319,3 +321,8 @@ private fun RowScope.BottomNavItem(
     label = label,
     modifier = Modifier.weight(1f).padding(vertical = 8.dp),
 )
+
+private fun filterByTab(incidents: List<Incident>, tab: RoadUserTab): List<Incident> = when (tab) {
+    RoadUserTab.Active -> incidents.filter { it.status != IncidentStatus.RESOLVED }
+    RoadUserTab.History -> incidents.filter { it.status == IncidentStatus.RESOLVED }
+}

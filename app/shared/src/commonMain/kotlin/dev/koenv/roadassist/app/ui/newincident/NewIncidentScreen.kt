@@ -1,6 +1,5 @@
 package dev.koenv.roadassist.app.ui.newincident
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,17 +23,15 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -62,21 +59,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
+import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
+import dev.koenv.roadassist.app.ui.components.CategoryIcon
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
+import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.components.SecondaryButton
 import dev.koenv.roadassist.app.ui.components.SectionLabel
-import dev.koenv.roadassist.app.ui.home.RoadUserNavRail
-import dev.koenv.roadassist.app.ui.home.RoadUserTab
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.displayName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -196,10 +194,36 @@ private fun DesktopLayout(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) { data -> Snackbar(data) } },
     ) { padding ->
-        Row(modifier = Modifier.fillMaxSize().padding(padding)) {
-            RoadUserNavRail(selectedTab = RoadUserTab.Active, onTabChange = {}, onLogout = onLogout)
-            Box(modifier = Modifier.width(0.5.dp).fillMaxSize().background(LocalRoadAssistColors.current.border))
-            Column(modifier = Modifier.weight(1f).fillMaxSize()) {
+        AppDesktopShell(
+            onLogout = onLogout,
+            navContent = {
+                NavRailItem(
+                    selected = true,
+                    onClick = {},
+                    icon = {
+                        Icon(
+                            Icons.Default.List,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    label = "Active",
+                )
+                NavRailItem(
+                    selected = false,
+                    onClick = {},
+                    icon = {
+                        Icon(
+                            Icons.Default.History,
+                            contentDescription = null,
+                            tint = LocalRoadAssistColors.current.mutedForeground,
+                        )
+                    },
+                    label = "History",
+                )
+            },
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -287,7 +311,7 @@ private fun CategorySection(category: IncidentCategory, onCategoryChange: (Incid
                 .padding(horizontal = 12.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NiCategoryIcon(category = category, color = mutedColor)
+            CategoryIcon(category = category, tint = mutedColor)
             Spacer(Modifier.width(10.dp))
             Text(category.displayName(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
             Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = mutedColor, modifier = Modifier.size(18.dp))
@@ -297,7 +321,7 @@ private fun CategorySection(category: IncidentCategory, onCategoryChange: (Incid
                 DropdownMenuItem(
                     text = { Text(cat.displayName()) },
                     onClick = { onCategoryChange(cat); expanded = false },
-                    leadingIcon = { NiCategoryIcon(category = cat, color = MaterialTheme.colorScheme.onSurface) },
+                    leadingIcon = { CategoryIcon(category = cat, tint = MaterialTheme.colorScheme.onSurface) },
                 )
             }
         }
@@ -619,15 +643,3 @@ private fun SubmitButton(submitState: SubmitState, onSubmit: () -> Unit, modifie
     }
 }
 
-private fun IncidentCategory.displayName(): String = name.lowercase().replaceFirstChar { it.uppercase() }
-
-@Composable
-private fun NiCategoryIcon(category: IncidentCategory, color: Color, modifier: Modifier = Modifier.size(18.dp)) {
-    val icon = when (category) {
-        IncidentCategory.BREAKDOWN -> Icons.Default.Build
-        IncidentCategory.ACCIDENT -> Icons.Default.WarningAmber
-        IncidentCategory.OBSTRUCTION -> Icons.Default.Inventory2
-        IncidentCategory.OTHER -> Icons.Default.Help
-    }
-    Icon(icon, contentDescription = null, tint = color, modifier = modifier)
-}

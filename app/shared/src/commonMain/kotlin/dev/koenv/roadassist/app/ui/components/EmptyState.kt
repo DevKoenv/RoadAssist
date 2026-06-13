@@ -1,6 +1,6 @@
 package dev.koenv.roadassist.app.ui.components
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,24 +16,28 @@ import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 
 @Composable
-fun EmptyState(title: String, description: String) {
-    Box(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        contentAlignment = Alignment.Center,
+fun EmptyState(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = LocalRoadAssistColors.current.mutedForeground,
-                textAlign = TextAlign.Center,
-            )
+        Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = LocalRoadAssistColors.current.mutedForeground,
+            textAlign = TextAlign.Center,
+        )
+        if (action != null) {
+            Spacer(Modifier.height(20.dp))
+            action()
         }
     }
 }

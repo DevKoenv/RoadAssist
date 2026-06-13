@@ -1,22 +1,28 @@
 package dev.koenv.roadassist.app.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,40 +31,43 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDivider
+import dev.koenv.roadassist.app.ui.components.CategoryIcon
+import dev.koenv.roadassist.app.ui.components.DispatcherNoteCard
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
-import dev.koenv.roadassist.app.ui.components.SectionLabel
+import dev.koenv.roadassist.app.ui.components.StatusBadge
 import dev.koenv.roadassist.core.Incident
+import dev.koenv.roadassist.core.displayName
 
 @Composable
 fun RoadUserDetailScreen(
-    incidentId: Int,
-    repository: IncidentRepository,
+    viewModel: RoadUserDetailViewModel,
     onBack: () -> Unit,
 ) {
-    val incident by produceState<Incident?>(null, incidentId) {
-        value = repository.getIncident(incidentId).getOrNull()
-    }
+    val incident by viewModel.incident.collectAsState()
+    val loading by viewModel.loading.collectAsState()
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            MobileAppBar(title = "Incident detail", onBack = onBack)
+            MobileAppBar(title = "Incident", onBack = onBack)
             AppDivider()
-            when (val current = incident) {
-                null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            when {
+                loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-                else -> RoadUserDetailContent(incident = current)
+                incident != null -> RoadUserDetailContent(incident = incident!!)
+                else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Incident not found.", style = MaterialTheme.typography.bodyMedium, color = LocalRoadAssistColors.current.mutedForeground)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun RoadUserDetailContent(incident: Incident) {
-    val mutedColor = LocalRoadAssistColors.current.mutedForeground
+internal fun RoadUserDetailContent(incident: Incident) {
+    val muted = LocalRoadAssistColors.current.mutedForeground
     val context = LocalPlatformContext.current
 
     Column(
@@ -66,42 +75,34 @@ private fun RoadUserDetailContent(incident: Incident) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        SectionLabel("CATEGORY")
-        Text(
-            text = incident.category.name.lowercase().replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(LocalRoadAssistColors.current.muted, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                CategoryIcon(category = incident.category, modifier = Modifier.size(14.dp))
+                Text(incident.category.displayName(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
+            }
+            StatusBadge(incident.status)
+        }
 
-        SectionLabel("DESCRIPTION")
         Text(
             text = incident.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        SectionLabel("LOCATION")
-        Text(
-            text = "%.6f, %.6f".format(incident.latitude, incident.longitude),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        SectionLabel("STATUS")
-        Text(
-            text = incident.status.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
         if (!incident.photoUrl.isNullOrBlank()) {
-            SectionLabel("PHOTO")
             AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(incident.photoUrl)
-                    .build(),
+                model = ImageRequest.Builder(context).data(incident.photoUrl).build(),
                 contentDescription = "Incident photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -111,13 +112,24 @@ private fun RoadUserDetailContent(incident: Incident) {
             )
         }
 
-        if (!incident.notes.isNullOrBlank()) {
-            SectionLabel("DISPATCHER NOTES")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalRoadAssistColors.current.muted, RoundedCornerShape(8.dp))
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(Icons.Default.LocationOn, contentDescription = null, tint = muted, modifier = Modifier.size(16.dp))
             Text(
-                text = incident.notes!!,
-                style = MaterialTheme.typography.bodyMedium,
-                color = mutedColor,
+                "%.4f, %.4f".format(incident.latitude, incident.longitude),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
+        }
+
+        if (!incident.notes.isNullOrBlank()) {
+            DispatcherNoteCard(notes = incident.notes!!)
         }
     }
 }

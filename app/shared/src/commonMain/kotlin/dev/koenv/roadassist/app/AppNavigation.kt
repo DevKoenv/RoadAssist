@@ -16,9 +16,12 @@ import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.geocoding.NominatimGeocodingService
 import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
+import dev.koenv.roadassist.app.ui.home.DispatcherDetailScreen
+import dev.koenv.roadassist.app.ui.home.DispatcherDetailViewModel
 import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.home.HomeViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
+import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.login.LoginScreen
 import dev.koenv.roadassist.app.ui.login.LoginViewModel
@@ -84,9 +87,9 @@ fun AppNavigation(
         composable("road_user_detail/{id}") { backStackEntry ->
             val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
             val repo = remember { IncidentRepository(apiClient) }
+            val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id) }
             RoadUserDetailScreen(
-                incidentId = id,
-                repository = repo,
+                viewModel = vm,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -100,6 +103,16 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onIncidentClick = { id -> navController.navigate("dispatcher_detail/$id") },
+            )
+        }
+        composable("dispatcher_detail/{id}") { backStackEntry ->
+            val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
+            val repo = remember { IncidentRepository(apiClient) }
+            val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id) }
+            DispatcherDetailScreen(
+                viewModel = vm,
+                onBack = { navController.popBackStack() },
             )
         }
         composable("new_incident") {
