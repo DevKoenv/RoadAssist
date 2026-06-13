@@ -65,6 +65,7 @@ import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.components.StatusEditChip
 import dev.koenv.roadassist.app.util.timeAgo
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import kotlinx.coroutines.launch
@@ -80,6 +81,8 @@ fun DispatcherDetailScreen(
     val selectedStatus by viewModel.selectedStatus.collectAsState()
     val notes by viewModel.notes.collectAsState()
     val updateState by viewModel.updateState.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val address by viewModel.address.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -102,6 +105,8 @@ fun DispatcherDetailScreen(
                     incident = incident,
                     loading = loading,
                     subtitle = subtitle,
+                    comments = comments,
+                    address = address,
                     onBack = onBack,
                     onLogout = onLogout,
                     onStatusChipClick = { showStatusDialog = true },
@@ -110,6 +115,8 @@ fun DispatcherDetailScreen(
                 DispatcherDetailMobileLayout(
                     incident = incident,
                     loading = loading,
+                    comments = comments,
+                    address = address,
                     onBack = onBack,
                     onStatusChipClick = { showStatusDialog = true },
                 )
@@ -141,6 +148,8 @@ fun DispatcherDetailScreen(
 private fun DispatcherDetailMobileLayout(
     incident: Incident?,
     loading: Boolean,
+    comments: List<Comment>,
+    address: String?,
     onBack: () -> Unit,
     onStatusChipClick: () -> Unit,
 ) {
@@ -151,6 +160,8 @@ private fun DispatcherDetailMobileLayout(
             DispatcherDetailBody(
                 incident = incident,
                 loading = loading,
+                comments = comments,
+                address = address,
                 onStatusChipClick = onStatusChipClick,
             )
         }
@@ -162,6 +173,8 @@ private fun DispatcherDetailDesktopLayout(
     incident: Incident?,
     loading: Boolean,
     subtitle: String?,
+    comments: List<Comment>,
+    address: String?,
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onStatusChipClick: () -> Unit,
@@ -183,6 +196,8 @@ private fun DispatcherDetailDesktopLayout(
             DispatcherDetailBody(
                 incident = incident,
                 loading = loading,
+                comments = comments,
+                address = address,
                 onStatusChipClick = onStatusChipClick,
             )
         }
@@ -193,6 +208,8 @@ private fun DispatcherDetailDesktopLayout(
 private fun DispatcherDetailBody(
     incident: Incident?,
     loading: Boolean,
+    comments: List<Comment>,
+    address: String?,
     onStatusChipClick: () -> Unit,
 ) {
     when {
@@ -201,6 +218,8 @@ private fun DispatcherDetailBody(
         }
         incident != null -> DispatcherDetailContent(
             incident = incident,
+            comments = comments,
+            address = address,
             onStatusChipClick = onStatusChipClick,
         )
         else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -212,6 +231,8 @@ private fun DispatcherDetailBody(
 @Composable
 private fun DispatcherDetailContent(
     incident: Incident,
+    comments: List<Comment>,
+    address: String?,
     onStatusChipClick: () -> Unit,
 ) {
     val context = LocalPlatformContext.current
@@ -250,9 +271,9 @@ private fun DispatcherDetailContent(
             )
         }
 
-        LocationRow(latitude = incident.latitude, longitude = incident.longitude)
+        LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address)
 
-        IncidentActivitySection(incident = incident)
+        IncidentActivitySection(incident = incident, comments = comments)
     }
 }
 

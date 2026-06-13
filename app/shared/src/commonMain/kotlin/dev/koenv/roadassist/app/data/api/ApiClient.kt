@@ -1,6 +1,7 @@
 package dev.koenv.roadassist.app.data.api
 
 import dev.koenv.roadassist.core.AuthResponse
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.LoginRequest
@@ -17,4 +18,6 @@ interface ApiClient {
     suspend fun getIncident(id: Int): Result<Incident>
     suspend fun patchIncidentStatus(id: Int, request: PatchIncidentStatusRequest): Result<Incident>
     suspend fun uploadPhoto(incidentId: Int, imageBytes: ByteArray, mimeType: String): Result<Incident>
+    suspend fun getComments(incidentId: Int): Result<List<Comment>>
+    suspend fun postComment(incidentId: Int, content: String): Result<Comment>
 }

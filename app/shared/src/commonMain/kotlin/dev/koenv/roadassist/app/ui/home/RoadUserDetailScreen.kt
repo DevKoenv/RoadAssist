@@ -1,5 +1,7 @@
 package dev.koenv.roadassist.app.ui.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,13 +17,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -45,6 +51,7 @@ import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.StatusBadge
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 
 @Composable
@@ -55,23 +62,67 @@ fun RoadUserDetailScreen(
 ) {
     val incident by viewModel.incident.collectAsState()
     val loading by viewModel.loading.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val address by viewModel.address.collectAsState()
+    val commentInput by viewModel.commentInput.collectAsState()
+    val commentPosting by viewModel.commentPosting.collectAsState()
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
-            RoadUserDetailDesktopLayout(incident = incident, loading = loading, onBack = onBack, onLogout = onLogout)
+            RoadUserDetailDesktopLayout(
+                incident = incident,
+                loading = loading,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                onBack = onBack,
+                onLogout = onLogout,
+                onCommentChange = viewModel::updateCommentInput,
+                onCommentSend = viewModel::postComment,
+            )
         } else {
-            RoadUserDetailMobileLayout(incident = incident, loading = loading, onBack = onBack)
+            RoadUserDetailMobileLayout(
+                incident = incident,
+                loading = loading,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                onBack = onBack,
+                onCommentChange = viewModel::updateCommentInput,
+                onCommentSend = viewModel::postComment,
+            )
         }
     }
 }
 
 @Composable
-private fun RoadUserDetailMobileLayout(incident: Incident?, loading: Boolean, onBack: () -> Unit) {
+private fun RoadUserDetailMobileLayout(
+    incident: Incident?,
+    loading: Boolean,
+    comments: List<Comment>,
+    address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
+    onBack: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
+) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             MobileAppBar(title = "Incident", onBack = onBack)
             AppDivider()
-            DetailBody(incident = incident, loading = loading)
+            DetailBody(
+                incident = incident,
+                loading = loading,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                onCommentChange = onCommentChange,
+                onCommentSend = onCommentSend,
+            )
         }
     }
 }
@@ -80,8 +131,14 @@ private fun RoadUserDetailMobileLayout(incident: Incident?, loading: Boolean, on
 private fun RoadUserDetailDesktopLayout(
     incident: Incident?,
     loading: Boolean,
+    comments: List<Comment>,
+    address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
     onBack: () -> Unit,
     onLogout: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
 ) {
     AppDesktopShell(
         onLogout = onLogout,
@@ -103,18 +160,44 @@ private fun RoadUserDetailDesktopLayout(
         Column(modifier = Modifier.fillMaxSize()) {
             DesktopDetailHeader(title = "Incident", onBack = onBack)
             AppDivider()
-            DetailBody(incident = incident, loading = loading)
+            DetailBody(
+                incident = incident,
+                loading = loading,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                onCommentChange = onCommentChange,
+                onCommentSend = onCommentSend,
+            )
         }
     }
 }
 
 @Composable
-private fun DetailBody(incident: Incident?, loading: Boolean) {
+private fun DetailBody(
+    incident: Incident?,
+    loading: Boolean,
+    comments: List<Comment>,
+    address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
+) {
     when {
         loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
-        incident != null -> RoadUserDetailContent(incident = incident)
+        incident != null -> RoadUserDetailContent(
+            incident = incident,
+            comments = comments,
+            address = address,
+            commentInput = commentInput,
+            commentPosting = commentPosting,
+            onCommentChange = onCommentChange,
+            onCommentSend = onCommentSend,
+        )
         else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Incident not found.", style = MaterialTheme.typography.bodyMedium, color = LocalRoadAssistColors.current.mutedForeground)
         }
@@ -122,8 +205,17 @@ private fun DetailBody(incident: Incident?, loading: Boolean) {
 }
 
 @Composable
-internal fun RoadUserDetailContent(incident: Incident) {
+internal fun RoadUserDetailContent(
+    incident: Incident,
+    comments: List<Comment>,
+    address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
+) {
     val context = LocalPlatformContext.current
+    val colors = LocalRoadAssistColors.current
 
     Column(
         modifier = Modifier
@@ -159,9 +251,63 @@ internal fun RoadUserDetailContent(incident: Incident) {
             )
         }
 
-        LocationRow(latitude = incident.latitude, longitude = incident.longitude)
+        LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address)
 
-        IncidentActivitySection(incident = incident)
+        IncidentActivitySection(incident = incident, comments = comments)
+
+        CommentInputRow(
+            input = commentInput,
+            posting = commentPosting,
+            onInputChange = onCommentChange,
+            onSend = onCommentSend,
+        )
+    }
+}
+
+@Composable
+private fun CommentInputRow(
+    input: String,
+    posting: Boolean,
+    onInputChange: (String) -> Unit,
+    onSend: () -> Unit,
+) {
+    val colors = LocalRoadAssistColors.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.border, RoundedCornerShape(8.dp)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicTextField(
+            value = input,
+            onValueChange = onInputChange,
+            modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 10.dp),
+            textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            decorationBox = { innerTextField ->
+                Box {
+                    if (input.isEmpty()) {
+                        Text("Add a message...", style = MaterialTheme.typography.bodySmall, color = colors.mutedForeground)
+                    }
+                    innerTextField()
+                }
+            },
+        )
+        IconButton(
+            onClick = onSend,
+            enabled = input.isNotBlank() && !posting,
+        ) {
+            if (posting) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(
+                    Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    tint = if (input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
     }
 }
 

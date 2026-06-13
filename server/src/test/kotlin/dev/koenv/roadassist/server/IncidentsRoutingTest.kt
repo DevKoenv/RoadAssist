@@ -5,6 +5,7 @@ import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LoginRequest
+import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
@@ -33,7 +34,7 @@ class IncidentsRoutingTest {
 
     @AfterTest
     fun tearDown() {
-        transaction { SchemaUtils.drop(RefreshTokensTable, IncidentsTable, UsersTable) }
+        transaction { SchemaUtils.drop(CommentsTable, RefreshTokensTable, IncidentsTable, UsersTable) }
         java.io.File("uploads").listFiles()?.forEach { it.delete() }
     }
 

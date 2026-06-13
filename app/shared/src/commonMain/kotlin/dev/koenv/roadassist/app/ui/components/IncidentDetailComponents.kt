@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.util.timeAgo
+import dev.koenv.roadassist.core.AuthorRole
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import dev.koenv.roadassist.core.displayName
@@ -72,7 +74,7 @@ fun StatusEditChip(status: IncidentStatus, onClick: () -> Unit, modifier: Modifi
 }
 
 @Composable
-fun LocationRow(latitude: Double, longitude: Double) {
+fun LocationRow(latitude: Double, longitude: Double, address: String? = null) {
     val muted = LocalRoadAssistColors.current.mutedForeground
     Row(
         modifier = Modifier
@@ -84,15 +86,21 @@ fun LocationRow(latitude: Double, longitude: Double) {
     ) {
         Icon(Icons.Default.LocationOn, contentDescription = null, tint = muted, modifier = Modifier.size(16.dp))
         Column {
-            Text("COORDINATES", style = MaterialTheme.typography.labelSmall, color = muted)
-            Spacer(Modifier.height(1.dp))
-            Text("%.5f, %.5f".format(latitude, longitude), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            if (address != null) {
+                Text(address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(Modifier.height(1.dp))
+                Text("%.5f, %.5f".format(latitude, longitude), style = MaterialTheme.typography.labelSmall, color = muted)
+            } else {
+                Text("COORDINATES", style = MaterialTheme.typography.labelSmall, color = muted)
+                Spacer(Modifier.height(1.dp))
+                Text("%.5f, %.5f".format(latitude, longitude), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            }
         }
     }
 }
 
 @Composable
-fun IncidentActivitySection(incident: Incident) {
+fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
     val muted = LocalRoadAssistColors.current.mutedForeground
     val colors = LocalRoadAssistColors.current
     val nowMillis = remember { System.currentTimeMillis() }
@@ -113,11 +121,46 @@ fun IncidentActivitySection(incident: Incident) {
             dotColor = colors.statusNew,
         )
 
-        if (!incident.notes.isNullOrBlank()) {
-            DispatcherMessageEntry(
-                message = incident.notes!!,
-                timestamp = timeAgo(incident.updatedAt, nowMillis),
+        comments.forEach { comment ->
+            CommentEntry(comment = comment, nowMillis = nowMillis)
+        }
+    }
+}
+
+@Composable
+private fun CommentEntry(comment: Comment, nowMillis: Long) {
+    val colors = LocalRoadAssistColors.current
+    val isDispatcher = comment.authorRole == AuthorRole.DISPATCHER
+    val dotColor = if (isDispatcher) colors.accentForeground else colors.statusNew
+    val bubbleBg = if (isDispatcher) colors.accent else colors.statusNewBg
+    val label = if (isDispatcher) "Dispatcher" else "Road user"
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 3.dp)
+                .size(7.dp)
+                .background(dotColor, CircleShape),
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
+                color = dotColor,
             )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(bubbleBg, RoundedCornerShape(6.dp))
+                    .padding(10.dp),
+            ) {
+                Text(comment.content, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            }
+            Text(timeAgo(comment.createdAt, nowMillis), style = MaterialTheme.typography.labelSmall, color = colors.mutedForeground)
         }
     }
 }
@@ -133,40 +176,6 @@ private fun ActivityEntry(label: String, timestamp: String, dotColor: Color) {
         Box(Modifier.size(7.dp).background(dotColor, CircleShape))
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-            Text(timestamp, style = MaterialTheme.typography.labelSmall, color = muted)
-        }
-    }
-}
-
-@Composable
-private fun DispatcherMessageEntry(message: String, timestamp: String) {
-    val muted = LocalRoadAssistColors.current.mutedForeground
-    val colors = LocalRoadAssistColors.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(top = 3.dp)
-                .size(7.dp)
-                .background(colors.accentForeground, CircleShape),
-        )
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                "Dispatcher message",
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
-                color = colors.accentForeground,
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.accent, RoundedCornerShape(6.dp))
-                    .padding(10.dp),
-            ) {
-                Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-            }
             Text(timestamp, style = MaterialTheme.typography.labelSmall, color = muted)
         }
     }

@@ -3,8 +3,11 @@ package dev.koenv.roadassist.app.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.geocoding.GeocodingService
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.LatLon
 import dev.koenv.roadassist.core.PatchIncidentStatusRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +23,7 @@ sealed class UpdateState {
 class DispatcherDetailViewModel(
     private val repository: IncidentRepository,
     private val incidentId: Int,
+    private val geocodingService: GeocodingService? = null,
 ) : ViewModel() {
 
     private val _incident = MutableStateFlow<Incident?>(null)
@@ -37,13 +41,22 @@ class DispatcherDetailViewModel(
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
 
+    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
+    val comments: StateFlow<List<Comment>> = _comments.asStateFlow()
+
+    private val _address = MutableStateFlow<String?>(null)
+    val address: StateFlow<String?> = _address.asStateFlow()
+
     init {
         viewModelScope.launch {
             val result = repository.getIncident(incidentId).getOrNull()
             _incident.value = result
             _selectedStatus.value = result?.status
-            _notes.value = result?.notes.orEmpty()
             _loading.value = false
+            _comments.value = repository.getComments(incidentId).getOrElse { emptyList() }
+            if (result != null && geocodingService != null) {
+                _address.value = geocodingService.reverse(LatLon(result.latitude, result.longitude))
+            }
         }
     }
 
@@ -54,26 +67,31 @@ class DispatcherDetailViewModel(
     fun saveUpdate(onSuccess: () -> Unit) {
         val current = _incident.value ?: return
         val status = _selectedStatus.value ?: return
-        val notes = _notes.value
+        val message = _notes.value.trim()
 
         val previousIncident = current
 
         viewModelScope.launch {
             _updateState.value = UpdateState.Loading
-            _incident.value = current.copy(status = status, notes = notes)
+            _incident.value = current.copy(status = status)
 
-            repository.patchIncidentStatus(current.id, PatchIncidentStatusRequest(status, notes))
+            repository.patchIncidentStatus(current.id, PatchIncidentStatusRequest(status, null))
                 .onSuccess { updated ->
                     _incident.value = updated
                     _selectedStatus.value = updated.status
-                    _notes.value = updated.notes.orEmpty()
                     _updateState.value = UpdateState.Idle
+                    if (message.isNotBlank()) {
+                        repository.postComment(current.id, message)
+                            .onSuccess { comment ->
+                                _comments.value = _comments.value + comment
+                            }
+                    }
+                    _notes.value = ""
                     onSuccess()
                 }
                 .onFailure {
                     _incident.value = previousIncident
                     _selectedStatus.value = previousIncident.status
-                    _notes.value = previousIncident.notes.orEmpty()
                     _updateState.value = UpdateState.Error("Failed to update. Please try again.")
                 }
         }
@@ -81,7 +99,7 @@ class DispatcherDetailViewModel(
 
     fun cancelEdit() {
         _selectedStatus.value = _incident.value?.status
-        _notes.value = _incident.value?.notes.orEmpty()
+        _notes.value = ""
     }
 
     fun clearError() { _updateState.value = UpdateState.Idle }

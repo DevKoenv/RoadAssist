@@ -96,7 +96,9 @@ fun AppNavigation(
         composable("road_user_detail/{id}") { backStackEntry ->
             val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
             val repo = remember { IncidentRepository(apiClient) }
-            val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id) }
+            val geocodingService = remember { NominatimGeocodingService() }
+            DisposableEffect(Unit) { onDispose { geocodingService.close() } }
+            val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id, geocodingService) }
             RoadUserDetailScreen(
                 viewModel = vm,
                 onBack = { navController.popBackStack() },
@@ -129,7 +131,9 @@ fun AppNavigation(
         composable("dispatcher_detail/{id}") { backStackEntry ->
             val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
             val repo = remember { IncidentRepository(apiClient) }
-            val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id) }
+            val geocodingService = remember { NominatimGeocodingService() }
+            DisposableEffect(Unit) { onDispose { geocodingService.close() } }
+            val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id, geocodingService) }
             DispatcherDetailScreen(
                 viewModel = vm,
                 onBack = { navController.popBackStack() },
