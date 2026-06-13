@@ -91,6 +91,11 @@ fun AppNavigation(
             RoadUserDetailScreen(
                 viewModel = vm,
                 onBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
         composable("dispatcher_home") {
@@ -113,6 +118,11 @@ fun AppNavigation(
             DispatcherDetailScreen(
                 viewModel = vm,
                 onBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
         composable("new_incident") {

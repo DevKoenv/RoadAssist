@@ -1,12 +1,15 @@
 package dev.koenv.roadassist.app.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,13 +39,17 @@ fun IncidentListItem(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        CategoryIcon(
-            category = incident.category,
-            modifier = Modifier.size(20.dp).padding(top = 1.dp),
-        )
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(LocalRoadAssistColors.current.muted, RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            CategoryIcon(category = incident.category, modifier = Modifier.size(18.dp))
+        }
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -51,7 +58,7 @@ fun IncidentListItem(
             ) {
                 Text(
                     incident.category.displayName(),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
@@ -67,7 +74,10 @@ fun IncidentListItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 StatusBadge(incident.status)
                 trailing?.invoke()
             }
