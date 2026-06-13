@@ -47,6 +47,15 @@ class DispatcherDetailViewModel(
     private val _address = MutableStateFlow<String?>(null)
     val address: StateFlow<String?> = _address.asStateFlow()
 
+    private val _commentInput = MutableStateFlow("")
+    val commentInput: StateFlow<String> = _commentInput.asStateFlow()
+
+    private val _commentPosting = MutableStateFlow(false)
+    val commentPosting: StateFlow<Boolean> = _commentPosting.asStateFlow()
+
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
             val result = repository.getIncident(incidentId).getOrNull()
@@ -60,11 +69,40 @@ class DispatcherDetailViewModel(
         }
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            _refreshing.value = true
+            val result = repository.getIncident(incidentId).getOrNull()
+            _incident.value = result
+            _selectedStatus.value = result?.status ?: _selectedStatus.value
+            _comments.value = repository.getComments(incidentId).getOrElse { _comments.value }
+            _refreshing.value = false
+        }
+    }
+
     fun selectStatus(status: IncidentStatus) { _selectedStatus.value = status }
 
     fun updateNotes(notes: String) { _notes.value = notes }
 
+    fun updateCommentInput(text: String) { _commentInput.value = text }
+
+    fun postComment() {
+        if (_commentPosting.value) return
+        val text = _commentInput.value.trim()
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            _commentPosting.value = true
+            repository.postComment(incidentId, text)
+                .onSuccess { comment ->
+                    _comments.value = _comments.value + comment
+                    _commentInput.value = ""
+                }
+            _commentPosting.value = false
+        }
+    }
+
     fun saveUpdate(onSuccess: () -> Unit) {
+        if (_updateState.value is UpdateState.Loading) return
         val current = _incident.value ?: return
         val status = _selectedStatus.value ?: return
         val message = _notes.value.trim()

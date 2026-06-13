@@ -166,7 +166,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             setBody(request)
         }
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -180,7 +180,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     override suspend fun getIncidents(): Result<List<Incident>> = try {
         val response = httpClient.get("$BASE_URL/incidents")
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<List<Incident>>().map { it.withAbsolutePhotoUrl() })
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -194,7 +194,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     override suspend fun getIncident(id: Int): Result<Incident> = try {
         val response = httpClient.get("$BASE_URL/incidents/$id")
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -211,7 +211,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             setBody(request)
         }
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -269,7 +269,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             )
         }
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -278,4 +278,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     } catch (e: Exception) {
         Result.failure(ApiException.Network(e))
     }
+
+    private fun Incident.withAbsolutePhotoUrl(): Incident =
+        if (photoUrl?.startsWith("/") == true) copy(photoUrl = "$BASE_URL$photoUrl") else this
 }

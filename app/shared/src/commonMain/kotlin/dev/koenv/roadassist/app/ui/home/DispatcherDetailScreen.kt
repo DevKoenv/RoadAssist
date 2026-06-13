@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,16 +21,19 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,6 +48,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,13 +63,11 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
-import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.components.StatusEditChip
 import dev.koenv.roadassist.app.util.timeAgo
@@ -73,8 +79,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun DispatcherDetailScreen(
     viewModel: DispatcherDetailViewModel,
+    isDesktop: Boolean,
     onBack: () -> Unit,
-    onLogout: () -> Unit,
 ) {
     val incident by viewModel.incident.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -83,6 +89,9 @@ fun DispatcherDetailScreen(
     val updateState by viewModel.updateState.collectAsState()
     val comments by viewModel.comments.collectAsState()
     val address by viewModel.address.collectAsState()
+    val commentInput by viewModel.commentInput.collectAsState()
+    val commentPosting by viewModel.commentPosting.collectAsState()
+    val refreshing by viewModel.refreshing.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -98,29 +107,36 @@ fun DispatcherDetailScreen(
     }
 
     Box(Modifier.fillMaxSize()) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val subtitle = incident?.let { "u-${it.userId} · ${timeAgo(it.createdAt, nowMillis)}" }
-            if (maxWidth >= 700.dp) {
-                DispatcherDetailDesktopLayout(
-                    incident = incident,
-                    loading = loading,
-                    subtitle = subtitle,
-                    comments = comments,
-                    address = address,
-                    onBack = onBack,
-                    onLogout = onLogout,
-                    onStatusChipClick = { showStatusDialog = true },
-                )
-            } else {
-                DispatcherDetailMobileLayout(
-                    incident = incident,
-                    loading = loading,
-                    comments = comments,
-                    address = address,
-                    onBack = onBack,
-                    onStatusChipClick = { showStatusDialog = true },
-                )
-            }
+        val subtitle = incident?.let { "u-${it.userId} · ${timeAgo(it.createdAt, nowMillis)}" }
+        if (isDesktop) {
+            DispatcherDetailDesktopLayout(
+                incident = incident,
+                loading = loading,
+                subtitle = subtitle,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                onBack = onBack,
+                onStatusChipClick = { showStatusDialog = true },
+                onCommentChange = viewModel::updateCommentInput,
+                onCommentSend = viewModel::postComment,
+            )
+        } else {
+            DispatcherDetailMobileLayout(
+                incident = incident,
+                loading = loading,
+                refreshing = refreshing,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                onBack = onBack,
+                onRefresh = viewModel::refresh,
+                onStatusChipClick = { showStatusDialog = true },
+                onCommentChange = viewModel::updateCommentInput,
+                onCommentSend = viewModel::postComment,
+            )
         }
         SnackbarHost(
             snackbarHostState,
@@ -144,26 +160,43 @@ fun DispatcherDetailScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DispatcherDetailMobileLayout(
     incident: Incident?,
     loading: Boolean,
+    refreshing: Boolean,
     comments: List<Comment>,
     address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
     onBack: () -> Unit,
+    onRefresh: () -> Unit,
     onStatusChipClick: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             MobileAppBar(title = "Incident", onBack = onBack)
             AppDivider()
-            DispatcherDetailBody(
-                incident = incident,
-                loading = loading,
-                comments = comments,
-                address = address,
-                onStatusChipClick = onStatusChipClick,
-            )
+            PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = onRefresh,
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                DispatcherDetailBody(
+                    incident = incident,
+                    loading = loading,
+                    comments = comments,
+                    address = address,
+                    commentInput = commentInput,
+                    commentPosting = commentPosting,
+                    onStatusChipClick = onStatusChipClick,
+                    onCommentChange = onCommentChange,
+                    onCommentSend = onCommentSend,
+                )
+            }
         }
     }
 }
@@ -175,32 +208,27 @@ private fun DispatcherDetailDesktopLayout(
     subtitle: String?,
     comments: List<Comment>,
     address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
     onBack: () -> Unit,
-    onLogout: () -> Unit,
     onStatusChipClick: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
 ) {
-    AppDesktopShell(
-        onLogout = onLogout,
-        navContent = {
-            NavRailItem(
-                selected = false,
-                onClick = onBack,
-                icon = { Icon(Icons.Default.List, contentDescription = null, tint = LocalRoadAssistColors.current.mutedForeground) },
-                label = "Queue",
-            )
-        },
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            DesktopDetailHeader(title = "Incident", subtitle = subtitle, onBack = onBack)
-            AppDivider()
-            DispatcherDetailBody(
-                incident = incident,
-                loading = loading,
-                comments = comments,
-                address = address,
-                onStatusChipClick = onStatusChipClick,
-            )
-        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        DesktopDetailHeader(title = "Incident", subtitle = subtitle, onBack = onBack)
+        AppDivider()
+        DispatcherDetailBody(
+            incident = incident,
+            loading = loading,
+            comments = comments,
+            address = address,
+            commentInput = commentInput,
+            commentPosting = commentPosting,
+            onStatusChipClick = onStatusChipClick,
+            onCommentChange = onCommentChange,
+            onCommentSend = onCommentSend,
+        )
     }
 }
 
@@ -210,7 +238,11 @@ private fun DispatcherDetailBody(
     loading: Boolean,
     comments: List<Comment>,
     address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
     onStatusChipClick: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
 ) {
     when {
         loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -220,7 +252,11 @@ private fun DispatcherDetailBody(
             incident = incident,
             comments = comments,
             address = address,
+            commentInput = commentInput,
+            commentPosting = commentPosting,
             onStatusChipClick = onStatusChipClick,
+            onCommentChange = onCommentChange,
+            onCommentSend = onCommentSend,
         )
         else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Incident not found.", style = MaterialTheme.typography.bodyMedium, color = LocalRoadAssistColors.current.mutedForeground)
@@ -233,9 +269,15 @@ private fun DispatcherDetailContent(
     incident: Incident,
     comments: List<Comment>,
     address: String?,
+    commentInput: String,
+    commentPosting: Boolean,
     onStatusChipClick: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onCommentSend: () -> Unit,
 ) {
+    val colors = LocalRoadAssistColors.current
     val context = LocalPlatformContext.current
+    var showLightbox by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -267,20 +309,104 @@ private fun DispatcherDetailContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { showLightbox = true },
             )
         }
 
         LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address)
 
+        DispatcherCommentInputRow(
+            input = commentInput,
+            posting = commentPosting,
+            onInputChange = onCommentChange,
+            onSend = onCommentSend,
+        )
+
         IncidentActivitySection(incident = incident, comments = comments)
+    }
+    if (showLightbox && !incident.photoUrl.isNullOrBlank()) {
+        Dialog(onDismissRequest = { showLightbox = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF000000), RoundedCornerShape(8.dp))
+                    .clickable { showLightbox = false }
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context).data(incident.photoUrl).build(),
+                    contentDescription = "Incident photo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DispatcherCommentInputRow(
+    input: String,
+    posting: Boolean,
+    onInputChange: (String) -> Unit,
+    onSend: () -> Unit,
+) {
+    val colors = LocalRoadAssistColors.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.border, RoundedCornerShape(8.dp)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicTextField(
+            value = input,
+            onValueChange = onInputChange,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed) {
+                        onSend()
+                        true
+                    } else {
+                        false
+                    }
+                },
+            textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            decorationBox = { innerTextField ->
+                Box {
+                    if (input.isEmpty()) {
+                        Text("Send a message to road user...", style = MaterialTheme.typography.bodySmall, color = colors.mutedForeground)
+                    }
+                    innerTextField()
+                }
+            },
+        )
+        IconButton(
+            onClick = onSend,
+            enabled = input.isNotBlank() && !posting,
+        ) {
+            if (posting) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(
+                    Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    tint = if (input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun DesktopDetailHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -291,7 +417,7 @@ private fun DesktopDetailHeader(title: String, onBack: () -> Unit, subtitle: Str
         )
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
             if (subtitle != null) {
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
             }

@@ -9,7 +9,7 @@ object DatabaseFactory {
     fun init(mode: String = "h2", path: String? = null) {
         connect(mode, path)
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(UsersTable, IncidentsTable, RefreshTokensTable, CommentsTable)
+            SchemaUtils.create(UsersTable, IncidentsTable, RefreshTokensTable, CommentsTable)
         }
     }
 

@@ -23,11 +23,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
@@ -161,7 +161,7 @@ private fun MobileLayout(
                 Spacer(Modifier.height(16.dp))
                 if (submitState is SubmitState.Error) {
                     Text(
-                        text = (submitState as SubmitState.Error).message,
+                        text = submitState.message,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -202,7 +202,7 @@ private fun DesktopLayout(
                     onClick = {},
                     icon = {
                         Icon(
-                            Icons.Default.List,
+                            Icons.AutoMirrored.Filled.List,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                         )
@@ -281,7 +281,7 @@ private fun DesktopLayout(
                         if (submitState is SubmitState.Error) {
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                text = (submitState as SubmitState.Error).message,
+                                text = submitState.message,
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall,
                             )

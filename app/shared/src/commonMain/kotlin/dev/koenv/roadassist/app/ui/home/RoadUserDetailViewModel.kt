@@ -36,6 +36,9 @@ class RoadUserDetailViewModel(
     private val _commentPosting = MutableStateFlow(false)
     val commentPosting: StateFlow<Boolean> = _commentPosting.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
             val incident = repository.getIncident(incidentId).getOrNull()
@@ -48,11 +51,22 @@ class RoadUserDetailViewModel(
         }
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            _refreshing.value = true
+            val incident = repository.getIncident(incidentId).getOrNull()
+            _incident.value = incident
+            _comments.value = repository.getComments(incidentId).getOrElse { _comments.value }
+            _refreshing.value = false
+        }
+    }
+
     fun updateCommentInput(text: String) {
         _commentInput.value = text
     }
 
     fun postComment() {
+        if (_commentPosting.value) return
         val text = _commentInput.value.trim()
         if (text.isBlank()) return
         viewModelScope.launch {

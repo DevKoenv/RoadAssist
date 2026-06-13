@@ -2,8 +2,8 @@ package dev.koenv.roadassist.app.ui.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Icon
@@ -25,7 +25,7 @@ fun CategoryIcon(
         IncidentCategory.BREAKDOWN -> Icons.Default.Build
         IncidentCategory.ACCIDENT -> Icons.Default.WarningAmber
         IncidentCategory.OBSTRUCTION -> Icons.Default.Lock
-        IncidentCategory.OTHER -> Icons.Default.Help
+        IncidentCategory.OTHER -> Icons.AutoMirrored.Filled.Help
     }
     Icon(icon, contentDescription = category.displayName(), tint = tint, modifier = modifier)
 }

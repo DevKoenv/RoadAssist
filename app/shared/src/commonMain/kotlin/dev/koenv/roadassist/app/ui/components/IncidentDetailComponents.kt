@@ -116,18 +116,18 @@ fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
             color = muted,
         )
 
-        ActivityEntry(
-            label = "Incident reported",
-            timestamp = timeAgo(incident.createdAt, nowMillis),
-            dotColor = colors.statusNew,
-        )
-
-        comments.forEach { comment ->
+        comments.reversed().forEach { comment ->
             when (comment.type) {
                 CommentType.STATUS_CHANGE -> StatusChangeEntry(comment = comment, nowMillis = nowMillis)
                 CommentType.MESSAGE -> MessageBubbleEntry(comment = comment, nowMillis = nowMillis)
             }
         }
+
+        ActivityEntry(
+            label = "Incident reported",
+            timestamp = timeAgo(incident.createdAt, nowMillis),
+            dotColor = colors.statusNew,
+        )
     }
 }
 
