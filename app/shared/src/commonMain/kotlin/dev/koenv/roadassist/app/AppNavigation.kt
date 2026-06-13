@@ -80,7 +80,7 @@ fun AppNavigation(
             )
         }
         composable("road_user_detail/{id}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
+            val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
             val repo = remember { IncidentRepository(apiClient) }
             RoadUserDetailScreen(
                 incidentId = id,
