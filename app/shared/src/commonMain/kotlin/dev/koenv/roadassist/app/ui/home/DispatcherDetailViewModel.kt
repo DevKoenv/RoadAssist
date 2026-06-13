@@ -79,5 +79,10 @@ class DispatcherDetailViewModel(
         }
     }
 
+    fun cancelEdit() {
+        _selectedStatus.value = _incident.value?.status
+        _notes.value = _incident.value?.notes.orEmpty()
+    }
+
     fun clearError() { _updateState.value = UpdateState.Idle }
 }

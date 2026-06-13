@@ -19,7 +19,7 @@ import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.core.IncidentStatus
 
 @Composable
-fun StatusBadge(status: IncidentStatus, modifier: Modifier = Modifier) {
+fun StatusBadge(status: IncidentStatus, modifier: Modifier = Modifier, large: Boolean = false) {
     val colors = LocalRoadAssistColors.current
     val (bg, fg, label) = when (status) {
         IncidentStatus.NEW -> Triple(colors.statusNewBg, colors.statusNew, "NEW")
@@ -27,19 +27,19 @@ fun StatusBadge(status: IncidentStatus, modifier: Modifier = Modifier) {
         IncidentStatus.EN_ROUTE -> Triple(colors.statusEnRouteBg, colors.statusEnRoute, "EN ROUTE")
         IncidentStatus.RESOLVED -> Triple(colors.statusResolvedBg, colors.statusResolved, "RESOLVED")
     }
-    StatusBadgeContent(bg = bg, fg = fg, label = label, modifier = modifier)
+    StatusBadgeContent(bg = bg, fg = fg, label = label, modifier = modifier, large = large)
 }
 
 @Composable
-private fun StatusBadgeContent(bg: Color, fg: Color, label: String, modifier: Modifier = Modifier) {
+private fun StatusBadgeContent(bg: Color, fg: Color, label: String, modifier: Modifier = Modifier, large: Boolean = false) {
     Row(
         modifier = modifier
-            .background(bg, RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp),
+            .background(bg, RoundedCornerShape(if (large) 6.dp else 4.dp))
+            .padding(horizontal = if (large) 10.dp else 6.dp, vertical = if (large) 5.dp else 3.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (large) 5.dp else 4.dp),
     ) {
-        Box(Modifier.size(6.dp).background(fg, CircleShape))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = fg)
+        Box(Modifier.size(if (large) 7.dp else 6.dp).background(fg, CircleShape))
+        Text(label, style = if (large) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelSmall, color = fg)
     }
 }

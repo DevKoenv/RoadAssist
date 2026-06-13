@@ -41,6 +41,7 @@ import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.DispatcherNoteCard
+import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.NavRailItem
@@ -133,11 +134,12 @@ internal fun RoadUserDetailContent(incident: Incident) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CategoryChip(incident = incident)
-            StatusBadge(incident.status)
+            StatusBadge(incident.status, large = true)
         }
 
         Text(
@@ -160,9 +162,9 @@ internal fun RoadUserDetailContent(incident: Incident) {
 
         LocationRow(latitude = incident.latitude, longitude = incident.longitude)
 
-        if (!incident.notes.isNullOrBlank()) {
-            DispatcherNoteCard(notes = incident.notes!!)
-        }
+        DispatcherNoteCard(notes = incident.notes)
+
+        IncidentActivitySection(incident = incident)
     }
 }
 

@@ -23,7 +23,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -60,11 +59,12 @@ import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.DispatcherNoteCard
+import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
-import dev.koenv.roadassist.app.ui.components.StatusBadge
+import dev.koenv.roadassist.app.ui.components.StatusEditChip
 import dev.koenv.roadassist.app.util.timeAgo
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
@@ -102,7 +102,6 @@ fun DispatcherDetailScreen(
                 DispatcherDetailDesktopLayout(
                     incident = incident,
                     loading = loading,
-                    selectedStatus = selectedStatus,
                     subtitle = subtitle,
                     onBack = onBack,
                     onLogout = onLogout,
@@ -112,7 +111,6 @@ fun DispatcherDetailScreen(
                 DispatcherDetailMobileLayout(
                     incident = incident,
                     loading = loading,
-                    selectedStatus = selectedStatus,
                     onBack = onBack,
                     onStatusChipClick = { showStatusDialog = true },
                 )
@@ -132,7 +130,10 @@ fun DispatcherDetailScreen(
             onStatusSelect = { viewModel.selectStatus(it) },
             onNotesChange = { viewModel.updateNotes(it) },
             onSave = { viewModel.saveUpdate { showStatusDialog = false } },
-            onDismiss = { showStatusDialog = false },
+            onDismiss = {
+                viewModel.cancelEdit()
+                showStatusDialog = false
+            },
         )
     }
 }
@@ -141,7 +142,6 @@ fun DispatcherDetailScreen(
 private fun DispatcherDetailMobileLayout(
     incident: Incident?,
     loading: Boolean,
-    selectedStatus: IncidentStatus?,
     onBack: () -> Unit,
     onStatusChipClick: () -> Unit,
 ) {
@@ -152,7 +152,6 @@ private fun DispatcherDetailMobileLayout(
             DispatcherDetailBody(
                 incident = incident,
                 loading = loading,
-                selectedStatus = selectedStatus,
                 onStatusChipClick = onStatusChipClick,
             )
         }
@@ -163,7 +162,6 @@ private fun DispatcherDetailMobileLayout(
 private fun DispatcherDetailDesktopLayout(
     incident: Incident?,
     loading: Boolean,
-    selectedStatus: IncidentStatus?,
     subtitle: String?,
     onBack: () -> Unit,
     onLogout: () -> Unit,
@@ -186,7 +184,6 @@ private fun DispatcherDetailDesktopLayout(
             DispatcherDetailBody(
                 incident = incident,
                 loading = loading,
-                selectedStatus = selectedStatus,
                 onStatusChipClick = onStatusChipClick,
             )
         }
@@ -197,7 +194,6 @@ private fun DispatcherDetailDesktopLayout(
 private fun DispatcherDetailBody(
     incident: Incident?,
     loading: Boolean,
-    selectedStatus: IncidentStatus?,
     onStatusChipClick: () -> Unit,
 ) {
     when {
@@ -206,7 +202,6 @@ private fun DispatcherDetailBody(
         }
         incident != null -> DispatcherDetailContent(
             incident = incident,
-            selectedStatus = selectedStatus ?: incident.status,
             onStatusChipClick = onStatusChipClick,
         )
         else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -218,7 +213,6 @@ private fun DispatcherDetailBody(
 @Composable
 private fun DispatcherDetailContent(
     incident: Incident,
-    selectedStatus: IncidentStatus,
     onStatusChipClick: () -> Unit,
 ) {
     val context = LocalPlatformContext.current
@@ -231,25 +225,12 @@ private fun DispatcherDetailContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CategoryChip(incident = incident)
-            Row(
-                modifier = Modifier
-                    .clickable(onClick = onStatusChipClick)
-                    .border(1.dp, LocalRoadAssistColors.current.border, RoundedCornerShape(20.dp))
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                StatusBadge(selectedStatus)
-                Icon(
-                    Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Change status",
-                    tint = LocalRoadAssistColors.current.mutedForeground,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
+            StatusEditChip(status = incident.status, onClick = onStatusChipClick)
         }
 
         Text(
@@ -272,9 +253,9 @@ private fun DispatcherDetailContent(
 
         LocationRow(latitude = incident.latitude, longitude = incident.longitude)
 
-        if (!incident.notes.isNullOrBlank()) {
-            DispatcherNoteCard(notes = incident.notes!!)
-        }
+        DispatcherNoteCard(notes = incident.notes)
+
+        IncidentActivitySection(incident = incident)
     }
 }
 

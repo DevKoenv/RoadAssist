@@ -15,24 +15,26 @@ import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 
 @Composable
-fun DispatcherNoteCard(notes: String, modifier: Modifier = Modifier) {
+fun DispatcherNoteCard(notes: String?, modifier: Modifier = Modifier) {
     val colors = LocalRoadAssistColors.current
+    val hasNote = !notes.isNullOrBlank()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(colors.accent, RoundedCornerShape(8.dp))
+            .background(if (hasNote) colors.accent else colors.muted, RoundedCornerShape(8.dp))
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             "DISPATCHER NOTE",
             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp),
-            color = colors.accentForeground,
+            color = if (hasNote) colors.accentForeground else colors.mutedForeground,
         )
         Text(
-            notes,
+            if (hasNote) notes!! else "No note added.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = if (hasNote) MaterialTheme.colorScheme.onSurface else colors.mutedForeground,
         )
     }
 }

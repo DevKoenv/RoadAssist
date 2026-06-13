@@ -60,12 +60,9 @@ fun IncidentListItem(
                     incident.category.displayName(),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
                 )
-                Text(
-                    timeAgo(incident.createdAt, nowMillis),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = muted,
-                )
+                StatusBadge(incident.status)
             }
             Text(
                 incident.description,
@@ -78,7 +75,11 @@ fun IncidentListItem(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                StatusBadge(incident.status)
+                Text(
+                    timeAgo(incident.createdAt, nowMillis),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = muted,
+                )
                 trailing?.invoke()
             }
         }
