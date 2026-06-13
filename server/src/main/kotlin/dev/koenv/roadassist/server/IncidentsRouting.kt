@@ -2,6 +2,7 @@ package dev.koenv.roadassist.server
 
 import dev.koenv.roadassist.core.AuthorRole
 import dev.koenv.roadassist.core.Comment
+import dev.koenv.roadassist.core.CommentType
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
@@ -141,6 +142,13 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
             body.notes?.let { n -> it[notes] = n }
             it[updatedAt] = now
         }
+        CommentsTable.insert {
+            it[CommentsTable.incidentId] = EntityID(incidentId, IncidentsTable)
+            it[CommentsTable.authorRole] = AuthorRole.DISPATCHER
+            it[CommentsTable.type] = CommentType.STATUS_CHANGE
+            it[content] = body.status.name
+            it[createdAt] = now
+        }
         IncidentsTable.selectAll()
             .where { IncidentsTable.id eq incidentId }
             .first().toIncident()
@@ -247,6 +255,7 @@ private suspend fun handlePostComment(call: ApplicationCall) {
         val id = CommentsTable.insert {
             it[CommentsTable.incidentId] = EntityID(incidentId, IncidentsTable)
             it[CommentsTable.authorRole] = authorRole
+            it[CommentsTable.type] = CommentType.MESSAGE
             it[content] = body.content
             it[createdAt] = now
         } get CommentsTable.id
@@ -254,6 +263,7 @@ private suspend fun handlePostComment(call: ApplicationCall) {
             id = id.value,
             incidentId = incidentId,
             authorRole = authorRole,
+            type = CommentType.MESSAGE,
             content = body.content,
             createdAt = now,
         )
@@ -272,6 +282,7 @@ private fun ResultRow.toComment(): Comment = Comment(
     id = this[CommentsTable.id].value,
     incidentId = this[CommentsTable.incidentId].value,
     authorRole = this[CommentsTable.authorRole],
+    type = this[CommentsTable.type],
     content = this[CommentsTable.content],
     createdAt = this[CommentsTable.createdAt],
 )

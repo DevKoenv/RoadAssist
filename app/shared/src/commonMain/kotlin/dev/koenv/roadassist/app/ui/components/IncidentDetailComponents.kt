@@ -31,6 +31,7 @@ import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.util.timeAgo
 import dev.koenv.roadassist.core.AuthorRole
 import dev.koenv.roadassist.core.Comment
+import dev.koenv.roadassist.core.CommentType
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import dev.koenv.roadassist.core.displayName
@@ -122,13 +123,44 @@ fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
         )
 
         comments.forEach { comment ->
-            CommentEntry(comment = comment, nowMillis = nowMillis)
+            when (comment.type) {
+                CommentType.STATUS_CHANGE -> StatusChangeEntry(comment = comment, nowMillis = nowMillis)
+                CommentType.MESSAGE -> MessageBubbleEntry(comment = comment, nowMillis = nowMillis)
+            }
         }
     }
 }
 
 @Composable
-private fun CommentEntry(comment: Comment, nowMillis: Long) {
+private fun StatusChangeEntry(comment: Comment, nowMillis: Long) {
+    val colors = LocalRoadAssistColors.current
+    val status = runCatching { IncidentStatus.valueOf(comment.content) }.getOrNull()
+    val dotColor = when (status) {
+        IncidentStatus.NEW -> colors.statusNew
+        IncidentStatus.IN_PROGRESS -> colors.statusInProgress
+        IncidentStatus.EN_ROUTE -> colors.statusEnRoute
+        IncidentStatus.RESOLVED -> colors.statusResolved
+        null -> colors.mutedForeground
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(Modifier.size(7.dp).background(dotColor, CircleShape))
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                "Status updated to ${status?.displayName() ?: comment.content}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(timeAgo(comment.createdAt, nowMillis), style = MaterialTheme.typography.labelSmall, color = colors.mutedForeground)
+        }
+    }
+}
+
+@Composable
+private fun MessageBubbleEntry(comment: Comment, nowMillis: Long) {
     val colors = LocalRoadAssistColors.current
     val isDispatcher = comment.authorRole == AuthorRole.DISPATCHER
     val dotColor = if (isDispatcher) colors.accentForeground else colors.statusNew

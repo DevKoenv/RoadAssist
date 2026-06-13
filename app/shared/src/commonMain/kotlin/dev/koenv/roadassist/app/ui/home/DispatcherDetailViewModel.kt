@@ -81,11 +81,9 @@ class DispatcherDetailViewModel(
                     _selectedStatus.value = updated.status
                     _updateState.value = UpdateState.Idle
                     if (message.isNotBlank()) {
-                        repository.postComment(current.id, message)
-                            .onSuccess { comment ->
-                                _comments.value = _comments.value + comment
-                            }
+                        repository.postComment(current.id, message).getOrNull()
                     }
+                    _comments.value = repository.getComments(current.id).getOrElse { _comments.value }
                     _notes.value = ""
                     onSuccess()
                 }
