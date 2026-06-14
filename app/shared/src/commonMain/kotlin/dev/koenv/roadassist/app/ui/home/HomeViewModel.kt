@@ -38,7 +38,7 @@ class HomeViewModel(
         viewModelScope.launch { loadIncidents() }
         viewModelScope.launch {
             while (true) {
-                delay(30_000L)
+                delay(15_000L)
                 loadIncidents()
             }
         }
