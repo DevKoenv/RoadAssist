@@ -7,6 +7,7 @@ import dev.koenv.roadassist.app.geocoding.GeocodingService
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.LatLon
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +40,16 @@ class RoadUserDetailViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
+    private val _serverReachable = MutableStateFlow(true)
+    val serverReachable: StateFlow<Boolean> = _serverReachable.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            while (true) {
+                _serverReachable.value = repository.checkConnectivity()
+                delay(10_000L)
+            }
+        }
         viewModelScope.launch {
             val incident = repository.getIncident(incidentId).getOrNull()
             _incident.value = incident

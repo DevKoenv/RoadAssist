@@ -73,6 +73,7 @@ fun RoadUserDetailScreen(
     val commentInput by viewModel.commentInput.collectAsState()
     val commentPosting by viewModel.commentPosting.collectAsState()
     val refreshing by viewModel.refreshing.collectAsState()
+    val serverReachable by viewModel.serverReachable.collectAsState()
 
     if (isDesktop) {
         RoadUserDetailDesktopLayout(
@@ -82,6 +83,7 @@ fun RoadUserDetailScreen(
             address = address,
             commentInput = commentInput,
             commentPosting = commentPosting,
+            serverReachable = serverReachable,
             onBack = onBack,
             onCommentChange = viewModel::updateCommentInput,
             onCommentSend = viewModel::postComment,
@@ -95,6 +97,7 @@ fun RoadUserDetailScreen(
             address = address,
             commentInput = commentInput,
             commentPosting = commentPosting,
+            serverReachable = serverReachable,
             onBack = onBack,
             onRefresh = viewModel::refresh,
             onCommentChange = viewModel::updateCommentInput,
@@ -113,6 +116,7 @@ private fun RoadUserDetailMobileLayout(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onCommentChange: (String) -> Unit,
@@ -134,6 +138,7 @@ private fun RoadUserDetailMobileLayout(
                     address = address,
                     commentInput = commentInput,
                     commentPosting = commentPosting,
+                    serverReachable = serverReachable,
                     onCommentChange = onCommentChange,
                     onCommentSend = onCommentSend,
                 )
@@ -150,6 +155,7 @@ private fun RoadUserDetailDesktopLayout(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onBack: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
@@ -164,6 +170,7 @@ private fun RoadUserDetailDesktopLayout(
             address = address,
             commentInput = commentInput,
             commentPosting = commentPosting,
+            serverReachable = serverReachable,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
         )
@@ -178,6 +185,7 @@ private fun DetailBody(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
 ) {
@@ -191,6 +199,7 @@ private fun DetailBody(
             address = address,
             commentInput = commentInput,
             commentPosting = commentPosting,
+            serverReachable = serverReachable,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
         )
@@ -207,6 +216,7 @@ internal fun RoadUserDetailContent(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean = true,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
 ) {
@@ -254,6 +264,7 @@ internal fun RoadUserDetailContent(
         CommentInputRow(
             input = commentInput,
             posting = commentPosting,
+            enabled = serverReachable,
             onInputChange = onCommentChange,
             onSend = onCommentSend,
         )
@@ -285,6 +296,7 @@ internal fun RoadUserDetailContent(
 private fun CommentInputRow(
     input: String,
     posting: Boolean,
+    enabled: Boolean = true,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
 ) {
@@ -297,11 +309,13 @@ private fun CommentInputRow(
     ) {
         BasicTextField(
             value = input,
-            onValueChange = onInputChange,
+            onValueChange = if (enabled) onInputChange else { _ -> },
+            readOnly = !enabled,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
                 .onPreviewKeyEvent { event ->
+                    if (!enabled) return@onPreviewKeyEvent false
                     if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed) {
                         onSend()
                         true
@@ -314,23 +328,25 @@ private fun CommentInputRow(
             decorationBox = { innerTextField ->
                 Box {
                     if (input.isEmpty()) {
-                        Text("Add a message...", style = MaterialTheme.typography.bodySmall, color = colors.mutedForeground)
+                        Text(
+                            if (enabled) "Add a message..." else "Offline — messages unavailable",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.mutedForeground,
+                        )
                     }
                     innerTextField()
                 }
             },
         )
-        IconButton(
-            onClick = onSend,
-            enabled = input.isNotBlank() && !posting,
-        ) {
+        val canSend = enabled && input.isNotBlank() && !posting
+        IconButton(onClick = onSend, enabled = canSend) {
             if (posting) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
             } else {
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
-                    tint = if (input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
+                    tint = if (enabled && input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
                     modifier = Modifier.size(20.dp),
                 )
             }

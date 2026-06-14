@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import dev.koenv.roadassist.app.data.api.KtorApiClient
+import dev.koenv.roadassist.app.data.incidents.createIncidentCache
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
 import dev.koenv.roadassist.app.theme.RoadAssistTheme
 
@@ -15,9 +16,10 @@ import dev.koenv.roadassist.app.theme.RoadAssistTheme
 fun App() {
     val storage = remember { createSecureStorage() }
     val apiClient = remember { KtorApiClient(storage) }
+    val incidentCache = remember { createIncidentCache() }
     RoadAssistTheme {
         Surface(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-            AppNavigation(storage = storage, apiClient = apiClient)
+            AppNavigation(storage = storage, apiClient = apiClient, incidentCache = incidentCache)
         }
     }
 }

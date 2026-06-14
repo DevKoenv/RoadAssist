@@ -29,6 +29,7 @@ class HomeViewModel(
     val incidentsLoading: StateFlow<Boolean> = _incidentsLoading.asStateFlow()
 
     init {
+        _incidents.value = repository.loadCached()
         viewModelScope.launch {
             while (true) {
                 _serverReachable.value = apiClient.checkConnectivity()

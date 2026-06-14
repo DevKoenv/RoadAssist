@@ -6,13 +6,20 @@ import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.PatchIncidentStatusRequest
 
-class IncidentRepository(private val apiClient: ApiClient) {
+class IncidentRepository(
+    private val apiClient: ApiClient,
+    private val cache: LocalIncidentCache,
+) {
 
     suspend fun createIncident(request: CreateIncidentRequest): Result<Incident> =
         apiClient.createIncident(request)
 
     suspend fun getIncidents(): Result<List<Incident>> =
-        apiClient.getIncidents()
+        apiClient.getIncidents().onSuccess { cache.save(it) }
+
+    fun loadCached(): List<Incident> = cache.load()
+
+    suspend fun checkConnectivity(): Boolean = apiClient.checkConnectivity()
 
     suspend fun getIncident(id: Int): Result<Incident> =
         apiClient.getIncident(id)

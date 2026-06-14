@@ -25,6 +25,7 @@ import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.auth.decodeRoleFromJwt
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.data.incidents.LocalIncidentCache
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.geocoding.NominatimGeocodingService
 import dev.koenv.roadassist.app.location.createLocationProvider
@@ -50,8 +51,10 @@ import dev.koenv.roadassist.core.Role
 fun AppNavigation(
     storage: SecureStorage,
     apiClient: ApiClient,
+    incidentCache: LocalIncidentCache,
 ) {
     val navController = rememberNavController()
+    val repo = remember { IncidentRepository(apiClient, incidentCache) }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 
@@ -100,7 +103,6 @@ fun AppNavigation(
                     )
                 }
                 composable("road_user_home") {
-                    val repo = remember { IncidentRepository(apiClient) }
                     val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
                     LaunchedEffect(currentRoute) {
                         if (currentRoute == "road_user_home") vm.refreshIncidents()
@@ -117,7 +119,6 @@ fun AppNavigation(
                 }
                 composable("road_user_detail/{id}") { backStackEntry ->
                     val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
-                    val repo = remember { IncidentRepository(apiClient) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id, geocodingService) }
@@ -128,7 +129,6 @@ fun AppNavigation(
                     )
                 }
                 composable("dispatcher_home") {
-                    val repo = remember { IncidentRepository(apiClient) }
                     val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
                     LaunchedEffect(currentRoute) {
                         if (currentRoute == "dispatcher_home") vm.refreshIncidents()
@@ -142,7 +142,6 @@ fun AppNavigation(
                 }
                 composable("dispatcher_detail/{id}") { backStackEntry ->
                     val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
-                    val repo = remember { IncidentRepository(apiClient) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id, geocodingService) }
@@ -155,7 +154,6 @@ fun AppNavigation(
                 composable("new_incident") {
                     val locationProvider = remember { createLocationProvider() }
                     val mediaPicker = remember { createMediaPicker() }
-                    val repo = remember { IncidentRepository(apiClient) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     val vm = viewModel { NewIncidentViewModel(repo, locationProvider, mediaPicker, geocodingService) }

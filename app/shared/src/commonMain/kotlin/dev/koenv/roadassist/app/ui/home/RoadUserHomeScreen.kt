@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
@@ -117,7 +118,7 @@ private fun RoadUserMobileLayout(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { RoadUserBottomBar(selectedTab = selectedTab, onTabChange = onTabChange) },
         floatingActionButton = {
-            if (selectedTab == RoadUserTab.Active) {
+            if (selectedTab == RoadUserTab.Active && serverReachable) {
                 FloatingActionButton(
                     onClick = onNewIncident,
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -144,7 +145,11 @@ private fun RoadUserMobileLayout(
                         RoadUserTab.Active -> EmptyState(
                             title = "No active incidents",
                             subtitle = "Your open reports will appear here.",
-                            action = { PrimaryButton(onClick = onNewIncident) { Text("Report an incident") } },
+                            action = if (serverReachable) {
+                                { PrimaryButton(onClick = onNewIncident) { Text("Report an incident") } }
+                            } else {
+                                null
+                            },
                         )
                         RoadUserTab.History -> EmptyState("No resolved incidents", "Past incidents will appear here once resolved.")
                     }
@@ -185,7 +190,7 @@ private fun RoadUserDesktopLayout(
                 IconButton(onClick = onRefresh) {
                     Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LocalRoadAssistColors.current.mutedForeground)
                 }
-                if (selectedTab == RoadUserTab.Active) {
+                if (selectedTab == RoadUserTab.Active && serverReachable) {
                     PrimaryButton(onClick = onNewIncident) {
                         Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -200,7 +205,11 @@ private fun RoadUserDesktopLayout(
                 RoadUserTab.Active -> EmptyState(
                     title = "No active incidents",
                     subtitle = "Your open reports will appear here.",
-                    action = { PrimaryButton(onClick = onNewIncident) { Text("Report an incident") } },
+                    action = if (serverReachable) {
+                        { PrimaryButton(onClick = onNewIncident) { Text("Report an incident") } }
+                    } else {
+                        null
+                    },
                 )
                 RoadUserTab.History -> EmptyState("No resolved incidents", "Past incidents will appear here once resolved.")
             }

@@ -91,6 +91,7 @@ fun DispatcherDetailScreen(
     val commentInput by viewModel.commentInput.collectAsState()
     val commentPosting by viewModel.commentPosting.collectAsState()
     val refreshing by viewModel.refreshing.collectAsState()
+    val serverReachable by viewModel.serverReachable.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -123,8 +124,9 @@ fun DispatcherDetailScreen(
                 address = address,
                 commentInput = commentInput,
                 commentPosting = commentPosting,
+                serverReachable = serverReachable,
                 onBack = onBack,
-                onStatusChipClick = { showStatusDialog = true },
+                onStatusChipClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
                 onCommentChange = viewModel::updateCommentInput,
                 onCommentSend = viewModel::postComment,
             )
@@ -137,9 +139,10 @@ fun DispatcherDetailScreen(
                 address = address,
                 commentInput = commentInput,
                 commentPosting = commentPosting,
+                serverReachable = serverReachable,
                 onBack = onBack,
                 onRefresh = viewModel::refresh,
-                onStatusChipClick = { showStatusDialog = true },
+                onStatusChipClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
                 onCommentChange = viewModel::updateCommentInput,
                 onCommentSend = viewModel::postComment,
             )
@@ -176,6 +179,7 @@ private fun DispatcherDetailMobileLayout(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onStatusChipClick: () -> Unit,
@@ -198,6 +202,7 @@ private fun DispatcherDetailMobileLayout(
                     address = address,
                     commentInput = commentInput,
                     commentPosting = commentPosting,
+                    serverReachable = serverReachable,
                     onStatusChipClick = onStatusChipClick,
                     onCommentChange = onCommentChange,
                     onCommentSend = onCommentSend,
@@ -216,6 +221,7 @@ private fun DispatcherDetailDesktopLayout(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onBack: () -> Unit,
     onStatusChipClick: () -> Unit,
     onCommentChange: (String) -> Unit,
@@ -231,6 +237,7 @@ private fun DispatcherDetailDesktopLayout(
             address = address,
             commentInput = commentInput,
             commentPosting = commentPosting,
+            serverReachable = serverReachable,
             onStatusChipClick = onStatusChipClick,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
@@ -246,6 +253,7 @@ private fun DispatcherDetailBody(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onStatusChipClick: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
@@ -260,6 +268,7 @@ private fun DispatcherDetailBody(
             address = address,
             commentInput = commentInput,
             commentPosting = commentPosting,
+            serverReachable = serverReachable,
             onStatusChipClick = onStatusChipClick,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
@@ -277,6 +286,7 @@ private fun DispatcherDetailContent(
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
+    serverReachable: Boolean,
     onStatusChipClick: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
@@ -325,6 +335,7 @@ private fun DispatcherDetailContent(
         DispatcherCommentInputRow(
             input = commentInput,
             posting = commentPosting,
+            enabled = serverReachable,
             onInputChange = onCommentChange,
             onSend = onCommentSend,
         )
@@ -356,6 +367,7 @@ private fun DispatcherDetailContent(
 private fun DispatcherCommentInputRow(
     input: String,
     posting: Boolean,
+    enabled: Boolean = true,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
 ) {
@@ -368,11 +380,13 @@ private fun DispatcherCommentInputRow(
     ) {
         BasicTextField(
             value = input,
-            onValueChange = onInputChange,
+            onValueChange = if (enabled) onInputChange else { _ -> },
+            readOnly = !enabled,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
                 .onPreviewKeyEvent { event ->
+                    if (!enabled) return@onPreviewKeyEvent false
                     if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed) {
                         onSend()
                         true
@@ -385,23 +399,25 @@ private fun DispatcherCommentInputRow(
             decorationBox = { innerTextField ->
                 Box {
                     if (input.isEmpty()) {
-                        Text("Send a message to road user...", style = MaterialTheme.typography.bodySmall, color = colors.mutedForeground)
+                        Text(
+                            if (enabled) "Send a message to road user..." else "Offline — messages unavailable",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.mutedForeground,
+                        )
                     }
                     innerTextField()
                 }
             },
         )
-        IconButton(
-            onClick = onSend,
-            enabled = input.isNotBlank() && !posting,
-        ) {
+        val canSend = enabled && input.isNotBlank() && !posting
+        IconButton(onClick = onSend, enabled = canSend) {
             if (posting) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
             } else {
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
-                    tint = if (input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
+                    tint = if (enabled && input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
                     modifier = Modifier.size(20.dp),
                 )
             }
