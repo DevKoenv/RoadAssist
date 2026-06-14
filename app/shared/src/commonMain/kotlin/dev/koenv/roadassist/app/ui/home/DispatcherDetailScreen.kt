@@ -72,6 +72,7 @@ import dev.koenv.roadassist.app.util.timeAgo
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -92,8 +93,15 @@ fun DispatcherDetailScreen(
     val refreshing by viewModel.refreshing.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var showStatusDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000L)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
 
     LaunchedEffect(updateState) {
         if (updateState is UpdateState.Error) {

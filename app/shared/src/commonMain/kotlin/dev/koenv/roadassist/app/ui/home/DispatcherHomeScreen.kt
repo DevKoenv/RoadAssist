@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -43,6 +44,7 @@ import dev.koenv.roadassist.app.ui.components.LogoutTextButton
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
+import kotlinx.coroutines.delay
 
 private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
 
@@ -56,7 +58,13 @@ fun DispatcherHomeScreen(
     val serverReachable by viewModel.serverReachable.collectAsState()
     val incidents by viewModel.incidents.collectAsState()
     val onLogoutClick: () -> Unit = { viewModel.logout(onLogout) }
-    val nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000L)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
 
     if (isDesktop) {
         DispatcherDesktopLayout(

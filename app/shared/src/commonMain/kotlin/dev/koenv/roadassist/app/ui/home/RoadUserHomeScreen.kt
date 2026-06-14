@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -44,6 +45,7 @@ import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
+import kotlinx.coroutines.delay
 
 enum class RoadUserTab { Active, History }
 
@@ -61,7 +63,13 @@ fun RoadUserHomeScreen(
     val incidents by viewModel.incidents.collectAsState()
     val incidentsLoading by viewModel.incidentsLoading.collectAsState()
     val onLogoutClick: () -> Unit = { viewModel.logout(onLogout) }
-    val nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000L)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
 
     if (isDesktop) {
         RoadUserDesktopLayout(
@@ -293,6 +301,6 @@ private fun RowScope.BottomNavItem(
 )
 
 private fun filterByTab(incidents: List<Incident>, tab: RoadUserTab): List<Incident> = when (tab) {
-    RoadUserTab.Active -> incidents.filter { it.status != IncidentStatus.RESOLVED }
+    RoadUserTab.Active -> incidents.filter { it.status != IncidentStatus.RESOLVED }.sortedByDescending { it.createdAt }
     RoadUserTab.History -> incidents.filter { it.status == IncidentStatus.RESOLVED }.sortedByDescending { it.updatedAt }
 }
