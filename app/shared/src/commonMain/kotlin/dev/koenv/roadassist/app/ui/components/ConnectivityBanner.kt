@@ -36,7 +36,7 @@ fun ConnectivityBanner(visible: Boolean) {
         ServerOfflineIcon(color = fg)
         Spacer(Modifier.width(10.dp))
         Text(
-            text = "Server unreachable. Check your connection.",
+            text = "No connection to the server — showing last update.",
             style = MaterialTheme.typography.bodySmall,
             color = fg,
         )

@@ -1,9 +1,14 @@
 package dev.koenv.roadassist.server
 
+import dev.koenv.roadassist.core.AuthorRole
+import dev.koenv.roadassist.core.Comment
+import dev.koenv.roadassist.core.CommentType
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.PostCommentRequest
 import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.UsersTable
 import io.ktor.http.ContentType
@@ -40,6 +45,8 @@ fun Route.configureIncidentsRouting() {
             get { handleGetIncident(call) }
             patch("/status") { handlePatchStatus(call) }
             post("/photo") { handleUploadPhoto(call) }
+            get("/comments") { handleListComments(call) }
+            post("/comments") { handlePostComment(call) }
         }
     }
 }
@@ -132,8 +139,15 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
             .firstOrNull() ?: return@transaction null
         IncidentsTable.update({ IncidentsTable.id eq incidentId }) {
             it[status] = body.status
-            it[notes] = body.notes
+            body.notes?.let { n -> it[notes] = n }
             it[updatedAt] = now
+        }
+        CommentsTable.insert {
+            it[CommentsTable.incidentId] = EntityID(incidentId, IncidentsTable)
+            it[CommentsTable.authorRole] = AuthorRole.DISPATCHER
+            it[CommentsTable.type] = CommentType.STATUS_CHANGE
+            it[content] = body.status.name
+            it[createdAt] = now
         }
         IncidentsTable.selectAll()
             .where { IncidentsTable.id eq incidentId }
@@ -199,12 +213,79 @@ private suspend fun handleUploadPhoto(call: ApplicationCall) {
     call.respond(updated)
 }
 
+private suspend fun handleListComments(call: ApplicationCall) {
+    val (userId, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
+    val incidentId = call.parameters["id"]?.toIntOrNull()
+        ?: return call.respond(HttpStatusCode.BadRequest)
+    val incident = transaction {
+        IncidentsTable.selectAll().where { IncidentsTable.id eq incidentId }.firstOrNull()?.toIncident()
+    } ?: return call.respond(HttpStatusCode.NotFound)
+    if (role != Role.DISPATCHER.name && incident.userId != userId) {
+        call.respond(HttpStatusCode.Forbidden)
+        return
+    }
+    val comments = transaction {
+        CommentsTable.selectAll()
+            .where { CommentsTable.incidentId eq EntityID(incidentId, IncidentsTable) }
+            .orderBy(CommentsTable.createdAt to SortOrder.ASC)
+            .map { it.toComment() }
+    }
+    call.respond(comments)
+}
+
+private suspend fun handlePostComment(call: ApplicationCall) {
+    val (userId, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
+    val incidentId = call.parameters["id"]?.toIntOrNull()
+        ?: return call.respond(HttpStatusCode.BadRequest)
+    val incident = transaction {
+        IncidentsTable.selectAll().where { IncidentsTable.id eq incidentId }.firstOrNull()?.toIncident()
+    } ?: return call.respond(HttpStatusCode.NotFound)
+    if (role != Role.DISPATCHER.name && incident.userId != userId) {
+        call.respond(HttpStatusCode.Forbidden)
+        return
+    }
+    val body = call.receive<PostCommentRequest>()
+    if (body.content.isBlank()) {
+        call.respondText("Content cannot be blank", status = HttpStatusCode.BadRequest)
+        return
+    }
+    val now = java.time.Instant.now().toString()
+    val authorRole = if (role == Role.DISPATCHER.name) AuthorRole.DISPATCHER else AuthorRole.ROAD_USER
+    val comment = transaction {
+        val id = CommentsTable.insert {
+            it[CommentsTable.incidentId] = EntityID(incidentId, IncidentsTable)
+            it[CommentsTable.authorRole] = authorRole
+            it[CommentsTable.type] = CommentType.MESSAGE
+            it[content] = body.content
+            it[createdAt] = now
+        } get CommentsTable.id
+        Comment(
+            id = id.value,
+            incidentId = incidentId,
+            authorRole = authorRole,
+            type = CommentType.MESSAGE,
+            content = body.content,
+            createdAt = now,
+        )
+    }
+    call.respond(HttpStatusCode.Created, comment)
+}
+
 private fun ApplicationCall.jwtClaims(): Pair<Int, String>? {
     val principal = principal<JWTPrincipal>() ?: return null
     val userId = principal.payload.subject?.toIntOrNull() ?: return null
     val role = principal.payload.getClaim("role")?.asString() ?: return null
     return userId to role
 }
+
+private fun ResultRow.toComment(): Comment = Comment(
+    id = this[CommentsTable.id].value,
+    incidentId = this[CommentsTable.incidentId].value,
+    authorRole = this[CommentsTable.authorRole],
+    type = this[CommentsTable.type],
+    content = this[CommentsTable.content],
+    createdAt = this[CommentsTable.createdAt],
+)
 
 private fun ResultRow.toIncident(): Incident = Incident(
     id = this[IncidentsTable.id].value,

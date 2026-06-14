@@ -171,3 +171,4 @@ local.properties
 # SQLite dev database
 server/roadassist.db
 server/uploads/
+.superpowers/

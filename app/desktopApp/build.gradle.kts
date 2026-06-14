@@ -8,6 +8,15 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.skiko") {
+            useVersion("0.144.6")
+            because("Force Skiko to CMP 1.11.1 version; Coil 3.x requests 0.8.18 which conflicts")
+        }
+    }
+}
+
 dependencies {
     implementation(projects.app.shared)
 

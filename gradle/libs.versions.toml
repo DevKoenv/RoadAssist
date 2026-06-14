@@ -27,6 +27,7 @@ material3 = "1.11.0-alpha07"
 detekt = "1.23.8"
 kover = "0.9.8"
 play-services-location = "21.3.0"
+coil = "3.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -75,6 +76,8 @@ navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-co
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

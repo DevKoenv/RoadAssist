@@ -7,5 +7,6 @@ class RoadAssistApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         AndroidContextHolder.applicationContext = applicationContext
+        initCoil()
     }
 }

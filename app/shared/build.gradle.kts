@@ -35,6 +35,10 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
+configurations.all {
+    exclude(group = "org.jetbrains.skiko")
+}
+
 kotlin {
     jvm()
 
@@ -68,7 +72,7 @@ kotlin {
             api(projects.core)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
+            implementation(compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
@@ -80,6 +84,8 @@ kotlin {
             implementation(libs.ktor.clientContentNegotiation)
             implementation(libs.ktor.serializationKotlinxJsonKmp)
             implementation(compose.materialIconsExtended)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -23,7 +23,7 @@ class DatabaseFactoryTest {
     @AfterTest
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(RefreshTokensTable, IncidentsTable, UsersTable)
+            SchemaUtils.drop(CommentsTable, RefreshTokensTable, IncidentsTable, UsersTable)
         }
     }
 

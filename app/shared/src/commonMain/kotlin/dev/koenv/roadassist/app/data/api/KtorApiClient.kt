@@ -4,10 +4,12 @@ import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.network.createHttpClient
 import dev.koenv.roadassist.core.AuthResponse
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.LoginRequest
 import dev.koenv.roadassist.core.PatchIncidentStatusRequest
+import dev.koenv.roadassist.core.PostCommentRequest
 import dev.koenv.roadassist.core.RefreshRequest
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -164,7 +166,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             setBody(request)
         }
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -178,7 +180,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     override suspend fun getIncidents(): Result<List<Incident>> = try {
         val response = httpClient.get("$BASE_URL/incidents")
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<List<Incident>>().map { it.withAbsolutePhotoUrl() })
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -192,7 +194,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     override suspend fun getIncident(id: Int): Result<Incident> = try {
         val response = httpClient.get("$BASE_URL/incidents/$id")
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -207,6 +209,37 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
         val response = httpClient.patch("$BASE_URL/incidents/$id/status") {
             contentType(ContentType.Application.Json)
             setBody(request)
+        }
+        when {
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun getComments(incidentId: Int): Result<List<Comment>> = try {
+        val response = httpClient.get("$BASE_URL/incidents/$incidentId/comments")
+        when {
+            response.status.isSuccess() -> Result.success(response.body())
+            response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
+            else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
+        }
+    } catch (e: HttpRequestTimeoutException) {
+        Result.failure(ApiException.Timeout())
+    } catch (e: Exception) {
+        Result.failure(ApiException.Network(e))
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun postComment(incidentId: Int, content: String): Result<Comment> = try {
+        val response = httpClient.post("$BASE_URL/incidents/$incidentId/comments") {
+            contentType(ContentType.Application.Json)
+            setBody(PostCommentRequest(content))
         }
         when {
             response.status.isSuccess() -> Result.success(response.body())
@@ -236,7 +269,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
             )
         }
         when {
-            response.status.isSuccess() -> Result.success(response.body())
+            response.status.isSuccess() -> Result.success(response.body<Incident>().withAbsolutePhotoUrl())
             response.status == HttpStatusCode.Unauthorized -> Result.failure(ApiException.Unauthorized())
             else -> Result.failure(ApiException.Network(RuntimeException("HTTP ${response.status.value}")))
         }
@@ -245,4 +278,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
     } catch (e: Exception) {
         Result.failure(ApiException.Network(e))
     }
+
+    private fun Incident.withAbsolutePhotoUrl(): Incident =
+        if (photoUrl?.startsWith("/") == true) copy(photoUrl = "$BASE_URL$photoUrl") else this
 }

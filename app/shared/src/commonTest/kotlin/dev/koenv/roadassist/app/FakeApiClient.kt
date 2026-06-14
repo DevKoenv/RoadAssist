@@ -3,6 +3,7 @@ package dev.koenv.roadassist.app
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.core.AuthResponse
+import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.LoginRequest
@@ -28,5 +29,10 @@ class FakeApiClient(
     override suspend fun patchIncidentStatus(id: Int, request: PatchIncidentStatusRequest): Result<Incident> =
         Result.failure(ApiException.Network(RuntimeException("not configured")))
     override suspend fun uploadPhoto(incidentId: Int, imageBytes: ByteArray, mimeType: String): Result<Incident> =
+        Result.failure(ApiException.Network(RuntimeException("not configured")))
+
+    override suspend fun getComments(incidentId: Int): Result<List<Comment>> = Result.success(emptyList())
+
+    override suspend fun postComment(incidentId: Int, content: String): Result<Comment> =
         Result.failure(ApiException.Network(RuntimeException("not configured")))
 }
