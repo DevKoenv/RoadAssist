@@ -81,7 +81,7 @@ fun RoadUserHomeScreen(
         },
     ) { padding ->
         val filtered = filterByTab(incidents, selectedTab)
-        if (windowSizeClass == WindowSizeClass.Compact) {
+        if (windowSizeClass != WindowSizeClass.Expanded) {
             PullToRefreshBox(
                 isRefreshing = incidentsLoading,
                 onRefresh = viewModel::refreshIncidents,
@@ -127,7 +127,7 @@ private fun RoadUserSplitPane(
 ) {
     val colors = LocalRoadAssistColors.current
     Row(modifier = modifier) {
-        Box(Modifier.width(300.dp).fillMaxHeight()) {
+        Box(Modifier.width(360.dp).fillMaxHeight()) {
             RoadUserIncidentList(
                 filtered = filtered,
                 incidentsLoading = false,

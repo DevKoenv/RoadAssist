@@ -82,7 +82,7 @@ fun DispatcherHomeScreen(
             }
         },
     ) { padding ->
-        if (windowSizeClass == WindowSizeClass.Compact) {
+        if (windowSizeClass != WindowSizeClass.Expanded) {
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
                 StatusFilterRow(
                     filter = filter,
@@ -133,11 +133,11 @@ private fun DispatcherSplitPane(
 ) {
     val colors = LocalRoadAssistColors.current
     Row(modifier = modifier) {
-        Column(Modifier.width(300.dp).fillMaxHeight()) {
+        Column(Modifier.width(360.dp).fillMaxHeight()) {
             StatusFilterRow(
                 filter = filter,
                 onFilterChange = onFilterChange,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 8.dp),
             )
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 if (filtered.isEmpty()) {
