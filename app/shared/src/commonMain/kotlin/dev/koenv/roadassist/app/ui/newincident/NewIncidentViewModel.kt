@@ -113,6 +113,7 @@ class NewIncidentViewModel(
     }
 
     fun submit() {
+        if (_submitState.value is SubmitState.Loading) return
         val loc = _location.value
         if (loc == null) {
             _submitState.value = SubmitState.Error("Location is required")
@@ -122,8 +123,8 @@ class NewIncidentViewModel(
             _submitState.value = SubmitState.Error("Description is required")
             return
         }
+        _submitState.value = SubmitState.Loading
         viewModelScope.launch {
-            _submitState.value = SubmitState.Loading
             val request = CreateIncidentRequest(
                 category = _category.value,
                 description = _description.value,

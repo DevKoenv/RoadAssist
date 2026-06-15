@@ -9,8 +9,13 @@ import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.LatLon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class RoadUserDetailViewModel(
@@ -19,14 +24,14 @@ class RoadUserDetailViewModel(
     private val geocodingService: GeocodingService? = null,
 ) : ViewModel() {
 
-    private val _incident = MutableStateFlow<Incident?>(null)
-    val incident: StateFlow<Incident?> = _incident.asStateFlow()
+    val incident: StateFlow<Incident?> = repository.observeIncident(incidentId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
-    val comments: StateFlow<List<Comment>> = _comments.asStateFlow()
+    val comments: StateFlow<List<Comment>> = repository.observeComments(incidentId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _address = MutableStateFlow<String?>(null)
     val address: StateFlow<String?> = _address.asStateFlow()
@@ -51,12 +56,19 @@ class RoadUserDetailViewModel(
             }
         }
         viewModelScope.launch {
-            val incident = repository.getIncident(incidentId).getOrNull()
-            _incident.value = incident
-            _loading.value = false
-            _comments.value = repository.getComments(incidentId).getOrElse { emptyList() }
-            if (incident != null && geocodingService != null) {
-                _address.value = geocodingService.reverse(LatLon(incident.latitude, incident.longitude))
+            var isFirstSync = true
+            serverReachable.filter { it }.collect {
+                repository.syncIncident(incidentId)
+                if (isFirstSync) {
+                    _loading.value = false
+                    isFirstSync = false
+                }
+            }
+        }
+        viewModelScope.launch {
+            val inc = incident.filterNotNull().first()
+            if (geocodingService != null) {
+                _address.value = geocodingService.reverse(LatLon(inc.latitude, inc.longitude))
             }
         }
     }
@@ -64,28 +76,21 @@ class RoadUserDetailViewModel(
     fun refresh() {
         viewModelScope.launch {
             _refreshing.value = true
-            val incident = repository.getIncident(incidentId).getOrNull()
-            _incident.value = incident
-            _comments.value = repository.getComments(incidentId).getOrElse { _comments.value }
+            repository.syncIncident(incidentId)
             _refreshing.value = false
         }
     }
 
-    fun updateCommentInput(text: String) {
-        _commentInput.value = text
-    }
+    fun updateCommentInput(text: String) { _commentInput.value = text }
 
     fun postComment() {
         if (_commentPosting.value) return
         val text = _commentInput.value.trim()
         if (text.isBlank()) return
+        _commentPosting.value = true
         viewModelScope.launch {
-            _commentPosting.value = true
             repository.postComment(incidentId, text)
-                .onSuccess { comment ->
-                    _comments.value = _comments.value + comment
-                    _commentInput.value = ""
-                }
+                .onSuccess { _commentInput.value = "" }
             _commentPosting.value = false
         }
     }

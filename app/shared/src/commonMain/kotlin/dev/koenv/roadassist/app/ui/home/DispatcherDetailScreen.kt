@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -61,13 +59,14 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
-import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.components.StatusEditChip
+import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
+import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
+import dev.koenv.roadassist.app.ui.layouts.DispatcherLayout
 import dev.koenv.roadassist.app.util.timeAgo
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
@@ -75,11 +74,12 @@ import dev.koenv.roadassist.core.IncidentStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DispatcherDetailScreen(
     viewModel: DispatcherDetailViewModel,
-    isDesktop: Boolean,
     onBack: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     val incident by viewModel.incident.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -113,44 +113,53 @@ fun DispatcherDetailScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
-        val subtitle = incident?.let { "u-${it.userId} · ${timeAgo(it.createdAt, nowMillis)}" }
-        if (isDesktop) {
-            DispatcherDetailDesktopLayout(
-                incident = incident,
-                loading = loading,
-                subtitle = subtitle,
-                comments = comments,
-                address = address,
-                commentInput = commentInput,
-                commentPosting = commentPosting,
-                serverReachable = serverReachable,
-                onBack = onBack,
-                onStatusChipClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
-                onCommentChange = viewModel::updateCommentInput,
-                onCommentSend = viewModel::postComment,
-            )
-        } else {
-            DispatcherDetailMobileLayout(
-                incident = incident,
-                loading = loading,
-                refreshing = refreshing,
-                comments = comments,
-                address = address,
-                commentInput = commentInput,
-                commentPosting = commentPosting,
-                serverReachable = serverReachable,
-                onBack = onBack,
-                onRefresh = viewModel::refresh,
-                onStatusChipClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
-                onCommentChange = viewModel::updateCommentInput,
-                onCommentSend = viewModel::postComment,
-            )
+    DispatcherLayout(
+        title = "Incident",
+        onBack = onBack,
+        onLogout = onLogout,
+        serverReachable = serverReachable,
+    ) { padding ->
+        val windowSizeClass = LocalWindowSizeClass.current
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            if (windowSizeClass == WindowSizeClass.Compact) {
+                PullToRefreshBox(
+                    isRefreshing = refreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    DispatcherDetailBody(
+                        incident = incident,
+                        loading = loading,
+                        comments = comments,
+                        address = address,
+                        commentInput = commentInput,
+                        commentPosting = commentPosting,
+                        serverReachable = serverReachable,
+                        onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
+                        onCommentChange = viewModel::updateCommentInput,
+                        onCommentSend = viewModel::postComment,
+                    )
+                }
+            } else {
+                DispatcherDetailBody(
+                    incident = incident,
+                    loading = loading,
+                    comments = comments,
+                    address = address,
+                    commentInput = commentInput,
+                    commentPosting = commentPosting,
+                    serverReachable = serverReachable,
+                    onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
+                    onCommentChange = viewModel::updateCommentInput,
+                    onCommentSend = viewModel::postComment,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            ) { data -> Snackbar(data) }
         }
-        SnackbarHost(
-            snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-        ) { data -> Snackbar(data) }
     }
 
     if (showStatusDialog && incident != null) {
@@ -169,84 +178,8 @@ fun DispatcherDetailScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DispatcherDetailMobileLayout(
-    incident: Incident?,
-    loading: Boolean,
-    refreshing: Boolean,
-    comments: List<Comment>,
-    address: String?,
-    commentInput: String,
-    commentPosting: Boolean,
-    serverReachable: Boolean,
-    onBack: () -> Unit,
-    onRefresh: () -> Unit,
-    onStatusChipClick: () -> Unit,
-    onCommentChange: (String) -> Unit,
-    onCommentSend: () -> Unit,
-) {
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            MobileAppBar(title = "Incident", onBack = onBack)
-            AppDivider()
-            PullToRefreshBox(
-                isRefreshing = refreshing,
-                onRefresh = onRefresh,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                DispatcherDetailBody(
-                    incident = incident,
-                    loading = loading,
-                    comments = comments,
-                    address = address,
-                    commentInput = commentInput,
-                    commentPosting = commentPosting,
-                    serverReachable = serverReachable,
-                    onStatusChipClick = onStatusChipClick,
-                    onCommentChange = onCommentChange,
-                    onCommentSend = onCommentSend,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DispatcherDetailDesktopLayout(
-    incident: Incident?,
-    loading: Boolean,
-    subtitle: String?,
-    comments: List<Comment>,
-    address: String?,
-    commentInput: String,
-    commentPosting: Boolean,
-    serverReachable: Boolean,
-    onBack: () -> Unit,
-    onStatusChipClick: () -> Unit,
-    onCommentChange: (String) -> Unit,
-    onCommentSend: () -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        DesktopDetailHeader(title = "Incident", subtitle = subtitle, onBack = onBack)
-        AppDivider()
-        DispatcherDetailBody(
-            incident = incident,
-            loading = loading,
-            comments = comments,
-            address = address,
-            commentInput = commentInput,
-            commentPosting = commentPosting,
-            serverReachable = serverReachable,
-            onStatusChipClick = onStatusChipClick,
-            onCommentChange = onCommentChange,
-            onCommentSend = onCommentSend,
-        )
-    }
-}
-
-@Composable
-private fun DispatcherDetailBody(
+internal fun DispatcherDetailBody(
     incident: Incident?,
     loading: Boolean,
     comments: List<Comment>,
@@ -254,12 +187,13 @@ private fun DispatcherDetailBody(
     commentInput: String,
     commentPosting: Boolean,
     serverReachable: Boolean,
-    onStatusChipClick: () -> Unit,
+    onStatusClick: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     when {
-        loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        loading -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         incident != null -> DispatcherDetailContent(
@@ -269,34 +203,36 @@ private fun DispatcherDetailBody(
             commentInput = commentInput,
             commentPosting = commentPosting,
             serverReachable = serverReachable,
-            onStatusChipClick = onStatusChipClick,
+            onStatusClick = onStatusClick,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
+            modifier = modifier,
         )
-        else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        else -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Incident not found.", style = MaterialTheme.typography.bodyMedium, color = LocalRoadAssistColors.current.mutedForeground)
         }
     }
 }
 
 @Composable
-private fun DispatcherDetailContent(
+internal fun DispatcherDetailContent(
     incident: Incident,
     comments: List<Comment>,
     address: String?,
     commentInput: String,
     commentPosting: Boolean,
     serverReachable: Boolean,
-    onStatusChipClick: () -> Unit,
+    onStatusClick: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalRoadAssistColors.current
     val context = LocalPlatformContext.current
     var showLightbox by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
@@ -308,7 +244,7 @@ private fun DispatcherDetailContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CategoryChip(incident = incident)
-            StatusEditChip(status = incident.status, onClick = onStatusChipClick)
+            StatusEditChip(status = incident.status, onClick = onStatusClick)
         }
 
         Text(
@@ -360,6 +296,67 @@ private fun DispatcherDetailContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+internal fun DispatcherDetailPanel(viewModel: DispatcherDetailViewModel) {
+    val incident by viewModel.incident.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val selectedStatus by viewModel.selectedStatus.collectAsState()
+    val notes by viewModel.notes.collectAsState()
+    val updateState by viewModel.updateState.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val address by viewModel.address.collectAsState()
+    val commentInput by viewModel.commentInput.collectAsState()
+    val commentPosting by viewModel.commentPosting.collectAsState()
+    val serverReachable by viewModel.serverReachable.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var showStatusDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(updateState) {
+        if (updateState is UpdateState.Error) {
+            scope.launch {
+                snackbarHostState.showSnackbar((updateState as UpdateState.Error).message)
+                viewModel.clearError()
+            }
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        DispatcherDetailBody(
+            incident = incident,
+            loading = loading,
+            comments = comments,
+            address = address,
+            commentInput = commentInput,
+            commentPosting = commentPosting,
+            serverReachable = serverReachable,
+            onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
+            onCommentChange = viewModel::updateCommentInput,
+            onCommentSend = viewModel::postComment,
+            modifier = Modifier.fillMaxSize(),
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) { data -> Snackbar(data) }
+    }
+
+    if (showStatusDialog && incident != null) {
+        UpdateStatusDialog(
+            currentStatus = selectedStatus ?: incident!!.status,
+            notes = notes,
+            isLoading = updateState is UpdateState.Loading,
+            onStatusSelect = { viewModel.selectStatus(it) },
+            onNotesChange = { viewModel.updateNotes(it) },
+            onSave = { viewModel.saveUpdate { showStatusDialog = false } },
+            onDismiss = {
+                viewModel.cancelEdit()
+                showStatusDialog = false
+            },
+        )
     }
 }
 
@@ -420,28 +417,6 @@ private fun DispatcherCommentInputRow(
                     tint = if (enabled && input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
                     modifier = Modifier.size(20.dp),
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DesktopDetailHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                Icons.AutoMirrored.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-            if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
             }
         }
     }

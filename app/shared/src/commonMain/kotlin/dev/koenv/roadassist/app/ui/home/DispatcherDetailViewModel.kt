@@ -4,15 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.geocoding.GeocodingService
-import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import dev.koenv.roadassist.core.LatLon
 import dev.koenv.roadassist.core.PatchIncidentStatusRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class UpdateState {
@@ -27,8 +31,8 @@ class DispatcherDetailViewModel(
     private val geocodingService: GeocodingService? = null,
 ) : ViewModel() {
 
-    private val _incident = MutableStateFlow<Incident?>(null)
-    val incident: StateFlow<Incident?> = _incident.asStateFlow()
+    val incident: StateFlow<Incident?> = repository.observeIncident(incidentId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -42,8 +46,8 @@ class DispatcherDetailViewModel(
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
 
-    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
-    val comments: StateFlow<List<Comment>> = _comments.asStateFlow()
+    val comments = repository.observeComments(incidentId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _address = MutableStateFlow<String?>(null)
     val address: StateFlow<String?> = _address.asStateFlow()
@@ -68,13 +72,20 @@ class DispatcherDetailViewModel(
             }
         }
         viewModelScope.launch {
-            val result = repository.getIncident(incidentId).getOrNull()
-            _incident.value = result
-            _selectedStatus.value = result?.status
-            _loading.value = false
-            _comments.value = repository.getComments(incidentId).getOrElse { emptyList() }
-            if (result != null && geocodingService != null) {
-                _address.value = geocodingService.reverse(LatLon(result.latitude, result.longitude))
+            var isFirstSync = true
+            serverReachable.filter { it }.collect {
+                repository.syncIncident(incidentId)
+                if (isFirstSync) {
+                    _loading.value = false
+                    isFirstSync = false
+                }
+            }
+        }
+        viewModelScope.launch {
+            val inc = incident.filterNotNull().first()
+            if (_selectedStatus.value == null) _selectedStatus.value = inc.status
+            if (geocodingService != null) {
+                _address.value = geocodingService.reverse(LatLon(inc.latitude, inc.longitude))
             }
         }
     }
@@ -82,10 +93,7 @@ class DispatcherDetailViewModel(
     fun refresh() {
         viewModelScope.launch {
             _refreshing.value = true
-            val result = repository.getIncident(incidentId).getOrNull()
-            _incident.value = result
-            _selectedStatus.value = result?.status ?: _selectedStatus.value
-            _comments.value = repository.getComments(incidentId).getOrElse { _comments.value }
+            repository.syncIncident(incidentId)
             _refreshing.value = false
         }
     }
@@ -100,51 +108,41 @@ class DispatcherDetailViewModel(
         if (_commentPosting.value) return
         val text = _commentInput.value.trim()
         if (text.isBlank()) return
+        _commentPosting.value = true
         viewModelScope.launch {
-            _commentPosting.value = true
             repository.postComment(incidentId, text)
-                .onSuccess { comment ->
-                    _comments.value = _comments.value + comment
-                    _commentInput.value = ""
-                }
+                .onSuccess { _commentInput.value = "" }
             _commentPosting.value = false
         }
     }
 
     fun saveUpdate(onSuccess: () -> Unit) {
         if (_updateState.value is UpdateState.Loading) return
-        val current = _incident.value ?: return
+        val current = incident.value ?: return
         val status = _selectedStatus.value ?: return
         val message = _notes.value.trim()
 
-        val previousIncident = current
+        _updateState.value = UpdateState.Loading
 
         viewModelScope.launch {
-            _updateState.value = UpdateState.Loading
-            _incident.value = current.copy(status = status)
-
             repository.patchIncidentStatus(current.id, PatchIncidentStatusRequest(status, null))
-                .onSuccess { updated ->
-                    _incident.value = updated
-                    _selectedStatus.value = updated.status
-                    _updateState.value = UpdateState.Idle
+                .onSuccess {
                     if (message.isNotBlank()) {
                         repository.postComment(current.id, message).getOrNull()
                     }
-                    _comments.value = repository.getComments(current.id).getOrElse { _comments.value }
                     _notes.value = ""
                     onSuccess()
+                    _updateState.value = UpdateState.Idle
                 }
                 .onFailure {
-                    _incident.value = previousIncident
-                    _selectedStatus.value = previousIncident.status
+                    _selectedStatus.value = current.status
                     _updateState.value = UpdateState.Error("Failed to update. Please try again.")
                 }
         }
     }
 
     fun cancelEdit() {
-        _selectedStatus.value = _incident.value?.status
+        _selectedStatus.value = incident.value?.status
         _notes.value = ""
     }
 

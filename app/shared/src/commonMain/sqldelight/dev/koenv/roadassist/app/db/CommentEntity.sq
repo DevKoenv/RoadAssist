@@ -1,0 +1,19 @@
+CREATE TABLE IF NOT EXISTS CommentEntity (
+    id         INTEGER NOT NULL PRIMARY KEY,
+    incidentId INTEGER NOT NULL,
+    authorRole TEXT    NOT NULL,
+    type       TEXT    NOT NULL,
+    content    TEXT    NOT NULL,
+    createdAt  TEXT    NOT NULL
+);
+
+selectByIncidentId:
+SELECT * FROM CommentEntity WHERE incidentId = ? ORDER BY createdAt ASC;
+
+upsert:
+INSERT OR REPLACE INTO CommentEntity
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteByIncidentId:
+DELETE FROM CommentEntity WHERE incidentId = ?;
+

@@ -16,6 +16,16 @@ class FakeApiClient(
         ApiException.Network(RuntimeException("not configured"))
     ),
     private val getIncidentsResult: Result<List<Incident>> = Result.success(emptyList()),
+    private val getIncidentResult: Result<Incident> = Result.failure(
+        ApiException.Network(RuntimeException("not configured"))
+    ),
+    private val patchResult: Result<Incident> = Result.failure(
+        ApiException.Network(RuntimeException("not configured"))
+    ),
+    private val getCommentsResult: Result<List<Comment>> = Result.success(emptyList()),
+    private val postCommentResult: Result<Comment> = Result.failure(
+        ApiException.Network(RuntimeException("not configured"))
+    ),
 ) : ApiClient {
     override suspend fun login(request: LoginRequest): Result<AuthResponse> = loginResult
     override suspend fun refresh(request: RefreshRequest): Result<AuthResponse> =
@@ -24,15 +34,10 @@ class FakeApiClient(
     override suspend fun checkConnectivity(): Boolean = true
     override suspend fun createIncident(request: CreateIncidentRequest): Result<Incident> = createIncidentResult
     override suspend fun getIncidents(): Result<List<Incident>> = getIncidentsResult
-    override suspend fun getIncident(id: Int): Result<Incident> =
-        Result.failure(ApiException.Network(RuntimeException("not configured")))
-    override suspend fun patchIncidentStatus(id: Int, request: PatchIncidentStatusRequest): Result<Incident> =
-        Result.failure(ApiException.Network(RuntimeException("not configured")))
+    override suspend fun getIncident(id: Int): Result<Incident> = getIncidentResult
+    override suspend fun patchIncidentStatus(id: Int, request: PatchIncidentStatusRequest): Result<Incident> = patchResult
     override suspend fun uploadPhoto(incidentId: Int, imageBytes: ByteArray, mimeType: String): Result<Incident> =
         Result.failure(ApiException.Network(RuntimeException("not configured")))
-
-    override suspend fun getComments(incidentId: Int): Result<List<Comment>> = Result.success(emptyList())
-
-    override suspend fun postComment(incidentId: Int, content: String): Result<Comment> =
-        Result.failure(ApiException.Network(RuntimeException("not configured")))
+    override suspend fun getComments(incidentId: Int): Result<List<Comment>> = getCommentsResult
+    override suspend fun postComment(incidentId: Int, content: String): Result<Comment> = postCommentResult
 }

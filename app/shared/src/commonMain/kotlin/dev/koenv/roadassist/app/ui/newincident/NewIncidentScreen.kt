@@ -4,8 +4,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -22,11 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
@@ -40,9 +37,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,14 +58,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.components.AppDesktopShell
-import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryIcon
-import dev.koenv.roadassist.app.ui.components.MobileAppBar
-import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
-import dev.koenv.roadassist.app.ui.components.SecondaryButton
 import dev.koenv.roadassist.app.ui.components.SectionLabel
+import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
+import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
+import dev.koenv.roadassist.app.ui.layouts.DetailLayout
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LatLon
 import dev.koenv.roadassist.core.displayName
@@ -84,7 +76,6 @@ fun NewIncidentScreen(
     viewModel: NewIncidentViewModel,
     onSuccess: () -> Unit,
     onBack: () -> Unit,
-    onLogout: () -> Unit,
 ) {
     val category by viewModel.category.collectAsState()
     val description by viewModel.description.collectAsState()
@@ -103,17 +94,22 @@ fun NewIncidentScreen(
         }
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        if (maxWidth >= 700.dp) {
-            DesktopLayout(viewModel, category, description, location, locationLabel, locationLoading, photoBytes, submitState, snackbarHostState, onBack, onLogout)
+    DetailLayout(
+        title = "New incident",
+        onBack = onBack,
+        snackbarHostState = snackbarHostState,
+    ) { padding ->
+        val windowSizeClass = LocalWindowSizeClass.current
+        if (windowSizeClass == WindowSizeClass.Compact) {
+            MobileFormContent(viewModel, category, description, location, locationLabel, locationLoading, photoBytes, submitState, padding)
         } else {
-            MobileLayout(viewModel, category, description, location, locationLabel, locationLoading, photoBytes, submitState, snackbarHostState, onBack)
+            DesktopFormContent(viewModel, category, description, location, locationLabel, locationLoading, photoBytes, submitState, padding)
         }
     }
 }
 
 @Composable
-private fun MobileLayout(
+private fun MobileFormContent(
     viewModel: NewIncidentViewModel,
     category: IncidentCategory,
     description: String,
@@ -122,173 +118,107 @@ private fun MobileLayout(
     locationLoading: Boolean,
     photoBytes: ByteArray?,
     submitState: SubmitState,
-    snackbarHostState: SnackbarHostState,
-    onBack: () -> Unit,
+    padding: PaddingValues,
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) { data -> Snackbar(data) } },
-    ) { padding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Spacer(Modifier.height(12.dp))
+            CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
+            Spacer(Modifier.height(12.dp))
+            DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
+            Spacer(Modifier.height(12.dp))
+            LocationSection(
+                location = location,
+                locationLabel = locationLabel,
+                locationLoading = locationLoading,
+                onRefresh = { viewModel.refreshLocation() },
+                onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
+                onSearch = { query -> viewModel.searchLocations(query) },
+                searchResults = searchResults,
+                isSearching = isSearching,
+                onClearSearch = { viewModel.clearSearch() },
+            )
+            Spacer(Modifier.height(12.dp))
+            PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() })
+            Spacer(Modifier.height(16.dp))
+            if (submitState is SubmitState.Error) {
+                Text(
+                    text = submitState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+            SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun DesktopFormContent(
+    viewModel: NewIncidentViewModel,
+    category: IncidentCategory,
+    description: String,
+    location: LatLon?,
+    locationLabel: String?,
+    locationLoading: Boolean,
+    photoBytes: ByteArray?,
+    submitState: SubmitState,
+    padding: PaddingValues,
+) {
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
+    Box(
+        modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
+        contentAlignment = Alignment.TopCenter,
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState()),
+                .widthIn(max = 760.dp)
+                .fillMaxWidth()
+                .border(1.dp, LocalRoadAssistColors.current.border, RoundedCornerShape(12.dp))
+                .padding(20.dp),
         ) {
-            MobileAppBar(title = "New incident", onBack = onBack)
-            AppDivider()
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Spacer(Modifier.height(12.dp))
-                CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
-                Spacer(Modifier.height(12.dp))
-                DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
-                Spacer(Modifier.height(12.dp))
-                LocationSection(
-                    location = location,
-                    locationLabel = locationLabel,
-                    locationLoading = locationLoading,
-                    onRefresh = { viewModel.refreshLocation() },
-                    onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
-                    onSearch = { query -> viewModel.searchLocations(query) },
-                    searchResults = searchResults,
-                    isSearching = isSearching,
-                    onClearSearch = { viewModel.clearSearch() },
-                )
-                Spacer(Modifier.height(12.dp))
-                PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = false)
-                Spacer(Modifier.height(16.dp))
-                if (submitState is SubmitState.Error) {
-                    Text(
-                        text = submitState.message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f)) {
+                    CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
                 }
-                SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() }, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(24.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun DesktopLayout(
-    viewModel: NewIncidentViewModel,
-    category: IncidentCategory,
-    description: String,
-    location: LatLon?,
-    locationLabel: String?,
-    locationLoading: Boolean,
-    photoBytes: ByteArray?,
-    submitState: SubmitState,
-    snackbarHostState: SnackbarHostState,
-    onBack: () -> Unit,
-    onLogout: () -> Unit,
-) {
-    val searchResults by viewModel.searchResults.collectAsState()
-    val isSearching by viewModel.isSearching.collectAsState()
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) { data -> Snackbar(data) } },
-    ) { padding ->
-        AppDesktopShell(
-            onLogout = onLogout,
-            navContent = {
-                NavRailItem(
-                    selected = true,
-                    onClick = {},
-                    icon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.List,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    },
-                    label = "Active",
-                )
-                NavRailItem(
-                    selected = false,
-                    onClick = {},
-                    icon = {
-                        Icon(
-                            Icons.Default.History,
-                            contentDescription = null,
-                            tint = LocalRoadAssistColors.current.mutedForeground,
-                        )
-                    },
-                    label = "History",
-                )
-            },
-        ) {
-            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(20.dp).clickable { onBack() },
+                Column(Modifier.weight(1f)) {
+                    LocationSection(
+                        location = location,
+                        locationLabel = locationLabel,
+                        locationLoading = locationLoading,
+                        onRefresh = { viewModel.refreshLocation() },
+                        onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
+                        onSearch = { query -> viewModel.searchLocations(query) },
+                        searchResults = searchResults,
+                        isSearching = isSearching,
+                        onClearSearch = { viewModel.clearSearch() },
                     )
-                    Spacer(Modifier.width(12.dp))
-                    Text("New incident", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-                    Spacer(Modifier.weight(1f))
-                    SecondaryButton(onClick = onBack) {
-                        Text("Cancel", color = LocalRoadAssistColors.current.mutedForeground, style = MaterialTheme.typography.bodyMedium)
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() })
-                }
-                AppDivider()
-                Box(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-                    contentAlignment = Alignment.TopCenter,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .widthIn(max = 760.dp)
-                            .fillMaxWidth()
-                            .border(1.dp, LocalRoadAssistColors.current.border, RoundedCornerShape(12.dp))
-                            .padding(20.dp),
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Column(Modifier.weight(1f)) {
-                                CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
-                            }
-                            Column(Modifier.weight(1f)) {
-                                LocationSection(
-                                    location = location,
-                                    locationLabel = locationLabel,
-                                    locationLoading = locationLoading,
-                                    onRefresh = { viewModel.refreshLocation() },
-                                    isDesktop = true,
-                                    onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
-                                    onSearch = { query -> viewModel.searchLocations(query) },
-                                    searchResults = searchResults,
-                                    isSearching = isSearching,
-                                    onClearSearch = { viewModel.clearSearch() },
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
-                        Spacer(Modifier.height(12.dp))
-                        PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = true)
-                        if (submitState is SubmitState.Error) {
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = submitState.message,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                    }
                 }
             }
+            Spacer(Modifier.height(12.dp))
+            DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
+            Spacer(Modifier.height(12.dp))
+            PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() })
+            if (submitState is SubmitState.Error) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = submitState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            SubmitButton(submitState = submitState, onSubmit = { viewModel.submit() }, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -365,13 +295,13 @@ private fun LocationSection(
     locationLabel: String?,
     locationLoading: Boolean,
     onRefresh: () -> Unit,
-    isDesktop: Boolean = false,
     onManualLocation: ((Double, Double, String) -> Unit)? = null,
     onSearch: ((String) -> Unit)? = null,
     searchResults: List<GeocodingResult> = emptyList(),
     isSearching: Boolean = false,
     onClearSearch: () -> Unit = {},
 ) {
+    val windowSizeClass = LocalWindowSizeClass.current
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -436,7 +366,7 @@ private fun LocationSection(
                 if (locationLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
                 } else {
-                    if (!isDesktop) {
+                    if (windowSizeClass == WindowSizeClass.Compact) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "Retry GPS",
@@ -573,8 +503,8 @@ private fun PhotoSection(
     photoBytes: ByteArray?,
     onPickPhoto: () -> Unit,
     onRemovePhoto: () -> Unit,
-    isDesktop: Boolean,
 ) {
+    val windowSizeClass = LocalWindowSizeClass.current
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
 
@@ -595,7 +525,7 @@ private fun PhotoSection(
                 Text("Remove", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
             }
         }
-    } else if (isDesktop) {
+    } else if (windowSizeClass != WindowSizeClass.Compact) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -642,4 +572,3 @@ private fun SubmitButton(submitState: SubmitState, onSubmit: () -> Unit, modifie
         }
     }
 }
-
