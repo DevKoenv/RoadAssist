@@ -29,6 +29,7 @@ import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.AppNavRail
 import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
 import dev.koenv.roadassist.app.ui.components.DesktopPageHeader
+import dev.koenv.roadassist.app.ui.components.LogoutTextButton
 import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.NavItemContent
 import dev.koenv.roadassist.app.ui.components.NavRailItem
@@ -49,7 +50,7 @@ fun RoadUserLayout(
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
     if (windowSizeClass == WindowSizeClass.Compact) {
-        CompactRoadUserLayout(selectedTab, onTabChange, serverReachable, fab, headerTrailing, content)
+        CompactRoadUserLayout(selectedTab, onTabChange, serverReachable, fab, headerTrailing, onLogout, content)
     } else {
         WideRoadUserLayout(selectedTab, onTabChange, serverReachable, onLogout, fab, windowSizeClass, headerTrailing, content)
     }
@@ -62,6 +63,7 @@ private fun CompactRoadUserLayout(
     serverReachable: Boolean,
     fab: FabConfig?,
     headerTrailing: (@Composable RowScope.() -> Unit)?,
+    onLogout: () -> Unit,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val title = if (selectedTab == RoadUserTab.Active) "Active" else "History"
@@ -70,7 +72,13 @@ private fun CompactRoadUserLayout(
         topBar = {
             Column {
                 ConnectivityBanner(visible = !serverReachable)
-                MobileAppBar(title = title, trailing = headerTrailing ?: {})
+                MobileAppBar(
+                    title = title,
+                    trailing = {
+                        headerTrailing?.invoke(this)
+                        LogoutTextButton(onClick = onLogout)
+                    },
+                )
                 AppDivider()
             }
         },
@@ -112,7 +120,7 @@ private fun CompactRoadUserLayout(
 }
 
 @Composable
-private fun RowScope.RoadUserBottomNavItem(
+private fun RoadUserBottomNavItem(
     tab: RoadUserTab,
     selectedTab: RoadUserTab,
     onTabChange: (RoadUserTab) -> Unit,
