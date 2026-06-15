@@ -2,19 +2,12 @@ package dev.koenv.roadassist.app
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,9 +24,6 @@ import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.geocoding.NominatimGeocodingService
 import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
-import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.components.AppDesktopShell
-import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.home.DispatcherDetailScreen
@@ -43,7 +33,6 @@ import dev.koenv.roadassist.app.ui.home.HomeViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
-import dev.koenv.roadassist.app.ui.home.RoadUserTab
 import dev.koenv.roadassist.app.ui.layouts.AuthLayout
 import dev.koenv.roadassist.app.ui.login.LoginScreen
 import dev.koenv.roadassist.app.ui.login.LoginViewModel
@@ -74,8 +63,6 @@ fun AppNavigation(
         }
     }
 
-    var roadUserTab by remember { mutableStateOf(RoadUserTab.Active) }
-
     LaunchedEffect(Unit) {
         AuthEventBus.unauthorizedEvents.collect {
             navController.navigate("login") {
@@ -95,10 +82,6 @@ fun AppNavigation(
             else              -> WindowSizeClass.Expanded
         }
         CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
-        val isDesktop = maxWidth >= 700.dp
-        val showShell = isDesktop && (currentRoute ?: startDestination) != "login"
-
-        val navHost: @Composable () -> Unit = {
             NavHost(navController = navController, startDestination = startDestination) {
                 composable("login") {
                     val vm = viewModel { LoginViewModel(apiClient, storage) }
@@ -121,9 +104,6 @@ fun AppNavigation(
                     }
                     RoadUserHomeScreen(
                         viewModel = vm,
-                        isDesktop = isDesktop,
-                        selectedTab = roadUserTab,
-                        onTabChange = { roadUserTab = it },
                         onLogout = goToLogin,
                         onNewIncident = { navController.navigate("new_incident") },
                         onIncidentClick = { id -> navController.navigate("road_user_detail/$id") },
@@ -146,7 +126,6 @@ fun AppNavigation(
                     }
                     DispatcherHomeScreen(
                         viewModel = vm,
-                        isDesktop = isDesktop,
                         onLogout = goToLogin,
                         onIncidentClick = { id -> navController.navigate("dispatcher_detail/$id") },
                     )
@@ -175,68 +154,5 @@ fun AppNavigation(
                 }
             }
         }
-
-        if (showShell) {
-            AppDesktopShell(
-                onLogout = { storage.clearToken(); goToLogin() },
-                navContent = {
-                    val isDispatcher = currentRoute?.startsWith("dispatcher") == true
-                    val isRoadUser = currentRoute?.startsWith("road_user") == true
-                    if (isDispatcher) {
-                        val selected = currentRoute == "dispatcher_home"
-                        NavRailItem(
-                            selected = selected,
-                            onClick = {
-                                if (!selected) navController.popBackStack("dispatcher_home", inclusive = false)
-                            },
-                            icon = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.List,
-                                    contentDescription = null,
-                                    tint = if (selected) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                                )
-                            },
-                            label = "Queue",
-                        )
-                    } else if (isRoadUser) {
-                        NavRailItem(
-                            selected = roadUserTab == RoadUserTab.Active,
-                            onClick = {
-                                roadUserTab = RoadUserTab.Active
-                                navController.popBackStack("road_user_home", inclusive = false)
-                            },
-                            icon = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.List,
-                                    contentDescription = null,
-                                    tint = if (roadUserTab == RoadUserTab.Active) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                                )
-                            },
-                            label = "Active",
-                        )
-                        NavRailItem(
-                            selected = roadUserTab == RoadUserTab.History,
-                            onClick = {
-                                roadUserTab = RoadUserTab.History
-                                navController.popBackStack("road_user_home", inclusive = false)
-                            },
-                            icon = {
-                                Icon(
-                                    Icons.Default.History,
-                                    contentDescription = null,
-                                    tint = if (roadUserTab == RoadUserTab.History) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                                )
-                            },
-                            label = "History",
-                        )
-                    }
-                },
-            ) {
-                navHost()
-            }
-        } else {
-            navHost()
-        }
-        } // end CompositionLocalProvider
     }
 }

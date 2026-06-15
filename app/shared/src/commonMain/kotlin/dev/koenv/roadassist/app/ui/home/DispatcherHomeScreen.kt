@@ -19,7 +19,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,12 +35,9 @@ import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.theme.RoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDivider
-import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
-import dev.koenv.roadassist.app.ui.components.DesktopPageHeader
 import dev.koenv.roadassist.app.ui.components.EmptyState
 import dev.koenv.roadassist.app.ui.components.IncidentListItem
-import dev.koenv.roadassist.app.ui.components.LogoutTextButton
-import dev.koenv.roadassist.app.ui.components.MobileAppBar
+import dev.koenv.roadassist.app.ui.layouts.DispatcherLayout
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import kotlinx.coroutines.delay
@@ -51,7 +47,6 @@ private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
 @Composable
 fun DispatcherHomeScreen(
     viewModel: HomeViewModel,
-    isDesktop: Boolean,
     onLogout: () -> Unit,
     onIncidentClick: (Int) -> Unit,
 ) {
@@ -65,53 +60,25 @@ fun DispatcherHomeScreen(
             nowMillis = System.currentTimeMillis()
         }
     }
-
-    if (isDesktop) {
-        DispatcherDesktopLayout(
-            incidents = incidents,
-            serverReachable = serverReachable,
-            nowMillis = nowMillis,
-            onIncidentClick = onIncidentClick,
-            onRefresh = viewModel::refreshIncidents,
-        )
-    } else {
-        DispatcherMobileLayout(
-            incidents = incidents,
-            serverReachable = serverReachable,
-            nowMillis = nowMillis,
-            onLogout = onLogoutClick,
-            onIncidentClick = onIncidentClick,
-            onRefresh = viewModel::refreshIncidents,
-        )
-    }
-}
-
-@Composable
-private fun DispatcherMobileLayout(
-    incidents: List<Incident>,
-    serverReachable: Boolean,
-    nowMillis: Long,
-    onLogout: () -> Unit,
-    onIncidentClick: (Int) -> Unit,
-    onRefresh: () -> Unit,
-) {
     var filter by remember { mutableStateOf(DispatcherFilter.All) }
     val filtered = filterIncidents(incidents, filter)
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            ConnectivityBanner(visible = !serverReachable)
-            MobileAppBar(
-                title = "All incidents",
-                trailing = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LocalRoadAssistColors.current.mutedForeground)
-                    }
-                    LogoutTextButton(onClick = onLogout)
-                },
+    DispatcherLayout(
+        title = "All incidents",
+        serverReachable = serverReachable,
+        onLogout = onLogoutClick,
+        headerTrailing = {
+            IconButton(onClick = viewModel::refreshIncidents) {
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LocalRoadAssistColors.current.mutedForeground)
+            }
+        },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            StatusFilterRow(
+                filter = filter,
+                onFilterChange = { filter = it },
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
-            AppDivider()
-            StatusFilterRow(filter = filter, onFilterChange = { filter = it }, modifier = Modifier.padding(horizontal = 16.dp))
             if (filtered.isEmpty()) {
                 EmptyState("No incidents in queue", "New reports from road users will appear here.")
             } else {
@@ -125,47 +92,6 @@ private fun DispatcherMobileLayout(
                         )
                         AppDivider()
                     }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DispatcherDesktopLayout(
-    incidents: List<Incident>,
-    serverReachable: Boolean,
-    nowMillis: Long,
-    onIncidentClick: (Int) -> Unit,
-    onRefresh: () -> Unit,
-) {
-    var filter by remember { mutableStateOf(DispatcherFilter.All) }
-    val filtered = filterIncidents(incidents, filter)
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        ConnectivityBanner(visible = !serverReachable)
-        DesktopPageHeader(
-            title = "All incidents",
-            trailing = {
-                IconButton(onClick = onRefresh) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LocalRoadAssistColors.current.mutedForeground)
-                }
-            },
-        )
-        AppDivider()
-        StatusFilterRow(filter = filter, onFilterChange = { filter = it }, modifier = Modifier.padding(horizontal = 24.dp))
-        if (filtered.isEmpty()) {
-            EmptyState("No incidents in queue", "New reports from road users will appear here.")
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(filtered, key = { it.id }) { incident ->
-                    IncidentListItem(
-                        incident = incident,
-                        nowMillis = nowMillis,
-                        onClick = { onIncidentClick(incident.id) },
-                        trailing = { UserIdBadge(incident.userId) },
-                    )
-                    AppDivider()
                 }
             }
         }
