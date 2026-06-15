@@ -93,8 +93,8 @@ fun DetailLayout(
                         Row { headerTrailing() }
                     }
                 }
-                AppDivider()
                 ConnectivityBanner(visible = !serverReachable)
+                AppDivider()
                 content(PaddingValues(0.dp))
             }
         }

@@ -146,7 +146,7 @@ private fun MobileFormContent(
                 onClearSearch = { viewModel.clearSearch() },
             )
             Spacer(Modifier.height(12.dp))
-            PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = false)
+            PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() })
             Spacer(Modifier.height(16.dp))
             if (submitState is SubmitState.Error) {
                 Text(
@@ -197,7 +197,6 @@ private fun DesktopFormContent(
                         locationLabel = locationLabel,
                         locationLoading = locationLoading,
                         onRefresh = { viewModel.refreshLocation() },
-                        isDesktop = true,
                         onManualLocation = { lat, lon, label -> viewModel.setManualLocation(lat, lon, label) },
                         onSearch = { query -> viewModel.searchLocations(query) },
                         searchResults = searchResults,
@@ -209,7 +208,7 @@ private fun DesktopFormContent(
             Spacer(Modifier.height(12.dp))
             DescriptionSection(description = description, onDescriptionChange = { viewModel.updateDescription(it) })
             Spacer(Modifier.height(12.dp))
-            PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() }, isDesktop = true)
+            PhotoSection(photoBytes = photoBytes, onPickPhoto = { viewModel.pickPhoto() }, onRemovePhoto = { viewModel.removePhoto() })
             if (submitState is SubmitState.Error) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -296,13 +295,13 @@ private fun LocationSection(
     locationLabel: String?,
     locationLoading: Boolean,
     onRefresh: () -> Unit,
-    isDesktop: Boolean = false,
     onManualLocation: ((Double, Double, String) -> Unit)? = null,
     onSearch: ((String) -> Unit)? = null,
     searchResults: List<GeocodingResult> = emptyList(),
     isSearching: Boolean = false,
     onClearSearch: () -> Unit = {},
 ) {
+    val windowSizeClass = LocalWindowSizeClass.current
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -367,7 +366,7 @@ private fun LocationSection(
                 if (locationLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.5.dp, color = mutedColor)
                 } else {
-                    if (!isDesktop) {
+                    if (windowSizeClass == WindowSizeClass.Compact) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "Retry GPS",
@@ -504,8 +503,8 @@ private fun PhotoSection(
     photoBytes: ByteArray?,
     onPickPhoto: () -> Unit,
     onRemovePhoto: () -> Unit,
-    isDesktop: Boolean,
 ) {
+    val windowSizeClass = LocalWindowSizeClass.current
     val borderColor = LocalRoadAssistColors.current.border
     val mutedColor = LocalRoadAssistColors.current.mutedForeground
 
@@ -526,7 +525,7 @@ private fun PhotoSection(
                 Text("Remove", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
             }
         }
-    } else if (isDesktop) {
+    } else if (windowSizeClass != WindowSizeClass.Compact) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
