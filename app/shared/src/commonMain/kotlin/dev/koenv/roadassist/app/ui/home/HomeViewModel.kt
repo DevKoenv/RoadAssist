@@ -9,8 +9,11 @@ import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.RefreshRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -22,8 +25,8 @@ class HomeViewModel(
     private val _serverReachable = MutableStateFlow(true)
     val serverReachable: StateFlow<Boolean> = _serverReachable.asStateFlow()
 
-    private val _incidents = MutableStateFlow<List<Incident>>(emptyList())
-    val incidents: StateFlow<List<Incident>> = _incidents.asStateFlow()
+    val incidents: StateFlow<List<Incident>> = repository.observeIncidents()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _incidentsLoading = MutableStateFlow(false)
     val incidentsLoading: StateFlow<Boolean> = _incidentsLoading.asStateFlow()
@@ -33,15 +36,16 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch {
-            repository.observeIncidents().collect { _incidents.value = it }
-        }
-        viewModelScope.launch {
             while (true) {
                 _serverReachable.value = apiClient.checkConnectivity()
                 delay(10_000L)
             }
         }
-        viewModelScope.launch { syncIncidents() }
+        // Sync immediately on first true, and on every false->true transition thereafter.
+        viewModelScope.launch {
+            serverReachable.filter { it }.collect { syncIncidents() }
+        }
+        // Periodic background sync every 15 seconds.
         viewModelScope.launch {
             while (true) {
                 delay(15_000L)

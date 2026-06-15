@@ -25,10 +25,10 @@ import kotlin.test.assertNull
 @OptIn(ExperimentalCoroutinesApi::class)
 class NewIncidentViewModelTest {
 
-    private fun makeDb(): RoadAssistDb {
+    private fun inMemoryRepo(api: FakeApiClient = FakeApiClient()): IncidentRepository {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         RoadAssistDb.Schema.create(driver)
-        return RoadAssistDb(driver)
+        return IncidentRepository(api, RoadAssistDb(driver))
     }
 
     @BeforeTest
@@ -50,7 +50,7 @@ class NewIncidentViewModelTest {
     @Test
     fun initial_category_is_breakdown() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -61,7 +61,7 @@ class NewIncidentViewModelTest {
     @Test
     fun location_populated_from_provider_after_init() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(52.0, 4.5)),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -72,7 +72,7 @@ class NewIncidentViewModelTest {
     @Test
     fun location_is_null_when_provider_returns_null() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(null),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -83,7 +83,7 @@ class NewIncidentViewModelTest {
     @Test
     fun submit_without_location_emits_error() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(null),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -96,7 +96,7 @@ class NewIncidentViewModelTest {
     @Test
     fun submit_with_blank_description_emits_error() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -110,7 +110,7 @@ class NewIncidentViewModelTest {
         val incident = sampleIncident()
         val fakeApi = FakeApiClient(createIncidentResult = Result.success(incident))
         val vm = NewIncidentViewModel(
-            IncidentRepository(fakeApi, makeDb()),
+            inMemoryRepo(fakeApi),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -128,7 +128,7 @@ class NewIncidentViewModelTest {
             )
         )
         val vm = NewIncidentViewModel(
-            IncidentRepository(fakeApi, makeDb()),
+            inMemoryRepo(fakeApi),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -141,7 +141,7 @@ class NewIncidentViewModelTest {
     @Test
     fun description_capped_at_500_chars() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(51.0, 4.0)),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -154,7 +154,7 @@ class NewIncidentViewModelTest {
     @Test
     fun locationLabel_populated_from_reverse_geocode() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(52.0, 4.5)),
             FakeMediaPicker(),
             FakeGeocodingService(reverseResult = "Amsterdam, Netherlands"),
@@ -165,7 +165,7 @@ class NewIncidentViewModelTest {
     @Test
     fun locationLabel_null_when_provider_returns_null() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(null),
             FakeMediaPicker(),
             FakeGeocodingService(reverseResult = "Should not be called"),
@@ -176,7 +176,7 @@ class NewIncidentViewModelTest {
     @Test
     fun locationLabel_null_when_reverse_returns_null() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(52.0, 4.5)),
             FakeMediaPicker(),
             FakeGeocodingService(reverseResult = null),
@@ -187,7 +187,7 @@ class NewIncidentViewModelTest {
     @Test
     fun setManualLocation_updates_location_and_label() = runTest {
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(null),
             FakeMediaPicker(),
             FakeGeocodingService(),
@@ -201,7 +201,7 @@ class NewIncidentViewModelTest {
     fun background_gps_does_not_override_manual_location() = runTest {
         // GPS provides a location but user already picked one manually before it resolves.
         val vm = NewIncidentViewModel(
-            IncidentRepository(FakeApiClient(), makeDb()),
+            inMemoryRepo(),
             FakeLocationProvider(LatLon(52.0, 4.5)),
             FakeMediaPicker(),
             FakeGeocodingService(reverseResult = "Amsterdam, Netherlands"),
