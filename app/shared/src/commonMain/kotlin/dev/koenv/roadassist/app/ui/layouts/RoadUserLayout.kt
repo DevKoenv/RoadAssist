@@ -120,7 +120,7 @@ private fun CompactRoadUserLayout(
 }
 
 @Composable
-private fun RoadUserBottomNavItem(
+private fun RowScope.RoadUserBottomNavItem(
     tab: RoadUserTab,
     selectedTab: RoadUserTab,
     onTabChange: (RoadUserTab) -> Unit,
