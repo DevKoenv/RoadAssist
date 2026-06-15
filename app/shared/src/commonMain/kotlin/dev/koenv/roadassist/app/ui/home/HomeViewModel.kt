@@ -32,33 +32,35 @@ class HomeViewModel(
     val selectedTab: StateFlow<RoadUserTab> = _selectedTab.asStateFlow()
 
     init {
-        _incidents.value = repository.loadCached()
+        viewModelScope.launch {
+            repository.observeIncidents().collect { _incidents.value = it }
+        }
         viewModelScope.launch {
             while (true) {
                 _serverReachable.value = apiClient.checkConnectivity()
                 delay(10_000L)
             }
         }
-        viewModelScope.launch { loadIncidents() }
+        viewModelScope.launch { syncIncidents() }
         viewModelScope.launch {
             while (true) {
                 delay(15_000L)
-                loadIncidents()
+                syncIncidents()
             }
         }
     }
 
     fun refreshIncidents() {
-        viewModelScope.launch { loadIncidents() }
+        viewModelScope.launch { syncIncidents() }
     }
 
     fun selectTab(tab: RoadUserTab) {
         _selectedTab.value = tab
     }
 
-    private suspend fun loadIncidents() {
+    private suspend fun syncIncidents() {
         _incidentsLoading.value = true
-        repository.getIncidents().onSuccess { _incidents.value = it }
+        repository.syncIncidents()
         _incidentsLoading.value = false
     }
 

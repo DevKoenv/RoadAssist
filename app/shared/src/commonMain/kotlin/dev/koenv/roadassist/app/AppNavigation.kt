@@ -19,8 +19,8 @@ import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.auth.decodeRoleFromJwt
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
-import dev.koenv.roadassist.app.data.incidents.LocalIncidentCache
 import dev.koenv.roadassist.app.data.storage.SecureStorage
+import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.app.geocoding.NominatimGeocodingService
 import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
@@ -46,10 +46,10 @@ import dev.koenv.roadassist.core.Role
 fun AppNavigation(
     storage: SecureStorage,
     apiClient: ApiClient,
-    incidentCache: LocalIncidentCache,
+    db: RoadAssistDb,
 ) {
     val navController = rememberNavController()
-    val repo = remember { IncidentRepository(apiClient, incidentCache) }
+    val repo = remember { IncidentRepository(apiClient, db) }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 

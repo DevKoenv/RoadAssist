@@ -51,22 +51,26 @@ class RoadUserDetailViewModel(
             }
         }
         viewModelScope.launch {
-            val incident = repository.getIncident(incidentId).getOrNull()
-            _incident.value = incident
-            _loading.value = false
-            _comments.value = repository.getComments(incidentId).getOrElse { emptyList() }
-            if (incident != null && geocodingService != null) {
-                _address.value = geocodingService.reverse(LatLon(incident.latitude, incident.longitude))
+            repository.observeIncident(incidentId).collect { incident ->
+                _incident.value = incident
+                _loading.value = false
+                if (incident != null && geocodingService != null && _address.value == null) {
+                    _address.value = geocodingService.reverse(LatLon(incident.latitude, incident.longitude))
+                }
             }
+        }
+        viewModelScope.launch {
+            repository.observeComments(incidentId).collect { _comments.value = it }
+        }
+        viewModelScope.launch {
+            repository.syncIncident(incidentId)
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
             _refreshing.value = true
-            val incident = repository.getIncident(incidentId).getOrNull()
-            _incident.value = incident
-            _comments.value = repository.getComments(incidentId).getOrElse { _comments.value }
+            repository.syncIncident(incidentId)
             _refreshing.value = false
         }
     }

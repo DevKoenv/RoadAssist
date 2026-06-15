@@ -68,24 +68,27 @@ class DispatcherDetailViewModel(
             }
         }
         viewModelScope.launch {
-            val result = repository.getIncident(incidentId).getOrNull()
-            _incident.value = result
-            _selectedStatus.value = result?.status
-            _loading.value = false
-            _comments.value = repository.getComments(incidentId).getOrElse { emptyList() }
-            if (result != null && geocodingService != null) {
-                _address.value = geocodingService.reverse(LatLon(result.latitude, result.longitude))
+            repository.observeIncident(incidentId).collect { result ->
+                _incident.value = result
+                if (_selectedStatus.value == null) _selectedStatus.value = result?.status
+                _loading.value = false
+                if (result != null && geocodingService != null && _address.value == null) {
+                    _address.value = geocodingService.reverse(LatLon(result.latitude, result.longitude))
+                }
             }
+        }
+        viewModelScope.launch {
+            repository.observeComments(incidentId).collect { _comments.value = it }
+        }
+        viewModelScope.launch {
+            repository.syncIncident(incidentId)
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
             _refreshing.value = true
-            val result = repository.getIncident(incidentId).getOrNull()
-            _incident.value = result
-            _selectedStatus.value = result?.status ?: _selectedStatus.value
-            _comments.value = repository.getComments(incidentId).getOrElse { _comments.value }
+            repository.syncIncident(incidentId)
             _refreshing.value = false
         }
     }
@@ -130,7 +133,6 @@ class DispatcherDetailViewModel(
                     if (message.isNotBlank()) {
                         repository.postComment(current.id, message).getOrNull()
                     }
-                    _comments.value = repository.getComments(current.id).getOrElse { _comments.value }
                     _notes.value = ""
                     onSuccess()
                     _updateState.value = UpdateState.Idle
