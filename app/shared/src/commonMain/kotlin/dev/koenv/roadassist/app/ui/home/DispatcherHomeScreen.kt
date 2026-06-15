@@ -211,7 +211,7 @@ private fun StatusFilterRow(
                             DispatcherFilter.EnRoute -> "En route"
                             DispatcherFilter.Resolved -> "Resolved"
                         },
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 },
                 shape = RoundedCornerShape(7.dp),
