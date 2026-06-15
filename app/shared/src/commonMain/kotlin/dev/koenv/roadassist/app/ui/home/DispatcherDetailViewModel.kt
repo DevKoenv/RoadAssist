@@ -100,8 +100,8 @@ class DispatcherDetailViewModel(
         if (_commentPosting.value) return
         val text = _commentInput.value.trim()
         if (text.isBlank()) return
+        _commentPosting.value = true
         viewModelScope.launch {
-            _commentPosting.value = true
             repository.postComment(incidentId, text)
                 .onSuccess { comment ->
                     _comments.value = _comments.value + comment
@@ -118,9 +118,9 @@ class DispatcherDetailViewModel(
         val message = _notes.value.trim()
 
         val previousIncident = current
+        _updateState.value = UpdateState.Loading
 
         viewModelScope.launch {
-            _updateState.value = UpdateState.Loading
             _incident.value = current.copy(status = status)
 
             repository.patchIncidentStatus(current.id, PatchIncidentStatusRequest(status, null))

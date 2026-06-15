@@ -61,7 +61,6 @@ import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
-import dev.koenv.roadassist.app.ui.components.StatusBadge
 import dev.koenv.roadassist.app.ui.components.StatusEditChip
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
@@ -119,12 +118,6 @@ fun DispatcherDetailScreen(
         onBack = onBack,
         serverReachable = serverReachable,
         snackbarHostState = snackbarHostState,
-        headerTrailing = {
-            StatusEditChip(
-                status = incident?.status ?: IncidentStatus.NEW,
-                onClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
-            )
-        },
     ) { padding ->
         val windowSizeClass = LocalWindowSizeClass.current
         if (windowSizeClass == WindowSizeClass.Compact) {
@@ -141,6 +134,7 @@ fun DispatcherDetailScreen(
                     commentInput = commentInput,
                     commentPosting = commentPosting,
                     serverReachable = serverReachable,
+                    onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
                     onCommentChange = viewModel::updateCommentInput,
                     onCommentSend = viewModel::postComment,
                 )
@@ -154,6 +148,7 @@ fun DispatcherDetailScreen(
                 commentInput = commentInput,
                 commentPosting = commentPosting,
                 serverReachable = serverReachable,
+                onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
                 onCommentChange = viewModel::updateCommentInput,
                 onCommentSend = viewModel::postComment,
                 modifier = Modifier.fillMaxSize().padding(padding),
@@ -186,6 +181,7 @@ private fun DispatcherDetailBody(
     commentInput: String,
     commentPosting: Boolean,
     serverReachable: Boolean,
+    onStatusClick: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
     modifier: Modifier = Modifier,
@@ -201,6 +197,7 @@ private fun DispatcherDetailBody(
             commentInput = commentInput,
             commentPosting = commentPosting,
             serverReachable = serverReachable,
+            onStatusClick = onStatusClick,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
             modifier = modifier,
@@ -219,6 +216,7 @@ private fun DispatcherDetailContent(
     commentInput: String,
     commentPosting: Boolean,
     serverReachable: Boolean,
+    onStatusClick: () -> Unit,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
     modifier: Modifier = Modifier,
@@ -240,7 +238,7 @@ private fun DispatcherDetailContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CategoryChip(incident = incident)
-            StatusBadge(status = incident.status)
+            StatusEditChip(status = incident.status, onClick = onStatusClick)
         }
 
         Text(

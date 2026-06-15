@@ -79,8 +79,8 @@ class RoadUserDetailViewModel(
         if (_commentPosting.value) return
         val text = _commentInput.value.trim()
         if (text.isBlank()) return
+        _commentPosting.value = true
         viewModelScope.launch {
-            _commentPosting.value = true
             repository.postComment(incidentId, text)
                 .onSuccess { comment ->
                     _comments.value = _comments.value + comment
