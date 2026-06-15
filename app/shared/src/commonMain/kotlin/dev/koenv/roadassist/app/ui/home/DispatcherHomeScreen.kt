@@ -1,12 +1,12 @@
 package dev.koenv.roadassist.app.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,8 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FilterChip
@@ -32,11 +35,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.theme.RoadAssistColors
@@ -49,6 +52,7 @@ import dev.koenv.roadassist.app.ui.layouts.DispatcherLayout
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
 
@@ -138,7 +142,6 @@ private fun DispatcherSplitPane(
             StatusFilterRow(
                 filter = filter,
                 onFilterChange = onFilterChange,
-                contentPaddingHorizontal = 8.dp,
             )
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 if (filtered.isEmpty()) {
@@ -182,53 +185,83 @@ private fun UserIdBadge(userId: Int) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StatusFilterRow(
     filter: DispatcherFilter,
     onFilterChange: (DispatcherFilter) -> Unit,
-    contentPaddingHorizontal: Dp = 16.dp,
     modifier: Modifier = Modifier,
 ) {
     val extColors = LocalRoadAssistColors.current
-    FlowRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = contentPaddingHorizontal, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+    val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val scrollAmount = 140
+
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        DispatcherFilter.entries.forEach { f ->
-            FilterChip(
-                selected = filter == f,
-                onClick = { onFilterChange(f) },
-                label = {
-                    Text(
-                        text = when (f) {
-                            DispatcherFilter.All -> "All"
-                            DispatcherFilter.New -> "New"
-                            DispatcherFilter.InProgress -> "In progress"
-                            DispatcherFilter.EnRoute -> "En route"
-                            DispatcherFilter.Resolved -> "Resolved"
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                },
-                shape = RoundedCornerShape(7.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = RoadAssistColors.Accent,
-                    selectedLabelColor = MaterialTheme.colorScheme.primary,
-                    containerColor = extColors.muted,
-                    labelColor = extColors.mutedForeground,
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
+        IconButton(
+            onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
+            enabled = scrollState.canScrollBackward,
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = "Scroll left",
+                modifier = Modifier.size(18.dp),
+                tint = if (scrollState.canScrollBackward) extColors.mutedForeground else Color.Transparent,
+            )
+        }
+        Row(
+            modifier = Modifier.weight(1f).horizontalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Spacer(Modifier.width(4.dp))
+            DispatcherFilter.entries.forEach { f ->
+                FilterChip(
                     selected = filter == f,
-                    borderColor = extColors.border,
-                    selectedBorderColor = Color.Transparent,
-                    borderWidth = 0.5.dp,
-                    selectedBorderWidth = 0.dp,
-                ),
+                    onClick = { onFilterChange(f) },
+                    label = {
+                        Text(
+                            text = when (f) {
+                                DispatcherFilter.All -> "All"
+                                DispatcherFilter.New -> "New"
+                                DispatcherFilter.InProgress -> "In progress"
+                                DispatcherFilter.EnRoute -> "En route"
+                                DispatcherFilter.Resolved -> "Resolved"
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
+                    shape = RoundedCornerShape(7.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = RoadAssistColors.Accent,
+                        selectedLabelColor = MaterialTheme.colorScheme.primary,
+                        containerColor = extColors.muted,
+                        labelColor = extColors.mutedForeground,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = filter == f,
+                        borderColor = extColors.border,
+                        selectedBorderColor = Color.Transparent,
+                        borderWidth = 0.5.dp,
+                        selectedBorderWidth = 0.dp,
+                    ),
+                )
+            }
+            Spacer(Modifier.width(4.dp))
+        }
+        IconButton(
+            onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
+            enabled = scrollState.canScrollForward,
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Scroll right",
+                modifier = Modifier.size(18.dp),
+                tint = if (scrollState.canScrollForward) extColors.mutedForeground else Color.Transparent,
             )
         }
     }
