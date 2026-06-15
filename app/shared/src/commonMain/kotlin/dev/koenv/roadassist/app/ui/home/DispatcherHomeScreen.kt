@@ -196,22 +196,20 @@ private fun StatusFilterRow(
     val scope = rememberCoroutineScope()
     val scrollAmount = 140
 
-    val hasOverflow = scrollState.canScrollBackward || scrollState.canScrollForward
     Row(
         modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (hasOverflow) {
+        if (scrollState.canScrollBackward) {
             IconButton(
                 onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
-                enabled = scrollState.canScrollBackward,
                 modifier = Modifier.size(28.dp),
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = "Scroll left",
                     modifier = Modifier.size(18.dp),
-                    tint = if (scrollState.canScrollBackward) extColors.mutedForeground else Color.Transparent,
+                    tint = extColors.mutedForeground,
                 )
             }
         }
@@ -219,7 +217,7 @@ private fun StatusFilterRow(
             modifier = Modifier.weight(1f).horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Spacer(Modifier.width(if (hasOverflow) 4.dp else 16.dp))
+            Spacer(Modifier.width(if (!scrollState.canScrollBackward) 16.dp else 4.dp))
             DispatcherFilter.entries.forEach { f ->
                 FilterChip(
                     selected = filter == f,
@@ -253,19 +251,18 @@ private fun StatusFilterRow(
                     ),
                 )
             }
-            Spacer(Modifier.width(if (hasOverflow) 4.dp else 16.dp))
+            Spacer(Modifier.width(if (!scrollState.canScrollForward) 16.dp else 4.dp))
         }
-        if (hasOverflow) {
+        if (scrollState.canScrollForward) {
             IconButton(
                 onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
-                enabled = scrollState.canScrollForward,
                 modifier = Modifier.size(28.dp),
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Scroll right",
                     modifier = Modifier.size(18.dp),
-                    tint = if (scrollState.canScrollForward) extColors.mutedForeground else Color.Transparent,
+                    tint = extColors.mutedForeground,
                 )
             }
         }
