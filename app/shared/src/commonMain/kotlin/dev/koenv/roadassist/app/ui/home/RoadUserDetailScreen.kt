@@ -49,7 +49,6 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
