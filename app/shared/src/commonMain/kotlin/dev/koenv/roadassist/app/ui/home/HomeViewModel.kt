@@ -28,6 +28,9 @@ class HomeViewModel(
     private val _incidentsLoading = MutableStateFlow(false)
     val incidentsLoading: StateFlow<Boolean> = _incidentsLoading.asStateFlow()
 
+    private val _selectedTab = MutableStateFlow(RoadUserTab.Active)
+    val selectedTab: StateFlow<RoadUserTab> = _selectedTab.asStateFlow()
+
     init {
         _incidents.value = repository.loadCached()
         viewModelScope.launch {
@@ -47,6 +50,10 @@ class HomeViewModel(
 
     fun refreshIncidents() {
         viewModelScope.launch { loadIncidents() }
+    }
+
+    fun selectTab(tab: RoadUserTab) {
+        _selectedTab.value = tab
     }
 
     private suspend fun loadIncidents() {

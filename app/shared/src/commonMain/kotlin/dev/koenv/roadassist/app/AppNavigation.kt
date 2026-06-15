@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +34,8 @@ import dev.koenv.roadassist.app.media.createMediaPicker
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDesktopShell
 import dev.koenv.roadassist.app.ui.components.NavRailItem
+import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
+import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.home.DispatcherDetailScreen
 import dev.koenv.roadassist.app.ui.home.DispatcherDetailViewModel
 import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
@@ -85,6 +88,12 @@ fun AppNavigation(
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val windowSizeClass = when {
+            maxWidth < 600.dp -> WindowSizeClass.Compact
+            maxWidth < 840.dp -> WindowSizeClass.Medium
+            else              -> WindowSizeClass.Expanded
+        }
+        CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
         val isDesktop = maxWidth >= 700.dp
         val showShell = isDesktop && (currentRoute ?: startDestination) != "login"
 
@@ -228,5 +237,6 @@ fun AppNavigation(
         } else {
             navHost()
         }
+        } // end CompositionLocalProvider
     }
 }
