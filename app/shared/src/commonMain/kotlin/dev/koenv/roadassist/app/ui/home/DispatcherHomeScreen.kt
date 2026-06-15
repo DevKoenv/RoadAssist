@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
@@ -197,9 +197,9 @@ private fun StatusFilterRow(
     val scrollAmount = 140
 
     val bg = MaterialTheme.colorScheme.background
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp).clipToBounds()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 16.dp).horizontalScroll(scrollState),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 8.dp).horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             DispatcherFilter.entries.forEach { f ->
@@ -239,7 +239,7 @@ private fun StatusFilterRow(
         if (scrollState.canScrollBackward) {
             IconButton(
                 onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
-                modifier = Modifier.align(Alignment.CenterStart).offset(x = 8.dp).size(28.dp).background(bg),
+                modifier = Modifier.align(Alignment.CenterStart).size(28.dp).background(bg),
             ) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll left", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
             }
@@ -247,7 +247,7 @@ private fun StatusFilterRow(
         if (scrollState.canScrollForward) {
             IconButton(
                 onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
-                modifier = Modifier.align(Alignment.CenterEnd).offset(x = (-8).dp).size(28.dp).background(bg),
+                modifier = Modifier.align(Alignment.CenterEnd).size(28.dp).background(bg),
             ) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll right", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
             }
