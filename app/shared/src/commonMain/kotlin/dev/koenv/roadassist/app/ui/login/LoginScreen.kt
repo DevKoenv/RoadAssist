@@ -6,11 +6,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,11 +48,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.theme.RoadAssistColors
 import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
+import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
+import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.core.Role
 
 @Composable
@@ -74,29 +72,11 @@ fun LoginScreen(
         }
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        val isWide = maxWidth >= 700.dp
-        if (isWide) {
-            DesktopLoginLayout(
-                state = state,
-                username = username,
-                password = password,
-                onUsernameChange = { username = it },
-                onPasswordChange = { password = it },
-                onLogin = { viewModel.login(username, password) },
-                serverReachable = serverReachable,
-            )
-        } else {
-            MobileLoginLayout(
-                state = state,
-                username = username,
-                password = password,
-                onUsernameChange = { username = it },
-                onPasswordChange = { password = it },
-                onLogin = { viewModel.login(username, password) },
-                serverReachable = serverReachable,
-            )
-        }
+    val windowSizeClass = LocalWindowSizeClass.current
+    if (windowSizeClass == WindowSizeClass.Compact) {
+        MobileLoginLayout(state, username, password, { username = it }, { password = it }, { viewModel.login(username, password) }, serverReachable)
+    } else {
+        DesktopFormPanel(state, username, password, { username = it }, { password = it }, { viewModel.login(username, password) }, serverReachable, modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -150,56 +130,6 @@ private fun MobileLoginLayout(
                 text = "Signed in stays active on this device.",
                 style = MaterialTheme.typography.labelMedium,
                 color = LocalRoadAssistColors.current.mutedForeground,
-            )
-        }
-    }
-}
-
-@Composable
-private fun DesktopLoginLayout(
-    state: LoginState,
-    username: String,
-    password: String,
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onLogin: () -> Unit,
-    serverReachable: Boolean,
-) {
-    Row(modifier = Modifier.fillMaxSize()) {
-        DesktopBrandPanel(modifier = Modifier.weight(0.42f).fillMaxHeight())
-        DesktopFormPanel(
-            state = state,
-            username = username,
-            password = password,
-            onUsernameChange = onUsernameChange,
-            onPasswordChange = onPasswordChange,
-            onLogin = onLogin,
-            serverReachable = serverReachable,
-            modifier = Modifier.weight(0.58f).fillMaxHeight(),
-        )
-    }
-}
-
-@Composable
-private fun DesktopBrandPanel(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.background(RoadAssistColors.BrandDark), contentAlignment = Alignment.Center) {
-        Column(modifier = Modifier.padding(40.dp)) {
-            RoadAssistAppIcon(size = 56.dp, lightScheme = false)
-            Spacer(Modifier.height(40.dp))
-            Box(modifier = Modifier.height(2.dp).width(40.dp).background(RoadAssistColors.Primary))
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "Help on the way, faster.",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp,
-                ),
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "Report a breakdown with your location and a photo. Dispatchers triage every report and keep you updated.",
-                style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9AA2B1), lineHeight = 20.sp),
             )
         }
     }

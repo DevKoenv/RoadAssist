@@ -44,6 +44,7 @@ import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserTab
+import dev.koenv.roadassist.app.ui.layouts.AuthLayout
 import dev.koenv.roadassist.app.ui.login.LoginScreen
 import dev.koenv.roadassist.app.ui.login.LoginViewModel
 import dev.koenv.roadassist.app.ui.newincident.NewIncidentScreen
@@ -101,15 +102,17 @@ fun AppNavigation(
             NavHost(navController = navController, startDestination = startDestination) {
                 composable("login") {
                     val vm = viewModel { LoginViewModel(apiClient, storage) }
-                    LoginScreen(
-                        viewModel = vm,
-                        onLoginSuccess = { role ->
-                            val destination = if (role == Role.DISPATCHER) "dispatcher_home" else "road_user_home"
-                            navController.navigate(destination) {
-                                popUpTo("login") { inclusive = true }
-                            }
-                        },
-                    )
+                    AuthLayout {
+                        LoginScreen(
+                            viewModel = vm,
+                            onLoginSuccess = { role ->
+                                val destination = if (role == Role.DISPATCHER) "dispatcher_home" else "road_user_home"
+                                navController.navigate(destination) {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
+                        )
+                    }
                 }
                 composable("road_user_home") {
                     val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
