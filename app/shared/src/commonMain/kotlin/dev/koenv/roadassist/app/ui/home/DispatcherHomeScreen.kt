@@ -196,27 +196,30 @@ private fun StatusFilterRow(
     val scope = rememberCoroutineScope()
     val scrollAmount = 140
 
+    val hasOverflow = scrollState.canScrollBackward || scrollState.canScrollForward
     Row(
         modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
-            onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
-            enabled = scrollState.canScrollBackward,
-            modifier = Modifier.size(28.dp),
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Scroll left",
-                modifier = Modifier.size(18.dp),
-                tint = if (scrollState.canScrollBackward) extColors.mutedForeground else Color.Transparent,
-            )
+        if (hasOverflow) {
+            IconButton(
+                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
+                enabled = scrollState.canScrollBackward,
+                modifier = Modifier.size(28.dp),
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = "Scroll left",
+                    modifier = Modifier.size(18.dp),
+                    tint = if (scrollState.canScrollBackward) extColors.mutedForeground else Color.Transparent,
+                )
+            }
         }
         Row(
             modifier = Modifier.weight(1f).horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(if (hasOverflow) 4.dp else 16.dp))
             DispatcherFilter.entries.forEach { f ->
                 FilterChip(
                     selected = filter == f,
@@ -250,19 +253,21 @@ private fun StatusFilterRow(
                     ),
                 )
             }
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(if (hasOverflow) 4.dp else 16.dp))
         }
-        IconButton(
-            onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
-            enabled = scrollState.canScrollForward,
-            modifier = Modifier.size(28.dp),
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Scroll right",
-                modifier = Modifier.size(18.dp),
-                tint = if (scrollState.canScrollForward) extColors.mutedForeground else Color.Transparent,
-            )
+        if (hasOverflow) {
+            IconButton(
+                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
+                enabled = scrollState.canScrollForward,
+                modifier = Modifier.size(28.dp),
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "Scroll right",
+                    modifier = Modifier.size(18.dp),
+                    tint = if (scrollState.canScrollForward) extColors.mutedForeground else Color.Transparent,
+                )
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ class IncidentRepository(
 
     suspend fun getIncident(id: Int): Result<Incident> =
         apiClient.getIncident(id)
+            .recoverCatching { cache.load().firstOrNull { it.id == id } ?: throw it }
 
     suspend fun patchIncidentStatus(id: Int, request: PatchIncidentStatusRequest): Result<Incident> =
         apiClient.patchIncidentStatus(id, request)
