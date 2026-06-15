@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -196,28 +195,12 @@ private fun StatusFilterRow(
     val scope = rememberCoroutineScope()
     val scrollAmount = 140
 
-    Row(
-        modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (scrollState.canScrollBackward) {
-            IconButton(
-                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
-                modifier = Modifier.size(28.dp),
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = "Scroll left",
-                    modifier = Modifier.size(18.dp),
-                    tint = extColors.mutedForeground,
-                )
-            }
-        }
+    val bg = MaterialTheme.colorScheme.background
+    Box(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.weight(1f).horizontalScroll(scrollState),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 16.dp).horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Spacer(Modifier.width(if (!scrollState.canScrollBackward) 16.dp else 4.dp))
             DispatcherFilter.entries.forEach { f ->
                 FilterChip(
                     selected = filter == f,
@@ -251,19 +234,21 @@ private fun StatusFilterRow(
                     ),
                 )
             }
-            Spacer(Modifier.width(if (!scrollState.canScrollForward) 16.dp else 4.dp))
+        }
+        if (scrollState.canScrollBackward) {
+            IconButton(
+                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
+                modifier = Modifier.align(Alignment.CenterStart).size(28.dp).background(bg),
+            ) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll left", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
+            }
         }
         if (scrollState.canScrollForward) {
             IconButton(
                 onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.align(Alignment.CenterEnd).size(28.dp).background(bg),
             ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Scroll right",
-                    modifier = Modifier.size(18.dp),
-                    tint = extColors.mutedForeground,
-                )
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll right", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
             }
         }
     }
