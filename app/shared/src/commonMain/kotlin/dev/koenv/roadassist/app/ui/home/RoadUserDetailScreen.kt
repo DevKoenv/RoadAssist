@@ -17,14 +17,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -55,15 +53,17 @@ import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.CategoryChip
 import dev.koenv.roadassist.app.ui.components.IncidentActivitySection
 import dev.koenv.roadassist.app.ui.components.LocationRow
-import dev.koenv.roadassist.app.ui.components.MobileAppBar
 import dev.koenv.roadassist.app.ui.components.StatusBadge
+import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
+import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
+import dev.koenv.roadassist.app.ui.layouts.DetailLayout
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoadUserDetailScreen(
     viewModel: RoadUserDetailViewModel,
-    isDesktop: Boolean,
     onBack: () -> Unit,
 ) {
     val incident by viewModel.incident.collectAsState()
@@ -75,61 +75,17 @@ fun RoadUserDetailScreen(
     val refreshing by viewModel.refreshing.collectAsState()
     val serverReachable by viewModel.serverReachable.collectAsState()
 
-    if (isDesktop) {
-        RoadUserDetailDesktopLayout(
-            incident = incident,
-            loading = loading,
-            comments = comments,
-            address = address,
-            commentInput = commentInput,
-            commentPosting = commentPosting,
-            serverReachable = serverReachable,
-            onBack = onBack,
-            onCommentChange = viewModel::updateCommentInput,
-            onCommentSend = viewModel::postComment,
-        )
-    } else {
-        RoadUserDetailMobileLayout(
-            incident = incident,
-            loading = loading,
-            refreshing = refreshing,
-            comments = comments,
-            address = address,
-            commentInput = commentInput,
-            commentPosting = commentPosting,
-            serverReachable = serverReachable,
-            onBack = onBack,
-            onRefresh = viewModel::refresh,
-            onCommentChange = viewModel::updateCommentInput,
-            onCommentSend = viewModel::postComment,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RoadUserDetailMobileLayout(
-    incident: Incident?,
-    loading: Boolean,
-    refreshing: Boolean,
-    comments: List<Comment>,
-    address: String?,
-    commentInput: String,
-    commentPosting: Boolean,
-    serverReachable: Boolean,
-    onBack: () -> Unit,
-    onRefresh: () -> Unit,
-    onCommentChange: (String) -> Unit,
-    onCommentSend: () -> Unit,
-) {
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            MobileAppBar(title = "Incident", onBack = onBack)
-            AppDivider()
+    DetailLayout(
+        title = "Incident",
+        onBack = onBack,
+        serverReachable = serverReachable,
+    ) { padding ->
+        val windowSizeClass = LocalWindowSizeClass.current
+        if (windowSizeClass == WindowSizeClass.Compact) {
             PullToRefreshBox(
                 isRefreshing = refreshing,
-                onRefresh = onRefresh,
-                modifier = Modifier.fillMaxSize(),
+                onRefresh = viewModel::refresh,
+                modifier = Modifier.fillMaxSize().padding(padding),
             ) {
                 DetailBody(
                     incident = incident,
@@ -139,41 +95,24 @@ private fun RoadUserDetailMobileLayout(
                     commentInput = commentInput,
                     commentPosting = commentPosting,
                     serverReachable = serverReachable,
-                    onCommentChange = onCommentChange,
-                    onCommentSend = onCommentSend,
+                    onCommentChange = viewModel::updateCommentInput,
+                    onCommentSend = viewModel::postComment,
                 )
             }
+        } else {
+            DetailBody(
+                incident = incident,
+                loading = loading,
+                comments = comments,
+                address = address,
+                commentInput = commentInput,
+                commentPosting = commentPosting,
+                serverReachable = serverReachable,
+                onCommentChange = viewModel::updateCommentInput,
+                onCommentSend = viewModel::postComment,
+                modifier = Modifier.fillMaxSize().padding(padding),
+            )
         }
-    }
-}
-
-@Composable
-private fun RoadUserDetailDesktopLayout(
-    incident: Incident?,
-    loading: Boolean,
-    comments: List<Comment>,
-    address: String?,
-    commentInput: String,
-    commentPosting: Boolean,
-    serverReachable: Boolean,
-    onBack: () -> Unit,
-    onCommentChange: (String) -> Unit,
-    onCommentSend: () -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        DesktopDetailHeader(title = "Incident", onBack = onBack)
-        AppDivider()
-        DetailBody(
-            incident = incident,
-            loading = loading,
-            comments = comments,
-            address = address,
-            commentInput = commentInput,
-            commentPosting = commentPosting,
-            serverReachable = serverReachable,
-            onCommentChange = onCommentChange,
-            onCommentSend = onCommentSend,
-        )
     }
 }
 
@@ -188,9 +127,10 @@ private fun DetailBody(
     serverReachable: Boolean,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     when {
-        loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        loading -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         incident != null -> RoadUserDetailContent(
@@ -202,8 +142,9 @@ private fun DetailBody(
             serverReachable = serverReachable,
             onCommentChange = onCommentChange,
             onCommentSend = onCommentSend,
+            modifier = modifier,
         )
-        else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        else -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Incident not found.", style = MaterialTheme.typography.bodyMedium, color = LocalRoadAssistColors.current.mutedForeground)
         }
     }
@@ -219,13 +160,14 @@ internal fun RoadUserDetailContent(
     serverReachable: Boolean = true,
     onCommentChange: (String) -> Unit,
     onCommentSend: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalPlatformContext.current
     val colors = LocalRoadAssistColors.current
     var showLightbox by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
@@ -349,28 +291,6 @@ private fun CommentInputRow(
                     tint = if (enabled && input.isNotBlank()) MaterialTheme.colorScheme.primary else colors.mutedForeground,
                     modifier = Modifier.size(20.dp),
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DesktopDetailHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                Icons.AutoMirrored.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-            if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
             }
         }
     }

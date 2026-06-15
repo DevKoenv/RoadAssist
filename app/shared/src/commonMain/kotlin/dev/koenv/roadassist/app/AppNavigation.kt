@@ -136,7 +136,6 @@ fun AppNavigation(
                     val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id, geocodingService) }
                     RoadUserDetailScreen(
                         viewModel = vm,
-                        isDesktop = isDesktop,
                         onBack = { navController.popBackStack("road_user_home", inclusive = false) },
                     )
                 }
@@ -159,7 +158,6 @@ fun AppNavigation(
                     val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id, geocodingService) }
                     DispatcherDetailScreen(
                         viewModel = vm,
-                        isDesktop = isDesktop,
                         onBack = { navController.popBackStack("dispatcher_home", inclusive = false) },
                     )
                 }
@@ -173,7 +171,6 @@ fun AppNavigation(
                         viewModel = vm,
                         onSuccess = { navController.popBackStack() },
                         onBack = { navController.popBackStack() },
-                        onLogout = goToLogin,
                     )
                 }
             }
