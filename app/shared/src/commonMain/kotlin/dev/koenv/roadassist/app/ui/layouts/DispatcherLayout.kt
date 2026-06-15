@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -33,14 +35,15 @@ fun DispatcherLayout(
     title: String,
     serverReachable: Boolean,
     onLogout: () -> Unit,
+    onBack: (() -> Unit)? = null,
     headerTrailing: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
     if (windowSizeClass == WindowSizeClass.Compact) {
-        CompactDispatcherLayout(title, serverReachable, onLogout, headerTrailing, content)
+        CompactDispatcherLayout(title, serverReachable, onLogout, onBack, headerTrailing, content)
     } else {
-        WideDispatcherLayout(title, serverReachable, onLogout, headerTrailing, content)
+        WideDispatcherLayout(title, serverReachable, onLogout, onBack, headerTrailing, content)
     }
 }
 
@@ -49,6 +52,7 @@ private fun CompactDispatcherLayout(
     title: String,
     serverReachable: Boolean,
     onLogout: () -> Unit,
+    onBack: (() -> Unit)?,
     headerTrailing: (@Composable RowScope.() -> Unit)?,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -59,6 +63,7 @@ private fun CompactDispatcherLayout(
                 ConnectivityBanner(visible = !serverReachable)
                 MobileAppBar(
                     title = title,
+                    onBack = onBack,
                     trailing = {
                         headerTrailing?.invoke(this)
                         LogoutTextButton(onClick = onLogout)
@@ -75,6 +80,7 @@ private fun WideDispatcherLayout(
     title: String,
     serverReachable: Boolean,
     onLogout: () -> Unit,
+    onBack: (() -> Unit)?,
     headerTrailing: (@Composable RowScope.() -> Unit)?,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -82,13 +88,13 @@ private fun WideDispatcherLayout(
     Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         AppNavRail(onLogout = onLogout) {
             NavRailItem(
-                selected = true,
-                onClick = {},
+                selected = onBack == null,
+                onClick = { onBack?.invoke() },
                 icon = {
                     Icon(
                         Icons.AutoMirrored.Filled.List,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (onBack == null) MaterialTheme.colorScheme.primary else colors.mutedForeground,
                     )
                 },
                 label = "Queue",
@@ -102,7 +108,23 @@ private fun WideDispatcherLayout(
         )
         Column(Modifier.weight(1f).fillMaxSize()) {
             ConnectivityBanner(visible = !serverReachable)
-            DesktopPageHeader(title = title, trailing = headerTrailing ?: {})
+            DesktopPageHeader(
+                title = title,
+                leading = if (onBack != null) {
+                    {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                            )
+                        }
+                    }
+                } else {
+                    null
+                },
+                trailing = headerTrailing ?: {},
+            )
             AppDivider()
             content(PaddingValues(0.dp))
         }

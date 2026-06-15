@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.theme.RoadAssistColors
@@ -87,7 +89,6 @@ fun DispatcherHomeScreen(
                 StatusFilterRow(
                     filter = filter,
                     onFilterChange = { filter = it },
-                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 if (filtered.isEmpty()) {
                     EmptyState("No incidents in queue", "New reports from road users will appear here.")
@@ -137,7 +138,7 @@ private fun DispatcherSplitPane(
             StatusFilterRow(
                 filter = filter,
                 onFilterChange = onFilterChange,
-                modifier = Modifier.padding(horizontal = 8.dp),
+                contentPaddingHorizontal = 8.dp,
             )
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 if (filtered.isEmpty()) {
@@ -185,11 +186,13 @@ private fun UserIdBadge(userId: Int) {
 private fun StatusFilterRow(
     filter: DispatcherFilter,
     onFilterChange: (DispatcherFilter) -> Unit,
+    contentPaddingHorizontal: Dp = 16.dp,
     modifier: Modifier = Modifier,
 ) {
     val extColors = LocalRoadAssistColors.current
     LazyRow(
-        modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = contentPaddingHorizontal, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(DispatcherFilter.entries) { f ->

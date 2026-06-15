@@ -55,7 +55,7 @@ import dev.koenv.roadassist.app.ui.components.LocationRow
 import dev.koenv.roadassist.app.ui.components.StatusBadge
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.layouts.DetailLayout
+import dev.koenv.roadassist.app.ui.layouts.RoadUserLayout
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
 
@@ -64,6 +64,7 @@ import dev.koenv.roadassist.core.Incident
 fun RoadUserDetailScreen(
     viewModel: RoadUserDetailViewModel,
     onBack: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     val incident by viewModel.incident.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -74,10 +75,12 @@ fun RoadUserDetailScreen(
     val refreshing by viewModel.refreshing.collectAsState()
     val serverReachable by viewModel.serverReachable.collectAsState()
 
-    DetailLayout(
-        title = "Incident",
+    RoadUserLayout(
         onBack = onBack,
+        onTabChange = { onBack() },
         serverReachable = serverReachable,
+        onLogout = onLogout,
+        title = "Incident",
     ) { padding ->
         val windowSizeClass = LocalWindowSizeClass.current
         if (windowSizeClass == WindowSizeClass.Compact) {

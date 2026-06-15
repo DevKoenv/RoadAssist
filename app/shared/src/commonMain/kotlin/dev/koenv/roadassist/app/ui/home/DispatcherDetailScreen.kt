@@ -66,7 +66,7 @@ import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.components.StatusEditChip
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.layouts.DetailLayout
+import dev.koenv.roadassist.app.ui.layouts.DispatcherLayout
 import dev.koenv.roadassist.app.util.timeAgo
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.Incident
@@ -79,6 +79,7 @@ import kotlinx.coroutines.launch
 fun DispatcherDetailScreen(
     viewModel: DispatcherDetailViewModel,
     onBack: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     val incident by viewModel.incident.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -112,22 +113,34 @@ fun DispatcherDetailScreen(
         }
     }
 
-    val subtitle = incident?.let { "u-${it.userId} · ${timeAgo(it.createdAt, nowMillis)}" }
-
-    DetailLayout(
+    DispatcherLayout(
         title = "Incident",
-        subtitle = subtitle,
         onBack = onBack,
+        onLogout = onLogout,
         serverReachable = serverReachable,
-        snackbarHostState = snackbarHostState,
     ) { padding ->
         val windowSizeClass = LocalWindowSizeClass.current
-        if (windowSizeClass == WindowSizeClass.Compact) {
-            PullToRefreshBox(
-                isRefreshing = refreshing,
-                onRefresh = viewModel::refresh,
-                modifier = Modifier.fillMaxSize().padding(padding),
-            ) {
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            if (windowSizeClass == WindowSizeClass.Compact) {
+                PullToRefreshBox(
+                    isRefreshing = refreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    DispatcherDetailBody(
+                        incident = incident,
+                        loading = loading,
+                        comments = comments,
+                        address = address,
+                        commentInput = commentInput,
+                        commentPosting = commentPosting,
+                        serverReachable = serverReachable,
+                        onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
+                        onCommentChange = viewModel::updateCommentInput,
+                        onCommentSend = viewModel::postComment,
+                    )
+                }
+            } else {
                 DispatcherDetailBody(
                     incident = incident,
                     loading = loading,
@@ -139,22 +152,13 @@ fun DispatcherDetailScreen(
                     onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
                     onCommentChange = viewModel::updateCommentInput,
                     onCommentSend = viewModel::postComment,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
-        } else {
-            DispatcherDetailBody(
-                incident = incident,
-                loading = loading,
-                comments = comments,
-                address = address,
-                commentInput = commentInput,
-                commentPosting = commentPosting,
-                serverReachable = serverReachable,
-                onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
-                onCommentChange = viewModel::updateCommentInput,
-                onCommentSend = viewModel::postComment,
-                modifier = Modifier.fillMaxSize().padding(padding),
-            )
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            ) { data -> Snackbar(data) }
         }
     }
 

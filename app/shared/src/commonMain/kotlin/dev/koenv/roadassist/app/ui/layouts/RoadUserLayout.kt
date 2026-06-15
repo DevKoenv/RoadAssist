@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
@@ -40,89 +42,134 @@ import dev.koenv.roadassist.app.ui.home.RoadUserTab
 
 @Composable
 fun RoadUserLayout(
-    selectedTab: RoadUserTab,
-    onTabChange: (RoadUserTab) -> Unit,
+    selectedTab: RoadUserTab? = null,
+    onTabChange: (RoadUserTab) -> Unit = {},
     serverReachable: Boolean,
     onLogout: () -> Unit,
     fab: FabConfig? = null,
+    onBack: (() -> Unit)? = null,
+    title: String? = null,
     headerTrailing: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
     if (windowSizeClass == WindowSizeClass.Compact) {
-        CompactRoadUserLayout(selectedTab, onTabChange, serverReachable, fab, headerTrailing, onLogout, content)
+        CompactRoadUserLayout(
+            selectedTab = selectedTab,
+            onTabChange = onTabChange,
+            serverReachable = serverReachable,
+            fab = fab,
+            headerTrailing = headerTrailing,
+            onLogout = onLogout,
+            onBack = onBack,
+            title = title,
+            content = content,
+        )
     } else {
-        WideRoadUserLayout(selectedTab, onTabChange, serverReachable, onLogout, fab, windowSizeClass, headerTrailing, content)
+        WideRoadUserLayout(
+            selectedTab = selectedTab,
+            onTabChange = onTabChange,
+            serverReachable = serverReachable,
+            onLogout = onLogout,
+            fab = fab,
+            windowSizeClass = windowSizeClass,
+            onBack = onBack,
+            customTitle = title,
+            headerTrailing = headerTrailing,
+            content = content,
+        )
     }
 }
 
 @Composable
 private fun CompactRoadUserLayout(
-    selectedTab: RoadUserTab,
+    selectedTab: RoadUserTab?,
     onTabChange: (RoadUserTab) -> Unit,
     serverReachable: Boolean,
     fab: FabConfig?,
     headerTrailing: (@Composable RowScope.() -> Unit)?,
     onLogout: () -> Unit,
+    onBack: (() -> Unit)?,
+    title: String?,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val title = if (selectedTab == RoadUserTab.Active) "Active" else "History"
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            Column {
-                ConnectivityBanner(visible = !serverReachable)
-                MobileAppBar(
-                    title = title,
-                    trailing = {
-                        headerTrailing?.invoke(this)
-                        LogoutTextButton(onClick = onLogout)
-                    },
-                )
-                AppDivider()
-            }
-        },
-        bottomBar = {
-            Column {
-                AppDivider()
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    tonalElevation = 0.dp,
-                ) {
-                    RoadUserBottomNavItem(RoadUserTab.Active, selectedTab, onTabChange, "Active") {
-                        Icon(
-                            Icons.AutoMirrored.Filled.List,
-                            contentDescription = null,
-                            tint = if (selectedTab == RoadUserTab.Active) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                        )
-                    }
-                    RoadUserBottomNavItem(RoadUserTab.History, selectedTab, onTabChange, "History") {
-                        Icon(
-                            Icons.Default.History,
-                            contentDescription = null,
-                            tint = if (selectedTab == RoadUserTab.History) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
-                        )
+    if (onBack != null) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                Column {
+                    ConnectivityBanner(visible = !serverReachable)
+                    MobileAppBar(
+                        title = title ?: "Incident",
+                        onBack = onBack,
+                        trailing = {
+                            headerTrailing?.invoke(this)
+                            LogoutTextButton(onClick = onLogout)
+                        },
+                    )
+                    AppDivider()
+                }
+            },
+        ) { padding -> content(padding) }
+    } else {
+        val tabTitle = if (selectedTab == RoadUserTab.Active) "Active" else "History"
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                Column {
+                    ConnectivityBanner(visible = !serverReachable)
+                    MobileAppBar(
+                        title = tabTitle,
+                        trailing = {
+                            headerTrailing?.invoke(this)
+                            LogoutTextButton(onClick = onLogout)
+                        },
+                    )
+                    AppDivider()
+                }
+            },
+            bottomBar = {
+                Column {
+                    AppDivider()
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        tonalElevation = 0.dp,
+                    ) {
+                        RoadUserBottomNavItem(RoadUserTab.Active, selectedTab, onTabChange, "Active") {
+                            Icon(
+                                Icons.AutoMirrored.Filled.List,
+                                contentDescription = null,
+                                tint = if (selectedTab == RoadUserTab.Active) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
+                            )
+                        }
+                        RoadUserBottomNavItem(RoadUserTab.History, selectedTab, onTabChange, "History") {
+                            Icon(
+                                Icons.Default.History,
+                                contentDescription = null,
+                                tint = if (selectedTab == RoadUserTab.History) MaterialTheme.colorScheme.primary else LocalRoadAssistColors.current.mutedForeground,
+                            )
+                        }
                     }
                 }
-            }
-        },
-        floatingActionButton = {
-            fab?.let { config ->
-                FloatingActionButton(
-                    onClick = config.onClick,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ) {
-                    Icon(config.icon, contentDescription = config.label, tint = MaterialTheme.colorScheme.onPrimary)
+            },
+            floatingActionButton = {
+                fab?.let { config ->
+                    FloatingActionButton(
+                        onClick = config.onClick,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ) {
+                        Icon(config.icon, contentDescription = config.label, tint = MaterialTheme.colorScheme.onPrimary)
+                    }
                 }
-            }
-        },
-    ) { padding -> content(padding) }
+            },
+        ) { padding -> content(padding) }
+    }
 }
 
 @Composable
 private fun RowScope.RoadUserBottomNavItem(
     tab: RoadUserTab,
-    selectedTab: RoadUserTab,
+    selectedTab: RoadUserTab?,
     onTabChange: (RoadUserTab) -> Unit,
     label: String,
     icon: @Composable () -> Unit,
@@ -136,17 +183,19 @@ private fun RowScope.RoadUserBottomNavItem(
 
 @Composable
 private fun WideRoadUserLayout(
-    selectedTab: RoadUserTab,
+    selectedTab: RoadUserTab?,
     onTabChange: (RoadUserTab) -> Unit,
     serverReachable: Boolean,
     onLogout: () -> Unit,
     fab: FabConfig?,
     windowSizeClass: WindowSizeClass,
+    onBack: (() -> Unit)?,
+    customTitle: String?,
     headerTrailing: (@Composable RowScope.() -> Unit)?,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val colors = LocalRoadAssistColors.current
-    val title = if (selectedTab == RoadUserTab.Active) "Active incidents" else "History"
+    val title = customTitle ?: if (selectedTab == RoadUserTab.Active) "Active incidents" else "History"
     Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         AppNavRail(onLogout = onLogout) {
             NavRailItem(
@@ -184,6 +233,19 @@ private fun WideRoadUserLayout(
             ConnectivityBanner(visible = !serverReachable)
             DesktopPageHeader(
                 title = title,
+                leading = if (onBack != null) {
+                    {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                            )
+                        }
+                    }
+                } else {
+                    null
+                },
                 trailing = {
                     headerTrailing?.invoke(this)
                     when (windowSizeClass) {
