@@ -4,7 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -182,6 +182,7 @@ private fun UserIdBadge(userId: Int) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StatusFilterRow(
     filter: DispatcherFilter,
@@ -190,12 +191,14 @@ private fun StatusFilterRow(
     modifier: Modifier = Modifier,
 ) {
     val extColors = LocalRoadAssistColors.current
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = contentPaddingHorizontal, vertical = 10.dp),
+    FlowRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = contentPaddingHorizontal, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        items(DispatcherFilter.entries) { f ->
+        DispatcherFilter.entries.forEach { f ->
             FilterChip(
                 selected = filter == f,
                 onClick = { onFilterChange(f) },

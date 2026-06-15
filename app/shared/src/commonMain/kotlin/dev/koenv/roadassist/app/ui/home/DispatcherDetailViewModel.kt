@@ -127,13 +127,13 @@ class DispatcherDetailViewModel(
                 .onSuccess { updated ->
                     _incident.value = updated
                     _selectedStatus.value = updated.status
-                    _updateState.value = UpdateState.Idle
                     if (message.isNotBlank()) {
                         repository.postComment(current.id, message).getOrNull()
                     }
                     _comments.value = repository.getComments(current.id).getOrElse { _comments.value }
                     _notes.value = ""
                     onSuccess()
+                    _updateState.value = UpdateState.Idle
                 }
                 .onFailure {
                     _incident.value = previousIncident
