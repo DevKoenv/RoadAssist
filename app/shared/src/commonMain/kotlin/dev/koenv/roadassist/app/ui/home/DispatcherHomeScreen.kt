@@ -196,9 +196,9 @@ private fun StatusFilterRow(
     val scrollAmount = 140
 
     val bg = MaterialTheme.colorScheme.background
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 16.dp).horizontalScroll(scrollState),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 8.dp).horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             DispatcherFilter.entries.forEach { f ->
