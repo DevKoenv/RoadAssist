@@ -14,12 +14,12 @@ import dev.koenv.roadassist.core.IncidentStatus
 fun IncidentEntity.toDomain(): Incident = Incident(
     id = id.toInt(),
     userId = userId.toInt(),
-    category = IncidentCategory.valueOf(category),
+    category = runCatching { IncidentCategory.valueOf(category) }.getOrElse { IncidentCategory.OTHER },
     description = description,
     latitude = latitude,
     longitude = longitude,
     photoUrl = photoUrl,
-    status = IncidentStatus.valueOf(status),
+    status = runCatching { IncidentStatus.valueOf(status) }.getOrElse { IncidentStatus.entries.first() },
     notes = notes,
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -42,8 +42,8 @@ fun IncidentEntityQueries.upsert(incident: Incident) = upsert(
 fun CommentEntity.toDomain(): Comment = Comment(
     id = id.toInt(),
     incidentId = incidentId.toInt(),
-    authorRole = AuthorRole.valueOf(authorRole),
-    type = CommentType.valueOf(type),
+    authorRole = runCatching { AuthorRole.valueOf(authorRole) }.getOrElse { AuthorRole.entries.first() },
+    type = runCatching { CommentType.valueOf(type) }.getOrElse { CommentType.entries.first() },
     content = content,
     createdAt = createdAt,
 )

@@ -16,3 +16,6 @@ VALUES (?, ?, ?, ?, ?, ?);
 
 deleteByIncidentId:
 DELETE FROM CommentEntity WHERE incidentId = ?;
+
+deleteAll:
+DELETE FROM CommentEntity;

@@ -56,12 +56,13 @@ class RoadUserDetailViewModel(
             }
         }
         viewModelScope.launch {
-            repository.syncIncident(incidentId)
-            _loading.value = false
-        }
-        viewModelScope.launch {
+            var isFirstSync = true
             serverReachable.filter { it }.collect {
                 repository.syncIncident(incidentId)
+                if (isFirstSync) {
+                    _loading.value = false
+                    isFirstSync = false
+                }
             }
         }
         viewModelScope.launch {

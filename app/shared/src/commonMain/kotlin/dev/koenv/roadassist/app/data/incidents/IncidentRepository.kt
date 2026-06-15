@@ -41,6 +41,7 @@ class IncidentRepository(
         apiClient.getIncidents().map { incidents ->
             db.incidentEntityQueries.transaction {
                 db.incidentEntityQueries.deleteAll()
+                db.commentEntityQueries.deleteAll()
                 incidents.forEach { db.incidentEntityQueries.upsert(it) }
             }
         }
