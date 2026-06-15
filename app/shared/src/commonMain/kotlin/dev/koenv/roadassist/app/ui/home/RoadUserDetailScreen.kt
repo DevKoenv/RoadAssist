@@ -116,7 +116,7 @@ fun RoadUserDetailScreen(
 }
 
 @Composable
-private fun DetailBody(
+internal fun DetailBody(
     incident: Incident?,
     loading: Boolean,
     comments: List<Comment>,
@@ -231,6 +231,29 @@ internal fun RoadUserDetailContent(
             }
         }
     }
+}
+
+@Composable
+internal fun RoadUserDetailPanel(viewModel: RoadUserDetailViewModel) {
+    val incident by viewModel.incident.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val address by viewModel.address.collectAsState()
+    val commentInput by viewModel.commentInput.collectAsState()
+    val commentPosting by viewModel.commentPosting.collectAsState()
+    val serverReachable by viewModel.serverReachable.collectAsState()
+    DetailBody(
+        incident = incident,
+        loading = loading,
+        comments = comments,
+        address = address,
+        commentInput = commentInput,
+        commentPosting = commentPosting,
+        serverReachable = serverReachable,
+        onCommentChange = viewModel::updateCommentInput,
+        onCommentSend = viewModel::postComment,
+        modifier = Modifier.fillMaxSize(),
+    )
 }
 
 @Composable

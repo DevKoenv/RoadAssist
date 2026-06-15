@@ -1,7 +1,12 @@
 package dev.koenv.roadassist.app.ui.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -17,9 +22,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.EmptyState
@@ -42,15 +49,20 @@ fun RoadUserHomeScreen(
     onLogout: () -> Unit,
     onNewIncident: () -> Unit,
     onIncidentClick: (Int) -> Unit,
+    detailPanel: @Composable (Int) -> Unit,
 ) {
     val serverReachable by viewModel.serverReachable.collectAsState()
     val incidents by viewModel.incidents.collectAsState()
     val incidentsLoading by viewModel.incidentsLoading.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
+    val windowSizeClass = LocalWindowSizeClass.current
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var selectedIncidentId by remember { mutableStateOf<Int?>(null) }
+
     LaunchedEffect(Unit) {
         while (true) { delay(60_000L); nowMillis = System.currentTimeMillis() }
     }
+    LaunchedEffect(selectedTab) { selectedIncidentId = null }
 
     RoadUserLayout(
         selectedTab = selectedTab,
@@ -69,7 +81,6 @@ fun RoadUserHomeScreen(
         },
     ) { padding ->
         val filtered = filterByTab(incidents, selectedTab)
-        val windowSizeClass = LocalWindowSizeClass.current
         if (windowSizeClass == WindowSizeClass.Compact) {
             PullToRefreshBox(
                 isRefreshing = incidentsLoading,
@@ -87,6 +98,36 @@ fun RoadUserHomeScreen(
                 )
             }
         } else {
+            RoadUserSplitPane(
+                filtered = filtered,
+                selectedTab = selectedTab,
+                serverReachable = serverReachable,
+                nowMillis = nowMillis,
+                onNewIncident = onNewIncident,
+                selectedIncidentId = selectedIncidentId,
+                onSelectIncident = { selectedIncidentId = it },
+                detailPanel = detailPanel,
+                modifier = Modifier.fillMaxSize().padding(padding),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RoadUserSplitPane(
+    filtered: List<Incident>,
+    selectedTab: RoadUserTab,
+    serverReachable: Boolean,
+    nowMillis: Long,
+    onNewIncident: () -> Unit,
+    selectedIncidentId: Int?,
+    onSelectIncident: (Int) -> Unit,
+    detailPanel: @Composable (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalRoadAssistColors.current
+    Row(modifier = modifier) {
+        Box(Modifier.width(300.dp).fillMaxHeight()) {
             RoadUserIncidentList(
                 filtered = filtered,
                 incidentsLoading = false,
@@ -94,9 +135,17 @@ fun RoadUserHomeScreen(
                 serverReachable = serverReachable,
                 nowMillis = nowMillis,
                 onNewIncident = onNewIncident,
-                onIncidentClick = onIncidentClick,
-                modifier = Modifier.fillMaxSize().padding(padding),
+                onIncidentClick = onSelectIncident,
+                selectedIncidentId = selectedIncidentId,
             )
+        }
+        Box(Modifier.width(0.5.dp).fillMaxHeight().background(colors.border))
+        Box(Modifier.weight(1f).fillMaxHeight()) {
+            if (selectedIncidentId != null) {
+                detailPanel(selectedIncidentId)
+            } else {
+                EmptyState("No incident selected", "Select an incident from the list to view details.")
+            }
         }
     }
 }
@@ -111,6 +160,7 @@ private fun RoadUserIncidentList(
     onNewIncident: () -> Unit,
     onIncidentClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    selectedIncidentId: Int? = null,
 ) {
     if (filtered.isEmpty() && !incidentsLoading) {
         when (selectedTab) {
@@ -128,7 +178,12 @@ private fun RoadUserIncidentList(
     } else {
         LazyColumn(modifier = modifier) {
             items(filtered, key = { it.id }) { incident ->
-                IncidentListItem(incident = incident, nowMillis = nowMillis, onClick = { onIncidentClick(incident.id) })
+                IncidentListItem(
+                    incident = incident,
+                    nowMillis = nowMillis,
+                    onClick = { onIncidentClick(incident.id) },
+                    selected = incident.id == selectedIncidentId,
+                )
                 AppDivider()
             }
         }

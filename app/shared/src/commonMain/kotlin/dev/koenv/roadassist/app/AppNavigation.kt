@@ -26,10 +26,12 @@ import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
+import dev.koenv.roadassist.app.ui.home.DispatcherDetailPanel
 import dev.koenv.roadassist.app.ui.home.DispatcherDetailScreen
 import dev.koenv.roadassist.app.ui.home.DispatcherDetailViewModel
 import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.home.HomeViewModel
+import dev.koenv.roadassist.app.ui.home.RoadUserDetailPanel
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
 import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
@@ -99,6 +101,8 @@ fun AppNavigation(
                 }
                 composable("road_user_home") {
                     val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
+                    val geocodingService = remember { NominatimGeocodingService() }
+                    DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     LaunchedEffect(currentRoute) {
                         if (currentRoute == "road_user_home") vm.refreshIncidents()
                     }
@@ -107,6 +111,12 @@ fun AppNavigation(
                         onLogout = goToLogin,
                         onNewIncident = { navController.navigate("new_incident") },
                         onIncidentClick = { id -> navController.navigate("road_user_detail/$id") },
+                        detailPanel = { id ->
+                            val detailVm = viewModel(key = "road_user_panel_$id") {
+                                RoadUserDetailViewModel(repo, id, geocodingService)
+                            }
+                            RoadUserDetailPanel(viewModel = detailVm)
+                        },
                     )
                 }
                 composable("road_user_detail/{id}") { backStackEntry ->
@@ -121,6 +131,8 @@ fun AppNavigation(
                 }
                 composable("dispatcher_home") {
                     val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
+                    val geocodingService = remember { NominatimGeocodingService() }
+                    DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     LaunchedEffect(currentRoute) {
                         if (currentRoute == "dispatcher_home") vm.refreshIncidents()
                     }
@@ -128,6 +140,12 @@ fun AppNavigation(
                         viewModel = vm,
                         onLogout = goToLogin,
                         onIncidentClick = { id -> navController.navigate("dispatcher_detail/$id") },
+                        detailPanel = { id ->
+                            val detailVm = viewModel(key = "dispatcher_panel_$id") {
+                                DispatcherDetailViewModel(repo, id, geocodingService)
+                            }
+                            DispatcherDetailPanel(viewModel = detailVm)
+                        },
                     )
                 }
                 composable("dispatcher_detail/{id}") { backStackEntry ->

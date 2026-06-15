@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
@@ -28,12 +29,15 @@ fun IncidentListItem(
     nowMillis: Long,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
     trailing: @Composable (() -> Unit)? = null,
 ) {
-    val muted = LocalRoadAssistColors.current.mutedForeground
+    val colors = LocalRoadAssistColors.current
+    val muted = colors.mutedForeground
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .background(if (selected) colors.muted else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -42,7 +46,7 @@ fun IncidentListItem(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(LocalRoadAssistColors.current.muted, RoundedCornerShape(8.dp)),
+                .background(colors.muted, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center,
         ) {
             CategoryIcon(category = incident.category, modifier = Modifier.size(18.dp))

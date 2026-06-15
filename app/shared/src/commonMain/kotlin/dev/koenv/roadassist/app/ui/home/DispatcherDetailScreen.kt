@@ -25,6 +25,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -173,7 +175,7 @@ fun DispatcherDetailScreen(
 }
 
 @Composable
-private fun DispatcherDetailBody(
+internal fun DispatcherDetailBody(
     incident: Incident?,
     loading: Boolean,
     comments: List<Comment>,
@@ -209,7 +211,7 @@ private fun DispatcherDetailBody(
 }
 
 @Composable
-private fun DispatcherDetailContent(
+internal fun DispatcherDetailContent(
     incident: Incident,
     comments: List<Comment>,
     address: String?,
@@ -290,6 +292,67 @@ private fun DispatcherDetailContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+internal fun DispatcherDetailPanel(viewModel: DispatcherDetailViewModel) {
+    val incident by viewModel.incident.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val selectedStatus by viewModel.selectedStatus.collectAsState()
+    val notes by viewModel.notes.collectAsState()
+    val updateState by viewModel.updateState.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val address by viewModel.address.collectAsState()
+    val commentInput by viewModel.commentInput.collectAsState()
+    val commentPosting by viewModel.commentPosting.collectAsState()
+    val serverReachable by viewModel.serverReachable.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var showStatusDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(updateState) {
+        if (updateState is UpdateState.Error) {
+            scope.launch {
+                snackbarHostState.showSnackbar((updateState as UpdateState.Error).message)
+                viewModel.clearError()
+            }
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        DispatcherDetailBody(
+            incident = incident,
+            loading = loading,
+            comments = comments,
+            address = address,
+            commentInput = commentInput,
+            commentPosting = commentPosting,
+            serverReachable = serverReachable,
+            onStatusClick = if (serverReachable) { { showStatusDialog = true } } else { {} },
+            onCommentChange = viewModel::updateCommentInput,
+            onCommentSend = viewModel::postComment,
+            modifier = Modifier.fillMaxSize(),
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) { data -> Snackbar(data) }
+    }
+
+    if (showStatusDialog && incident != null) {
+        UpdateStatusDialog(
+            currentStatus = selectedStatus ?: incident!!.status,
+            notes = notes,
+            isLoading = updateState is UpdateState.Loading,
+            onStatusSelect = { viewModel.selectStatus(it) },
+            onNotesChange = { viewModel.updateNotes(it) },
+            onSave = { viewModel.saveUpdate { showStatusDialog = false } },
+            onDismiss = {
+                viewModel.cancelEdit()
+                showStatusDialog = false
+            },
+        )
     }
 }
 
