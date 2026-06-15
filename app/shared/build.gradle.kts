@@ -33,6 +33,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.sqldelight)
 }
 
 configurations.all {
@@ -64,6 +65,7 @@ kotlin {
             implementation(libs.ktor.clientOkhttp)
             implementation(libs.androidx.security.crypto)
             implementation(libs.play.services.location)
+            implementation(libs.sqldelight.driver.android)
         }
         commonMain {
             kotlin.srcDir(generateAppVersion)
@@ -86,6 +88,8 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+            implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -93,6 +97,15 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(libs.ktor.clientCio)
+            implementation(libs.sqldelight.driver.jvm)
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("RoadAssistDb") {
+            packageName.set("dev.koenv.roadassist.app.db")
         }
     }
 }

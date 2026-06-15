@@ -28,6 +28,7 @@ detekt = "1.23.8"
 kover = "0.9.8"
 play-services-location = "21.3.0"
 coil = "3.1.0"
+sqldelight = "2.3.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -78,6 +79,10 @@ detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", 
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+sqldelight-runtime        = { module = "app.cash.sqldelight:runtime",               version.ref = "sqldelight" }
+sqldelight-coroutines     = { module = "app.cash.sqldelight:coroutines-extensions",  version.ref = "sqldelight" }
+sqldelight-driver-jvm     = { module = "app.cash.sqldelight:sqlite-driver",          version.ref = "sqldelight" }
+sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver",         version.ref = "sqldelight" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -90,3 +95,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
