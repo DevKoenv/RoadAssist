@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.core
+package dev.koenv.roadassist.core.auth
 
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest

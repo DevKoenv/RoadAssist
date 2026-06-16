@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.core
+package dev.koenv.roadassist.core.health
 
 import dev.koenv.roadassist.core.health.PingMessage
 import kotlinx.serialization.encodeToString

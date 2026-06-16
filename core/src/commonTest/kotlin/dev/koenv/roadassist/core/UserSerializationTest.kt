@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.core
+package dev.koenv.roadassist.core.user
 
 import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.core.user.User
