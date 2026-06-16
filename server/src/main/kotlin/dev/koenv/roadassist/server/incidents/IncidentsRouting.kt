@@ -12,6 +12,10 @@ import dev.koenv.roadassist.server.auth.jwtClaims
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.UsersTable
+import dev.koenv.roadassist.server.events.EventBroadcaster
+import dev.koenv.roadassist.server.events.commentAdded
+import dev.koenv.roadassist.server.events.incidentCreated
+import dev.koenv.roadassist.server.events.incidentUpdated
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
@@ -36,21 +40,21 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 
-fun Route.configureIncidentsRouting() {
+fun Route.configureIncidentsRouting(broadcaster: EventBroadcaster) {
     route("/incidents") {
-        post { handleCreateIncident(call) }
+        post { handleCreateIncident(call, broadcaster) }
         get { handleListIncidents(call) }
         route("/{id}") {
             get { handleGetIncident(call) }
-            patch("/status") { handlePatchStatus(call) }
-            post("/photo") { handleUploadPhoto(call) }
+            patch("/status") { handlePatchStatus(call, broadcaster) }
+            post("/photo") { handleUploadPhoto(call, broadcaster) }
             get("/comments") { handleListComments(call) }
-            post("/comments") { handlePostComment(call) }
+            post("/comments") { handlePostComment(call, broadcaster) }
         }
     }
 }
 
-private suspend fun handleCreateIncident(call: ApplicationCall) {
+private suspend fun handleCreateIncident(call: ApplicationCall, broadcaster: EventBroadcaster) {
     val (userId, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
     if (role != Role.ROAD_USER.name) {
         call.respond(HttpStatusCode.Forbidden)
@@ -86,6 +90,7 @@ private suspend fun handleCreateIncident(call: ApplicationCall) {
         )
     }
     call.respond(HttpStatusCode.Created, incident)
+    broadcaster.emit(incidentCreated(incident), incident.userId)
 }
 
 private suspend fun handleListIncidents(call: ApplicationCall) {
@@ -118,7 +123,7 @@ private suspend fun handleGetIncident(call: ApplicationCall) {
     call.respond(incident)
 }
 
-private suspend fun handlePatchStatus(call: ApplicationCall) {
+private suspend fun handlePatchStatus(call: ApplicationCall, broadcaster: EventBroadcaster) {
     val (_, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
     if (role != Role.DISPATCHER.name) {
         call.respond(HttpStatusCode.Forbidden)
@@ -139,7 +144,8 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
         return
     }
     val now = java.time.Instant.now().toString()
-    val updated = transaction {
+    data class PatchResult(val incident: Incident, val comment: Comment)
+    val result = transaction {
         IncidentsTable.selectAll()
             .where { IncidentsTable.id eq incidentId }
             .firstOrNull() ?: return@transaction null
@@ -149,25 +155,36 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
             it[updatedAt] = now
         }
         // Every status change is automatically audit-logged as a STATUS_CHANGE comment
-        CommentsTable.insert {
+        val commentId = CommentsTable.insert {
             it[CommentsTable.incidentId] = EntityID(incidentId, IncidentsTable)
             it[CommentsTable.authorRole] = AuthorRole.DISPATCHER
             it[CommentsTable.type] = CommentType.STATUS_CHANGE
             it[content] = body.status.name
             it[createdAt] = now
-        }
-        IncidentsTable.selectAll()
+        } get CommentsTable.id
+        val updatedIncident = IncidentsTable.selectAll()
             .where { IncidentsTable.id eq incidentId }
             .first().toIncident()
+        val auditComment = Comment(
+            id = commentId.value,
+            incidentId = incidentId,
+            authorRole = AuthorRole.DISPATCHER,
+            type = CommentType.STATUS_CHANGE,
+            content = body.status.name,
+            createdAt = now,
+        )
+        PatchResult(updatedIncident, auditComment)
     }
-    if (updated == null) {
+    if (result == null) {
         call.respond(HttpStatusCode.NotFound)
         return
     }
-    call.respond(updated)
+    call.respond(result.incident)
+    broadcaster.emit(incidentUpdated(result.incident), result.incident.userId)
+    broadcaster.emit(commentAdded(result.comment), result.incident.userId)
 }
 
-private suspend fun handleUploadPhoto(call: ApplicationCall) {
+private suspend fun handleUploadPhoto(call: ApplicationCall, broadcaster: EventBroadcaster) {
     val (userId, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
     val incidentId = call.parameters["id"]?.toIntOrNull()
         ?: return call.respond(HttpStatusCode.BadRequest)
@@ -218,6 +235,7 @@ private suspend fun handleUploadPhoto(call: ApplicationCall) {
         IncidentsTable.selectAll().where { IncidentsTable.id eq incidentId }.first().toIncident()
     }
     call.respond(updated)
+    broadcaster.emit(incidentUpdated(updated), updated.userId)
 }
 
 private suspend fun handleListComments(call: ApplicationCall) {
@@ -240,7 +258,7 @@ private suspend fun handleListComments(call: ApplicationCall) {
     call.respond(comments)
 }
 
-private suspend fun handlePostComment(call: ApplicationCall) {
+private suspend fun handlePostComment(call: ApplicationCall, broadcaster: EventBroadcaster) {
     val (userId, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
     val incidentId = call.parameters["id"]?.toIntOrNull()
         ?: return call.respond(HttpStatusCode.BadRequest)
@@ -276,6 +294,7 @@ private suspend fun handlePostComment(call: ApplicationCall) {
         )
     }
     call.respond(HttpStatusCode.Created, comment)
+    broadcaster.emit(commentAdded(comment), incident.userId)
 }
 
 private fun ResultRow.toComment(): Comment = Comment(
