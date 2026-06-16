@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.server
+package dev.koenv.roadassist.server.incidents
 
 import dev.koenv.roadassist.core.comment.AuthorRole
 import dev.koenv.roadassist.core.comment.Comment

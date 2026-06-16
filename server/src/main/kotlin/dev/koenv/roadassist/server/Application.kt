@@ -2,8 +2,12 @@ package dev.koenv.roadassist.server
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import dev.koenv.roadassist.server.auth.configureAuthRouting
 import dev.koenv.roadassist.server.database.DatabaseFactory
 import dev.koenv.roadassist.server.database.DatabaseSeeder
+import dev.koenv.roadassist.server.health.configureHealthRouting
+import dev.koenv.roadassist.server.health.configurePingRouting
+import dev.koenv.roadassist.server.incidents.configureIncidentsRouting
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install

@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.server
+package dev.koenv.roadassist.server.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
