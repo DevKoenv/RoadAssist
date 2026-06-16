@@ -22,7 +22,9 @@ object DatabaseFactory {
                     driver = "org.sqlite.JDBC",
                 )
             }
-            // Default to H2 in-memory; data resets on restart, used for local dev/testing
+            // Default to H2 in-memory; data resets on restart, used for local dev/testing.
+            // DB_CLOSE_DELAY=-1 keeps the schema alive for the JVM lifetime; without it H2
+            // drops the in-memory DB as soon as the last connection closes.
             else -> Database.connect(
                 url = "jdbc:h2:mem:roadassist;DB_CLOSE_DELAY=-1",
                 driver = "org.h2.Driver",

@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private const val BASE_URL = "https://nominatim.openstreetmap.org"
+// Nominatim's usage policy requires a descriptive User-Agent identifying the app; anonymous requests get blocked
 private const val USER_AGENT = "RoadAssist/1.0.0 (roadassist@koenv.dev)"
 
 @Serializable
@@ -27,7 +28,7 @@ class NominatimGeocodingService : GeocodingService {
 
     private val client = createHttpClient().config {
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(Json { ignoreUnknownKeys = true })  // Nominatim returns many more fields than we map
         }
     }
 

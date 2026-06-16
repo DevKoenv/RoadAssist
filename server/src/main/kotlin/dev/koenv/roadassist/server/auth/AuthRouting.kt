@@ -127,6 +127,8 @@ private suspend fun handleRefresh(call: ApplicationCall, jwtSecret: String) {
         .withClaim("role", user[UsersTable.role].name)
         .withExpiresAt(Date(now + ACCESS_TOKEN_TTL_MS))
         .sign(Algorithm.HMAC256(jwtSecret))
+    // Return the same refresh token rather than rotating -- avoids invalidating in-flight requests
+    // on the same device. If multi-device support lands later, rotate here and revoke the old row.
     call.respond(AuthResponse(token = accessToken, refreshToken = request.refreshToken, role = user[UsersTable.role]))
 }
 

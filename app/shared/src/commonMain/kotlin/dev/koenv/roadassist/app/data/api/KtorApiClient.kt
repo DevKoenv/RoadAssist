@@ -84,7 +84,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
                         requestBuilder.headers {
                             set(HttpHeaders.Authorization, "Bearer ${authResp.token}")
                         }
-                        requestBuilder.attributes.put(retryAfterRefreshKey, true)
+                        requestBuilder.attributes.put(retryAfterRefreshKey, true)  // prevents a second 401 on this retry from triggering another refresh
                         execute(requestBuilder)
                     } else {
                         // Refresh failed; clear tokens and kick back to login

@@ -56,10 +56,10 @@ class NewIncidentViewModel(
     init {
         viewModelScope.launch {
             val latLon = withTimeoutOrNull(10_000L) { locationProvider.getCurrentLocation() }
-            if (latLon != null && !locationSetManually) {
+            if (latLon != null && !locationSetManually) {  // user might've picked an address while GPS was still fetching
                 _location.value = latLon
                 val label = geocodingService.reverse(latLon)
-                if (!locationSetManually) {
+                if (!locationSetManually) {  // re-check after the reverse geocoding await -- that's also async
                     _locationLabel.value = label
                 }
             }
