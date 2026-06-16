@@ -54,7 +54,7 @@ import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 
 @Composable
 fun LoginScreen(

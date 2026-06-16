@@ -1,5 +1,7 @@
 package dev.koenv.roadassist.core
 
+import dev.koenv.roadassist.core.user.Role
+import dev.koenv.roadassist.core.user.User
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

@@ -1,6 +1,6 @@
 package dev.koenv.roadassist.app.ui.login
 
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 
 sealed class LoginState {
     object Idle : LoginState()

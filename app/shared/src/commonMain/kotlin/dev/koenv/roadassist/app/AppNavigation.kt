@@ -41,7 +41,7 @@ import dev.koenv.roadassist.app.ui.login.LoginViewModel
 import dev.koenv.roadassist.app.ui.newincident.NewIncidentScreen
 import dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel
 import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeViewModel
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 
 @Composable
 fun AppNavigation(

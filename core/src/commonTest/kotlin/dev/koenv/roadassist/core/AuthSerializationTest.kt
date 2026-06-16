@@ -4,6 +4,7 @@ import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest
 import dev.koenv.roadassist.core.auth.RefreshRequest
 import dev.koenv.roadassist.core.auth.RegisterRequest
+import dev.koenv.roadassist.core.user.Role
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

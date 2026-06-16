@@ -1,6 +1,6 @@
 package dev.koenv.roadassist.app.data.auth
 
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.json.Json

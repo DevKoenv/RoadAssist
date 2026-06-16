@@ -1,6 +1,6 @@
 package dev.koenv.roadassist.server
 
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest
 import dev.koenv.roadassist.core.auth.RefreshRequest

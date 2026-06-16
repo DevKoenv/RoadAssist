@@ -7,7 +7,7 @@ import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import dev.koenv.roadassist.core.PostCommentRequest
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.UsersTable

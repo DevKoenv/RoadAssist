@@ -2,7 +2,7 @@ package dev.koenv.roadassist.server.database
 
 import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.IncidentStatus
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll

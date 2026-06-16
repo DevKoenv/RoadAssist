@@ -1,6 +1,6 @@
 package dev.koenv.roadassist.server.database
 
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.user.Role
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
