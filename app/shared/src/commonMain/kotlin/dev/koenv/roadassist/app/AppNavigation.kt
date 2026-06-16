@@ -33,14 +33,14 @@ import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeViewModel
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.home.RoadUserDetailPanel
-import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
-import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
-import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.layouts.AuthLayout
-import dev.koenv.roadassist.app.ui.newincident.NewIncidentScreen
-import dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel
+import dev.koenv.roadassist.app.ui.roaduser.detail.RoadUserDetailPanel
+import dev.koenv.roadassist.app.ui.roaduser.detail.RoadUserDetailScreen
+import dev.koenv.roadassist.app.ui.roaduser.detail.RoadUserDetailViewModel
+import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeViewModel
+import dev.koenv.roadassist.app.ui.roaduser.newincident.NewIncidentScreen
+import dev.koenv.roadassist.app.ui.roaduser.newincident.NewIncidentViewModel
 import dev.koenv.roadassist.core.user.Role
 
 @Composable

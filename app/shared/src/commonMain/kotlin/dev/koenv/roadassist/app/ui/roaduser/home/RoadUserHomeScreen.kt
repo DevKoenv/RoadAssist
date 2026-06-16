@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app.ui.home
+package dev.koenv.roadassist.app.ui.roaduser.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,8 +36,6 @@ import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.FabConfig
 import dev.koenv.roadassist.app.ui.layouts.RoadUserLayout
-import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeViewModel
-import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserTab
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentStatus
 import kotlinx.coroutines.delay

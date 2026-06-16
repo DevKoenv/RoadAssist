@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app.ui.home
+package dev.koenv.roadassist.app.ui.roaduser.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

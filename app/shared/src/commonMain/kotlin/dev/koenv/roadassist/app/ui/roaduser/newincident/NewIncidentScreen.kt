@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app.ui.newincident
+package dev.koenv.roadassist.app.ui.roaduser.newincident
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app.ui.newincident
+package dev.koenv.roadassist.app.ui.roaduser.newincident
 
 sealed class SubmitState {
     object Idle : SubmitState()

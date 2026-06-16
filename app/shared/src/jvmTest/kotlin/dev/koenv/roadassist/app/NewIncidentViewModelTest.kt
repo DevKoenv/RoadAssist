@@ -3,8 +3,8 @@ package dev.koenv.roadassist.app
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.db.RoadAssistDb
-import dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel
-import dev.koenv.roadassist.app.ui.newincident.SubmitState
+import dev.koenv.roadassist.app.ui.roaduser.newincident.NewIncidentViewModel
+import dev.koenv.roadassist.app.ui.roaduser.newincident.SubmitState
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentCategory
 import dev.koenv.roadassist.core.incident.IncidentStatus
