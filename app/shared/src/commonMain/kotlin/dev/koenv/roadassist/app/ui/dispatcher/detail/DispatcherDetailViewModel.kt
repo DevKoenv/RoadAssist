@@ -9,14 +9,13 @@ import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentStatus
 import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import dev.koenv.roadassist.core.location.LatLon
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -30,7 +29,6 @@ class DispatcherDetailViewModel(
     private val repository: IncidentRepository,
     private val incidentId: Int,
     private val geocodingService: GeocodingService? = null,
-    @Suppress("UnusedPrivateProperty")
     private val eventStreamService: EventStreamService,
 ) : ViewModel() {
 
@@ -64,31 +62,25 @@ class DispatcherDetailViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
-    private val _serverReachable = MutableStateFlow(true)
-    val serverReachable: StateFlow<Boolean> = _serverReachable.asStateFlow()
+    val serverReachable: StateFlow<Boolean> = eventStreamService.connectionState
+        .map { it is EventStreamService.ConnectionState.Connected }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     init {
         viewModelScope.launch {
-            while (true) {
-                _serverReachable.value = repository.checkConnectivity()
-                delay(10_000L)
-            }
-        }
-        viewModelScope.launch {
-            var isFirstSync = true  // clear loading state once; subsequent connectivity events shouldn't re-show it
-            serverReachable.filter { it }.collect {
-                repository.syncIncident(incidentId)
-                if (isFirstSync) {
-                    _loading.value = false
-                    isFirstSync = false
-                }
-            }
+            repository.syncIncident(incidentId)
+            _loading.value = false
         }
         viewModelScope.launch {
             val inc = incident.filterNotNull().first()
             if (_selectedStatus.value == null) _selectedStatus.value = inc.status
             if (geocodingService != null) {
                 _address.value = geocodingService.reverse(LatLon(inc.latitude, inc.longitude))
+            }
+        }
+        viewModelScope.launch {
+            eventStreamService.reconnects.collect {
+                repository.syncIncident(incidentId)
             }
         }
     }
