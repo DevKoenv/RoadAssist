@@ -28,35 +28,65 @@ class DispatcherFiltersTest {
     )
 
     @Test
-    fun all_all_returns_every_incident() {
-        val result = filterIncidents(incidents, DispatcherStatusFilter.All, DispatcherCategoryFilter.All)
+    fun empty_sets_return_every_incident() {
+        val result = filterIncidents(incidents, emptySet(), emptySet())
         assertEquals(5, result.size)
     }
 
     @Test
     fun status_filter_alone_returns_matching_subset() {
-        val result = filterIncidents(incidents, DispatcherStatusFilter.New, DispatcherCategoryFilter.All)
+        val result = filterIncidents(incidents, setOf(DispatcherStatusFilter.New), emptySet())
         assertEquals(2, result.size)
         assertTrue(result.all { it.status == IncidentStatus.NEW })
     }
 
     @Test
     fun category_filter_alone_returns_matching_subset() {
-        val result = filterIncidents(incidents, DispatcherStatusFilter.All, DispatcherCategoryFilter.Breakdown)
+        val result = filterIncidents(incidents, emptySet(), setOf(DispatcherCategoryFilter.Breakdown))
         assertEquals(2, result.size)
         assertTrue(result.all { it.category == IncidentCategory.BREAKDOWN })
     }
 
     @Test
     fun combined_and_filter_returns_intersection() {
-        val result = filterIncidents(incidents, DispatcherStatusFilter.New, DispatcherCategoryFilter.Breakdown)
+        val result = filterIncidents(
+            incidents,
+            setOf(DispatcherStatusFilter.New),
+            setOf(DispatcherCategoryFilter.Breakdown),
+        )
         assertEquals(1, result.size)
         assertEquals(1, result[0].id)
     }
 
     @Test
     fun combined_filter_with_no_match_returns_empty() {
-        val result = filterIncidents(incidents, DispatcherStatusFilter.Resolved, DispatcherCategoryFilter.Accident)
+        val result = filterIncidents(
+            incidents,
+            setOf(DispatcherStatusFilter.Resolved),
+            setOf(DispatcherCategoryFilter.Accident),
+        )
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun multi_status_filter_returns_or_union() {
+        val result = filterIncidents(
+            incidents,
+            setOf(DispatcherStatusFilter.New, DispatcherStatusFilter.InProgress),
+            emptySet(),
+        )
+        assertEquals(3, result.size)
+        assertTrue(result.all { it.status == IncidentStatus.NEW || it.status == IncidentStatus.IN_PROGRESS })
+    }
+
+    @Test
+    fun multi_category_filter_returns_or_union() {
+        val result = filterIncidents(
+            incidents,
+            emptySet(),
+            setOf(DispatcherCategoryFilter.Breakdown, DispatcherCategoryFilter.Accident),
+        )
+        assertEquals(3, result.size)
+        assertTrue(result.all { it.category == IncidentCategory.BREAKDOWN || it.category == IncidentCategory.ACCIDENT })
     }
 }

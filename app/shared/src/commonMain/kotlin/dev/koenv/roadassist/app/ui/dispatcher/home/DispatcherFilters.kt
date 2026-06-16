@@ -4,27 +4,51 @@ import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentCategory
 import dev.koenv.roadassist.core.incident.IncidentStatus
 
-internal enum class DispatcherStatusFilter { All, New, InProgress, EnRoute, Resolved }
+internal enum class DispatcherStatusFilter(val displayName: String) {
+    New("New"),
+    InProgress("In progress"),
+    EnRoute("En route"),
+    Resolved("Resolved"),
+}
 
-internal enum class DispatcherCategoryFilter { All, Breakdown, Accident, Obstruction, Other }
+internal enum class DispatcherCategoryFilter(val displayName: String) {
+    Breakdown("Breakdown"),
+    Accident("Accident"),
+    Obstruction("Obstruction"),
+    Other("Other"),
+}
 
 internal fun filterIncidents(
     incidents: List<Incident>,
-    statusFilter: DispatcherStatusFilter,
-    categoryFilter: DispatcherCategoryFilter,
+    statusFilters: Set<DispatcherStatusFilter>,
+    categoryFilters: Set<DispatcherCategoryFilter>,
 ): List<Incident> {
-    val byStatus = when (statusFilter) {
-        DispatcherStatusFilter.All -> incidents
-        DispatcherStatusFilter.New -> incidents.filter { it.status == IncidentStatus.NEW }
-        DispatcherStatusFilter.InProgress -> incidents.filter { it.status == IncidentStatus.IN_PROGRESS }
-        DispatcherStatusFilter.EnRoute -> incidents.filter { it.status == IncidentStatus.EN_ROUTE }
-        DispatcherStatusFilter.Resolved -> incidents.filter { it.status == IncidentStatus.RESOLVED }
+    val byStatus = if (statusFilters.isEmpty()) {
+        incidents
+    } else {
+        incidents.filter { inc ->
+            statusFilters.any { f ->
+                when (f) {
+                    DispatcherStatusFilter.New -> inc.status == IncidentStatus.NEW
+                    DispatcherStatusFilter.InProgress -> inc.status == IncidentStatus.IN_PROGRESS
+                    DispatcherStatusFilter.EnRoute -> inc.status == IncidentStatus.EN_ROUTE
+                    DispatcherStatusFilter.Resolved -> inc.status == IncidentStatus.RESOLVED
+                }
+            }
+        }
     }
-    return when (categoryFilter) {
-        DispatcherCategoryFilter.All -> byStatus
-        DispatcherCategoryFilter.Breakdown -> byStatus.filter { it.category == IncidentCategory.BREAKDOWN }
-        DispatcherCategoryFilter.Accident -> byStatus.filter { it.category == IncidentCategory.ACCIDENT }
-        DispatcherCategoryFilter.Obstruction -> byStatus.filter { it.category == IncidentCategory.OBSTRUCTION }
-        DispatcherCategoryFilter.Other -> byStatus.filter { it.category == IncidentCategory.OTHER }
+    return if (categoryFilters.isEmpty()) {
+        byStatus
+    } else {
+        byStatus.filter { inc ->
+            categoryFilters.any { f ->
+                when (f) {
+                    DispatcherCategoryFilter.Breakdown -> inc.category == IncidentCategory.BREAKDOWN
+                    DispatcherCategoryFilter.Accident -> inc.category == IncidentCategory.ACCIDENT
+                    DispatcherCategoryFilter.Obstruction -> inc.category == IncidentCategory.OBSTRUCTION
+                    DispatcherCategoryFilter.Other -> inc.category == IncidentCategory.OTHER
+                }
+            }
+        }
     }
 }

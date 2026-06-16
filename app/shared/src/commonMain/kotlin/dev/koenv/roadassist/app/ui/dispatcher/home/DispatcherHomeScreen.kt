@@ -1,7 +1,6 @@
 package dev.koenv.roadassist.app.ui.dispatcher.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,18 +13,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,12 +33,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.theme.RoadAssistColors
@@ -52,7 +47,6 @@ import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.DispatcherLayout
 import dev.koenv.roadassist.core.incident.Incident
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun DispatcherHomeScreen(
@@ -77,10 +71,10 @@ fun DispatcherHomeScreen(
     }
 
     // Filter state lives here in the screen, not in the ViewModel, so it survives auto-refresh
-    var statusFilter by remember { mutableStateOf(DispatcherStatusFilter.All) }
-    var categoryFilter by remember { mutableStateOf(DispatcherCategoryFilter.All) }
-    val filtered = filterIncidents(incidents, statusFilter, categoryFilter)
-    val filtersActive = statusFilter != DispatcherStatusFilter.All || categoryFilter != DispatcherCategoryFilter.All
+    var statusFilters by remember { mutableStateOf(emptySet<DispatcherStatusFilter>()) }
+    var categoryFilters by remember { mutableStateOf(emptySet<DispatcherCategoryFilter>()) }
+    val filtered = filterIncidents(incidents, statusFilters, categoryFilters)
+    val filtersActive = statusFilters.isNotEmpty() || categoryFilters.isNotEmpty()
 
     DispatcherLayout(
         title = "All incidents",
@@ -94,15 +88,15 @@ fun DispatcherHomeScreen(
     ) { padding ->
         if (windowSizeClass != WindowSizeClass.Expanded) {
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-                FilterSection(
-                    statusFilter = statusFilter,
-                    onStatusFilterChange = { statusFilter = it },
-                    categoryFilter = categoryFilter,
-                    onCategoryFilterChange = { categoryFilter = it },
+                FilterBar(
+                    statusFilters = statusFilters,
+                    onStatusFilterToggle = { f -> statusFilters = if (f in statusFilters) statusFilters - f else statusFilters + f },
+                    categoryFilters = categoryFilters,
+                    onCategoryFilterToggle = { f -> categoryFilters = if (f in categoryFilters) categoryFilters - f else categoryFilters + f },
                     filtersActive = filtersActive,
                     onClearFilters = {
-                        statusFilter = DispatcherStatusFilter.All
-                        categoryFilter = DispatcherCategoryFilter.All
+                        statusFilters = emptySet()
+                        categoryFilters = emptySet()
                     },
                 )
                 if (filtered.isEmpty()) {
@@ -124,14 +118,14 @@ fun DispatcherHomeScreen(
         } else {
             DispatcherSplitPane(
                 filtered = filtered,
-                statusFilter = statusFilter,
-                onStatusFilterChange = { statusFilter = it },
-                categoryFilter = categoryFilter,
-                onCategoryFilterChange = { categoryFilter = it },
+                statusFilters = statusFilters,
+                onStatusFilterToggle = { f -> statusFilters = if (f in statusFilters) statusFilters - f else statusFilters + f },
+                categoryFilters = categoryFilters,
+                onCategoryFilterToggle = { f -> categoryFilters = if (f in categoryFilters) categoryFilters - f else categoryFilters + f },
                 filtersActive = filtersActive,
                 onClearFilters = {
-                    statusFilter = DispatcherStatusFilter.All
-                    categoryFilter = DispatcherCategoryFilter.All
+                    statusFilters = emptySet()
+                    categoryFilters = emptySet()
                 },
                 nowMillis = nowMillis,
                 selectedIncidentId = selectedIncidentId,
@@ -146,10 +140,10 @@ fun DispatcherHomeScreen(
 @Composable
 private fun DispatcherSplitPane(
     filtered: List<Incident>,
-    statusFilter: DispatcherStatusFilter,
-    onStatusFilterChange: (DispatcherStatusFilter) -> Unit,
-    categoryFilter: DispatcherCategoryFilter,
-    onCategoryFilterChange: (DispatcherCategoryFilter) -> Unit,
+    statusFilters: Set<DispatcherStatusFilter>,
+    onStatusFilterToggle: (DispatcherStatusFilter) -> Unit,
+    categoryFilters: Set<DispatcherCategoryFilter>,
+    onCategoryFilterToggle: (DispatcherCategoryFilter) -> Unit,
     filtersActive: Boolean,
     onClearFilters: () -> Unit,
     nowMillis: Long,
@@ -162,11 +156,11 @@ private fun DispatcherSplitPane(
     Row(modifier = modifier) {
         // incident list panel
         Column(Modifier.width(360.dp).fillMaxHeight()) {
-            FilterSection(
-                statusFilter = statusFilter,
-                onStatusFilterChange = onStatusFilterChange,
-                categoryFilter = categoryFilter,
-                onCategoryFilterChange = onCategoryFilterChange,
+            FilterBar(
+                statusFilters = statusFilters,
+                onStatusFilterToggle = onStatusFilterToggle,
+                categoryFilters = categoryFilters,
+                onCategoryFilterToggle = onCategoryFilterToggle,
                 filtersActive = filtersActive,
                 onClearFilters = onClearFilters,
             )
@@ -202,179 +196,109 @@ private fun DispatcherSplitPane(
     }
 }
 
-// Groups both filter chip rows and the clear button into one composable so call sites stay simple
 @Composable
-private fun FilterSection(
-    statusFilter: DispatcherStatusFilter,
-    onStatusFilterChange: (DispatcherStatusFilter) -> Unit,
-    categoryFilter: DispatcherCategoryFilter,
-    onCategoryFilterChange: (DispatcherCategoryFilter) -> Unit,
+private fun FilterBar(
+    statusFilters: Set<DispatcherStatusFilter>,
+    onStatusFilterToggle: (DispatcherStatusFilter) -> Unit,
+    categoryFilters: Set<DispatcherCategoryFilter>,
+    onCategoryFilterToggle: (DispatcherCategoryFilter) -> Unit,
     filtersActive: Boolean,
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val extColors = LocalRoadAssistColors.current
-    Column(modifier = modifier) {
-        StatusFilterRow(
-            filter = statusFilter,
-            onFilterChange = onStatusFilterChange,
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterList,
+            contentDescription = null,
+            tint = extColors.mutedForeground,
+            modifier = Modifier.size(18.dp),
         )
-        CategoryFilterRow(
-            filter = categoryFilter,
-            onFilterChange = onCategoryFilterChange,
+        MultiSelectDropdown(
+            label = if (statusFilters.isEmpty()) "Status" else "Status · ${statusFilters.size}",
+            items = DispatcherStatusFilter.entries,
+            selected = statusFilters,
+            itemLabel = { it.displayName },
+            onToggle = onStatusFilterToggle,
+        )
+        MultiSelectDropdown(
+            label = if (categoryFilters.isEmpty()) "Category" else "Category · ${categoryFilters.size}",
+            items = DispatcherCategoryFilter.entries,
+            selected = categoryFilters,
+            itemLabel = { it.displayName },
+            onToggle = onCategoryFilterToggle,
         )
         if (filtersActive) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onClearFilters) {
-                    Text(
-                        text = "Clear filters",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = extColors.mutedForeground,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusFilterRow(
-    filter: DispatcherStatusFilter,
-    onFilterChange: (DispatcherStatusFilter) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val extColors = LocalRoadAssistColors.current
-    val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
-    val scrollAmount = 140
-
-    val bg = MaterialTheme.colorScheme.background
-    Box(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp).clipToBounds()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 8.dp).horizontalScroll(scrollState),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            DispatcherStatusFilter.entries.forEach { f ->
-                FilterChip(
-                    selected = filter == f,
-                    onClick = { onFilterChange(f) },
-                    label = {
-                        Text(
-                            text = when (f) {
-                                DispatcherStatusFilter.All -> "All"
-                                DispatcherStatusFilter.New -> "New"
-                                DispatcherStatusFilter.InProgress -> "In progress"
-                                DispatcherStatusFilter.EnRoute -> "En route"
-                                DispatcherStatusFilter.Resolved -> "Resolved"
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    },
-                    shape = RoundedCornerShape(7.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = RoadAssistColors.Accent,
-                        selectedLabelColor = MaterialTheme.colorScheme.primary,
-                        containerColor = extColors.muted,
-                        labelColor = extColors.mutedForeground,
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = filter == f,
-                        borderColor = extColors.border,
-                        selectedBorderColor = Color.Transparent,
-                        borderWidth = 0.5.dp,
-                        selectedBorderWidth = 0.dp,
-                    ),
+            TextButton(onClick = onClearFilters) {
+                Text(
+                    text = "Clear",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = extColors.mutedForeground,
                 )
             }
         }
-        if (scrollState.canScrollBackward) {
-            IconButton(
-                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
-                modifier = Modifier.align(Alignment.CenterStart).size(28.dp).background(bg),
-            ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll left", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
-            }
-        }
-        if (scrollState.canScrollForward) {
-            IconButton(
-                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
-                modifier = Modifier.align(Alignment.CenterEnd).size(28.dp).background(bg),
-            ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll right", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
-            }
-        }
     }
+    AppDivider()
 }
 
 @Composable
-private fun CategoryFilterRow(
-    filter: DispatcherCategoryFilter,
-    onFilterChange: (DispatcherCategoryFilter) -> Unit,
+private fun <T> MultiSelectDropdown(
+    label: String,
+    items: List<T>,
+    selected: Set<T>,
+    itemLabel: (T) -> String,
+    onToggle: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val extColors = LocalRoadAssistColors.current
-    val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
-    val scrollAmount = 140
+    var expanded by remember { mutableStateOf(false) }
+    val isActive = selected.isNotEmpty()
 
-    val bg = MaterialTheme.colorScheme.background
-    Box(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp).clipToBounds()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 8.dp).horizontalScroll(scrollState),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+    Box(modifier = modifier) {
+        Surface(
+            onClick = { expanded = true },
+            shape = MaterialTheme.shapes.small,
+            color = if (isActive) RoadAssistColors.Accent else extColors.muted,
+            tonalElevation = 0.dp,
         ) {
-            DispatcherCategoryFilter.entries.forEach { f ->
-                FilterChip(
-                    selected = filter == f,
-                    onClick = { onFilterChange(f) },
-                    label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isActive) MaterialTheme.colorScheme.primary else extColors.mutedForeground,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            items.forEach { item ->
+                val isSelected = item in selected
+                DropdownMenuItem(
+                    text = {
                         Text(
-                            text = when (f) {
-                                DispatcherCategoryFilter.All -> "All"
-                                DispatcherCategoryFilter.Breakdown -> "Breakdown"
-                                DispatcherCategoryFilter.Accident -> "Accident"
-                                DispatcherCategoryFilter.Obstruction -> "Obstruction"
-                                DispatcherCategoryFilter.Other -> "Other"
-                            },
-                            style = MaterialTheme.typography.labelMedium,
+                            text = itemLabel(item),
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     },
-                    shape = RoundedCornerShape(7.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = RoadAssistColors.Accent,
-                        selectedLabelColor = MaterialTheme.colorScheme.primary,
-                        containerColor = extColors.muted,
-                        labelColor = extColors.mutedForeground,
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = filter == f,
-                        borderColor = extColors.border,
-                        selectedBorderColor = Color.Transparent,
-                        borderWidth = 0.5.dp,
-                        selectedBorderWidth = 0.dp,
-                    ),
+                    leadingIcon = if (isSelected) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    onClick = { onToggle(item) },
                 )
-            }
-        }
-        if (scrollState.canScrollBackward) {
-            IconButton(
-                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value - scrollAmount).coerceAtLeast(0)) } },
-                modifier = Modifier.align(Alignment.CenterStart).size(28.dp).background(bg),
-            ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll left", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
-            }
-        }
-        if (scrollState.canScrollForward) {
-            IconButton(
-                onClick = { scope.launch { scrollState.animateScrollTo((scrollState.value + scrollAmount).coerceAtMost(scrollState.maxValue)) } },
-                modifier = Modifier.align(Alignment.CenterEnd).size(28.dp).background(bg),
-            ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll right", modifier = Modifier.size(18.dp), tint = extColors.mutedForeground)
             }
         }
     }
