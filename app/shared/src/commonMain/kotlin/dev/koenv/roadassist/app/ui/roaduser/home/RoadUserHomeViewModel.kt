@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app.ui.home
+package dev.koenv.roadassist.app.ui.roaduser.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class HomeViewModel(
+enum class RoadUserTab { Active, History }
+
+class RoadUserHomeViewModel(
     private val apiClient: ApiClient,
     private val storage: SecureStorage,
     private val repository: IncidentRepository,
@@ -41,11 +43,9 @@ class HomeViewModel(
                 delay(10_000L)
             }
         }
-        // Sync immediately on first true, and on every false->true transition thereafter.
         viewModelScope.launch {
             serverReachable.filter { it }.collect { syncIncidents() }
         }
-        // Periodic background sync every 15 seconds.
         viewModelScope.launch {
             while (true) {
                 delay(15_000L)

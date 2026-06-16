@@ -36,16 +36,16 @@ import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.FabConfig
 import dev.koenv.roadassist.app.ui.layouts.RoadUserLayout
+import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeViewModel
+import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserTab
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentStatus
 import kotlinx.coroutines.delay
 
-enum class RoadUserTab { Active, History }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoadUserHomeScreen(
-    viewModel: HomeViewModel,
+    viewModel: RoadUserHomeViewModel,
     onLogout: () -> Unit,
     onNewIncident: () -> Unit,
     onIncidentClick: (Int) -> Unit,

@@ -46,6 +46,7 @@ import dev.koenv.roadassist.app.theme.RoadAssistColors
 import dev.koenv.roadassist.app.ui.components.AppDivider
 import dev.koenv.roadassist.app.ui.components.EmptyState
 import dev.koenv.roadassist.app.ui.components.IncidentListItem
+import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeViewModel
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.DispatcherLayout
@@ -58,7 +59,7 @@ private enum class DispatcherFilter { All, New, InProgress, EnRoute, Resolved }
 
 @Composable
 fun DispatcherHomeScreen(
-    viewModel: HomeViewModel,
+    viewModel: DispatcherHomeViewModel,
     onLogout: () -> Unit,
     onIncidentClick: (Int) -> Unit,
     detailPanel: @Composable (Int) -> Unit,
