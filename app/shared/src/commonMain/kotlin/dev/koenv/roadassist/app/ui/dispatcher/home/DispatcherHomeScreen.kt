@@ -67,6 +67,8 @@ fun DispatcherHomeScreen(
     val incidents by viewModel.incidents.collectAsState()
     val onLogoutClick: () -> Unit = { viewModel.logout(onLogout) }
     val windowSizeClass = LocalWindowSizeClass.current
+    // Ticks every minute just to refresh "time ago" labels; fast enough for readability,
+    // slow enough not to cause constant recomposition
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var selectedIncidentId by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(Unit) {

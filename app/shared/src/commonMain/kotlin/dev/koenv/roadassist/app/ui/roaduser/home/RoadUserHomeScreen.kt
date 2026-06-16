@@ -60,6 +60,7 @@ fun RoadUserHomeScreen(
     LaunchedEffect(Unit) {
         while (true) { delay(60_000L); nowMillis = System.currentTimeMillis() }
     }
+    // Clear the panel selection when switching tabs so a stale detail doesn't linger
     LaunchedEffect(selectedTab) { selectedIncidentId = null }
 
     RoadUserLayout(
@@ -67,6 +68,7 @@ fun RoadUserHomeScreen(
         onTabChange = viewModel::selectTab,
         serverReachable = serverReachable,
         onLogout = { viewModel.logout(onLogout) },
+        // Hide the FAB when offline -- submission requires a server round-trip
         fab = if (selectedTab == RoadUserTab.Active && serverReachable) {
             FabConfig(Icons.Default.Add, "New incident", onNewIncident)
         } else {
@@ -190,5 +192,6 @@ private fun RoadUserIncidentList(
 
 private fun filterByTab(incidents: List<Incident>, tab: RoadUserTab): List<Incident> = when (tab) {
     RoadUserTab.Active -> incidents.filter { it.status != IncidentStatus.RESOLVED }.sortedByDescending { it.createdAt }
+    // History sorted by updatedAt, not createdAt -- when it was resolved matters more than when it was filed
     RoadUserTab.History -> incidents.filter { it.status == IncidentStatus.RESOLVED }.sortedByDescending { it.updatedAt }
 }

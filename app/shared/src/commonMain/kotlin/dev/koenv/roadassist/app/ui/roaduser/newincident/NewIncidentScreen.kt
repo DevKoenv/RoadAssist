@@ -310,6 +310,9 @@ private fun LocationSection(
     val focusRequester = remember { FocusRequester() }
     val locationMissing = location == null && !locationLoading
 
+    // LaunchedEffect cancels and restarts on every keystroke, so the delay(400) below acts
+    // as a debounce -- the search only fires when typing pauses for 400ms.
+    // Nominatim's usage policy asks for no rapid-fire requests, so this matters.
     LaunchedEffect(query, searchMode) {
         if (!searchMode) {
             onClearSearch()
@@ -475,6 +478,7 @@ private fun LocationSection(
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Map picker isn't implemented yet; stub kept to show the intended UX
                 Icon(
                     Icons.Default.Map,
                     contentDescription = null,

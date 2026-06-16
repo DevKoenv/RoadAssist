@@ -54,6 +54,7 @@ fun AppNavigation(
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 
+    // Wrapped in remember so we don't re-read storage on every recomposition
     val startDestination = remember {
         val token = storage.getToken()
         if (token != null) {

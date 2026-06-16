@@ -37,6 +37,7 @@ class RoadUserHomeViewModel(
     val selectedTab: StateFlow<RoadUserTab> = _selectedTab.asStateFlow()
 
     init {
+        // Same three-loop sync strategy as DispatcherHomeViewModel
         viewModelScope.launch {
             while (true) {
                 _serverReachable.value = apiClient.checkConnectivity()

@@ -60,6 +60,7 @@ class AndroidLocationProvider : LocationProvider {
     private suspend fun requestPermission(permission: String): Boolean {
         val activity = ActivityHolder.activity ?: return false
 
+        // True after a first denial but before the user ticks "Don't ask again"
         val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
         if (shouldShowRationale) {
             val accepted = withContext(Dispatchers.Main) {

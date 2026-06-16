@@ -32,6 +32,8 @@ class DispatcherHomeViewModel(
     val incidentsLoading: StateFlow<Boolean> = _incidentsLoading.asStateFlow()
 
     init {
+        // Three independent loops: connectivity probe every 10s, sync on reconnect,
+        // and a background sync every 15s to catch changes while the app is open.
         viewModelScope.launch {
             while (true) {
                 _serverReachable.value = apiClient.checkConnectivity()

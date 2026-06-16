@@ -12,6 +12,6 @@ actual fun createDatabaseDriver(): SqlDriver {
         ?: Path.of(System.getProperty("user.home"), ".roadassist")
     dir.createDirectories()
     val driver = JdbcSqliteDriver("jdbc:sqlite:${dir.resolve("roadassist.db")}")
-    RoadAssistDb.Schema.create(driver)
+    RoadAssistDb.Schema.create(driver)  // generates IF NOT EXISTS DDL, safe on every start
     return driver
 }

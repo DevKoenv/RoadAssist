@@ -116,6 +116,8 @@ fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
             color = muted,
         )
 
+        // Comments come from the DB in ASC order; reversed() puts newest at the top.
+        // The synthetic "Incident reported" entry below is always the bottom anchor.
         comments.reversed().forEach { comment ->
             when (comment.type) {
                 CommentType.STATUS_CHANGE -> StatusChangeEntry(comment = comment, nowMillis = nowMillis)
@@ -134,6 +136,7 @@ fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
 @Composable
 private fun StatusChangeEntry(comment: Comment, nowMillis: Long) {
     val colors = LocalRoadAssistColors.current
+    // Status name is stored as raw text in the comment body; parse it back to get the dot color
     val status = runCatching { IncidentStatus.valueOf(comment.content) }.getOrNull()
     val dotColor = when (status) {
         IncidentStatus.NEW -> colors.statusNew
