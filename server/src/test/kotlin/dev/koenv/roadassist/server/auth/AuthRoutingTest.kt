@@ -1,14 +1,16 @@
-package dev.koenv.roadassist.server
+package dev.koenv.roadassist.server.auth
 
-import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest
 import dev.koenv.roadassist.core.auth.RefreshRequest
 import dev.koenv.roadassist.core.auth.RegisterRequest
+import dev.koenv.roadassist.core.user.Role
+import dev.koenv.roadassist.server.applyTestConfig
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
+import dev.koenv.roadassist.server.module
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 import io.ktor.client.request.*

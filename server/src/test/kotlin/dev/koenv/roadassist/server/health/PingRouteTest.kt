@@ -1,13 +1,16 @@
-package dev.koenv.roadassist.server
+package dev.koenv.roadassist.server.health
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import dev.koenv.roadassist.core.health.PingMessage
 import dev.koenv.roadassist.core.user.Role
+import dev.koenv.roadassist.server.TEST_JWT_SECRET
+import dev.koenv.roadassist.server.applyTestConfig
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.RefreshTokensTable
 import dev.koenv.roadassist.server.database.UsersTable
+import dev.koenv.roadassist.server.module
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 import io.ktor.client.request.*
