@@ -26,13 +26,13 @@ import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
 import dev.koenv.roadassist.app.ui.auth.login.LoginScreen
 import dev.koenv.roadassist.app.ui.auth.login.LoginViewModel
+import dev.koenv.roadassist.app.ui.dispatcher.detail.DispatcherDetailPanel
+import dev.koenv.roadassist.app.ui.dispatcher.detail.DispatcherDetailScreen
+import dev.koenv.roadassist.app.ui.dispatcher.detail.DispatcherDetailViewModel
+import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeViewModel
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.home.DispatcherDetailPanel
-import dev.koenv.roadassist.app.ui.home.DispatcherDetailScreen
-import dev.koenv.roadassist.app.ui.home.DispatcherDetailViewModel
-import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailPanel
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
 import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
