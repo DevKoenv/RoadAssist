@@ -171,4 +171,35 @@ class IncidentRepositoryTest {
 
         assertEquals(listOf(com), repo.observeComments(1).first())
     }
+
+    @Test
+    fun upsertIncident_writes_to_db() = runTest {
+        val inc = incident(id = 7)
+        repository.upsertIncident(inc)
+        assertEquals(inc, repository.observeIncident(7).first())
+    }
+
+    @Test
+    fun upsertIncident_updates_existing() = runTest {
+        val original = incident(id = 7, status = IncidentStatus.NEW)
+        val updated = original.copy(status = IncidentStatus.IN_PROGRESS)
+        repository.upsertIncident(original)
+        repository.upsertIncident(updated)
+        assertEquals(IncidentStatus.IN_PROGRESS, repository.observeIncident(7).first()?.status)
+    }
+
+    @Test
+    fun upsertComment_writes_to_db() = runTest {
+        val com = comment(id = 5, incidentId = 1)
+        repository.upsertComment(com)
+        assertEquals(listOf(com), repository.observeComments(1).first())
+    }
+
+    @Test
+    fun upsertComment_is_idempotent() = runTest {
+        val com = comment(id = 5, incidentId = 1)
+        repository.upsertComment(com)
+        repository.upsertComment(com)
+        assertEquals(1, repository.observeComments(1).first().size)
+    }
 }
