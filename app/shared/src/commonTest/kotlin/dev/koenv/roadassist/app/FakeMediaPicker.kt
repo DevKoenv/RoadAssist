@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app
+package dev.koenv.roadassist.app.media
 
 import dev.koenv.roadassist.app.media.MediaPicker
 

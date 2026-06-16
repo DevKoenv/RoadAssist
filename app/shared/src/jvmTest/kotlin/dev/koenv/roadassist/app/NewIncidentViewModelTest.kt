@@ -1,10 +1,13 @@
-package dev.koenv.roadassist.app
+package dev.koenv.roadassist.app.ui.roaduser.newincident
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.data.api.FakeApiClient
+import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.app.db.RoadAssistDb
-import dev.koenv.roadassist.app.ui.roaduser.newincident.NewIncidentViewModel
-import dev.koenv.roadassist.app.ui.roaduser.newincident.SubmitState
+import dev.koenv.roadassist.app.location.FakeLocationProvider
+import dev.koenv.roadassist.app.media.FakeMediaPicker
+import dev.koenv.roadassist.app.geocoding.FakeGeocodingService
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentCategory
 import dev.koenv.roadassist.core.incident.IncidentStatus
@@ -124,7 +127,7 @@ class NewIncidentViewModelTest {
     fun submit_api_failure_emits_error_state() = runTest {
         val fakeApi = FakeApiClient(
             createIncidentResult = Result.failure(
-                dev.koenv.roadassist.app.data.api.ApiException.Network(RuntimeException("offline"))
+                ApiException.Network(RuntimeException("offline"))
             )
         )
         val vm = NewIncidentViewModel(

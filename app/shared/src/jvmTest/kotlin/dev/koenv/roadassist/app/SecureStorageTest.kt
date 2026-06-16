@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app
+package dev.koenv.roadassist.app.data.storage
 
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
 import java.io.File

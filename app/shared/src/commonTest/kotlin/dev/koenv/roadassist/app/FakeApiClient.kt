@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app
+package dev.koenv.roadassist.app.data.api
 
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.api.ApiException

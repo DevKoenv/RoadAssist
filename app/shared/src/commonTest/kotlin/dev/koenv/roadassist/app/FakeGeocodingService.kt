@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app
+package dev.koenv.roadassist.app.geocoding
 
 import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.geocoding.GeocodingService

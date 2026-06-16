@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app
+package dev.koenv.roadassist.app.location
 
 import dev.koenv.roadassist.app.location.LocationProvider
 import dev.koenv.roadassist.core.location.LatLon
