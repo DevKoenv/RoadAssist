@@ -175,6 +175,7 @@ internal fun RoadUserDetailContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // category chip + status badge header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -184,13 +185,14 @@ internal fun RoadUserDetailContent(
             StatusBadge(incident.status, large = true)
         }
 
-        Text(
+        Text( // incident description
             text = incident.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
 
         if (!incident.photoUrl.isNullOrBlank()) {
+            // incident photo (tap to expand)
             AsyncImage(
                 model = ImageRequest.Builder(context).data(incident.photoUrl).build(),
                 contentDescription = "Incident photo",
@@ -203,9 +205,9 @@ internal fun RoadUserDetailContent(
             )
         }
 
-        LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address)
+        LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address) // location
 
-        CommentInputRow(
+        CommentInputRow( // comment input
             input = commentInput,
             posting = commentPosting,
             enabled = serverReachable,
@@ -213,8 +215,9 @@ internal fun RoadUserDetailContent(
             onSend = onCommentSend,
         )
 
-        IncidentActivitySection(incident = incident, comments = comments)
+        IncidentActivitySection(incident = incident, comments = comments) // activity feed
     }
+    // lightbox dialog
     if (showLightbox && !incident.photoUrl.isNullOrBlank()) {
         Dialog(onDismissRequest = { showLightbox = false }) {
             Box(

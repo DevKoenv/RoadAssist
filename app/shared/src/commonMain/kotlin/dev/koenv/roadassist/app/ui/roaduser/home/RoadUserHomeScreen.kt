@@ -127,6 +127,7 @@ private fun RoadUserSplitPane(
 ) {
     val colors = LocalRoadAssistColors.current
     Row(modifier = modifier) {
+        // incident list panel
         Box(Modifier.width(360.dp).fillMaxHeight()) {
             RoadUserIncidentList(
                 filtered = filtered,
@@ -139,7 +140,9 @@ private fun RoadUserSplitPane(
                 selectedIncidentId = selectedIncidentId,
             )
         }
+        // list/detail divider
         Box(Modifier.width(0.5.dp).fillMaxHeight().background(colors.border))
+        // detail panel area
         Box(Modifier.weight(1f).fillMaxHeight()) {
             if (selectedIncidentId != null) {
                 detailPanel(selectedIncidentId)

@@ -48,9 +48,9 @@ fun DetailLayout(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 Column {
-                    ConnectivityBanner(visible = !serverReachable)
-                    MobileAppBar(title = title, onBack = onBack, trailing = headerTrailing ?: {})
-                    AppDivider()
+                    ConnectivityBanner(visible = !serverReachable) // offline banner
+                    MobileAppBar(title = title, onBack = onBack, trailing = headerTrailing ?: {}) // top app bar
+                    AppDivider() // header/content divider
                 }
             },
             snackbarHost = snackbarHost,
@@ -64,18 +64,19 @@ fun DetailLayout(
             snackbarHost = snackbarHost,
         ) { padding ->
             Column(Modifier.fillMaxSize().padding(padding)) {
+                // desktop header row: back button + title + trailing actions
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = onBack) { // back button
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onBackground,
                         )
                     }
-                    Column(Modifier.weight(1f)) {
+                    Column(Modifier.weight(1f)) { // title and subtitle
                         Text(
                             title,
                             style = MaterialTheme.typography.titleMedium,
@@ -90,11 +91,11 @@ fun DetailLayout(
                         }
                     }
                     if (headerTrailing != null) {
-                        Row { headerTrailing() }
+                        Row { headerTrailing() } // trailing header actions
                     }
                 }
-                ConnectivityBanner(visible = !serverReachable)
-                AppDivider()
+                ConnectivityBanner(visible = !serverReachable) // offline banner
+                AppDivider() // header/content divider
                 content(PaddingValues(0.dp))
             }
         }

@@ -176,10 +176,12 @@ private fun DesktopFormContent(
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
+    // centered card wrapper
     Box(
         modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
         contentAlignment = Alignment.TopCenter,
     ) {
+        // main form card (max 760dp wide)
         Column(
             modifier = Modifier
                 .widthIn(max = 760.dp)
@@ -187,11 +189,12 @@ private fun DesktopFormContent(
                 .border(1.dp, LocalRoadAssistColors.current.border, RoundedCornerShape(12.dp))
                 .padding(20.dp),
         ) {
+            // top row: category + location side by side
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f)) { // left: category
                     CategorySection(category = category, onCategoryChange = { viewModel.updateCategory(it) })
                 }
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f)) { // right: location
                     LocationSection(
                         location = location,
                         locationLabel = locationLabel,

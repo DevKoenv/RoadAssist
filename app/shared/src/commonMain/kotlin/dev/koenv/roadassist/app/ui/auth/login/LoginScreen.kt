@@ -91,7 +91,8 @@ private fun MobileLoginLayout(
     serverReachable: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        ConnectivityBanner(visible = !serverReachable)
+        ConnectivityBanner(visible = !serverReachable) // offline banner
+        // centered login form area
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -101,22 +102,22 @@ private fun MobileLoginLayout(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            RoadAssistAppIcon(size = 72.dp)
+            RoadAssistAppIcon(size = 72.dp) // app icon
             Spacer(Modifier.height(16.dp))
-            Text(
+            Text( // app name
                 text = "RoadAssist",
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(Modifier.height(6.dp))
-            Text(
+            Text( // tagline
                 text = "Report a breakdown. Track help on the way.",
                 style = MaterialTheme.typography.bodySmall,
                 color = LocalRoadAssistColors.current.mutedForeground,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(28.dp))
-            LoginForm(
+            LoginForm( // username/password fields + submit button
                 state = state,
                 username = username,
                 password = password,
@@ -126,7 +127,7 @@ private fun MobileLoginLayout(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(16.dp))
-            Text(
+            Text( // session persistence note
                 text = "Signed in stays active on this device.",
                 style = MaterialTheme.typography.labelMedium,
                 color = LocalRoadAssistColors.current.mutedForeground,
@@ -147,15 +148,17 @@ private fun DesktopFormPanel(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.background(Color.White)) {
-        ConnectivityBanner(visible = !serverReachable)
+        ConnectivityBanner(visible = !serverReachable) // offline banner
+        // centered form container
         Box(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
+            // form content (max 400dp wide)
             Column(modifier = Modifier.widthIn(max = 400.dp).padding(horizontal = 40.dp)) {
-                Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground) // form title
                 Spacer(Modifier.height(6.dp))
-                Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
+                Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground) // subtitle
                 Spacer(Modifier.height(24.dp))
                 LoginForm(state = state, username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onLogin = onLogin, modifier = Modifier.fillMaxWidth())
             }

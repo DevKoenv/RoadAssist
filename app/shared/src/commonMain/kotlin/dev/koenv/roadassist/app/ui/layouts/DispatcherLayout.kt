@@ -60,7 +60,7 @@ private fun CompactDispatcherLayout(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column {
-                ConnectivityBanner(visible = !serverReachable)
+                ConnectivityBanner(visible = !serverReachable) // offline banner
                 MobileAppBar(
                     title = title,
                     onBack = onBack,
@@ -68,8 +68,8 @@ private fun CompactDispatcherLayout(
                         headerTrailing?.invoke(this)
                         LogoutTextButton(onClick = onLogout)
                     },
-                )
-                AppDivider()
+                ) // top app bar
+                AppDivider() // header/content divider
             }
         },
     ) { padding -> content(padding) }
@@ -86,6 +86,7 @@ private fun WideDispatcherLayout(
 ) {
     val colors = LocalRoadAssistColors.current
     Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // nav rail
         AppNavRail(onLogout = onLogout) {
             NavRailItem(
                 selected = onBack == null,
@@ -100,12 +101,14 @@ private fun WideDispatcherLayout(
                 label = "Queue",
             )
         }
+        // rail/content divider
         Box(
             Modifier
                 .width(0.5.dp)
                 .fillMaxHeight()
                 .background(colors.border),
         )
+        // main content area
         Column(Modifier.weight(1f).fillMaxSize()) {
             ConnectivityBanner(visible = !serverReachable)
             DesktopPageHeader(

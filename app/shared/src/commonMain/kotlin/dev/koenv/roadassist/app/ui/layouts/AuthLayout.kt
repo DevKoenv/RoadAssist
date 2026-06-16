@@ -12,11 +12,13 @@ import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 fun AuthLayout(content: @Composable () -> Unit) {
     val windowSizeClass = LocalWindowSizeClass.current
     if (windowSizeClass == WindowSizeClass.Compact) {
+        // mobile: full-screen login form
         Box(Modifier.fillMaxSize()) { content() }
     } else {
+        // desktop: branding panel on left, login form on right
         Row(Modifier.fillMaxSize()) {
-            AuthBrandingPanel(Modifier.weight(1f))
-            Box(Modifier.weight(1f)) { content() }
+            AuthBrandingPanel(Modifier.weight(1f)) // left: dark branded sidebar
+            Box(Modifier.weight(1f)) { content() } // right: login form panel
         }
     }
 }

@@ -140,6 +140,7 @@ private fun DispatcherSplitPane(
 ) {
     val colors = LocalRoadAssistColors.current
     Row(modifier = modifier) {
+        // incident list panel
         Column(Modifier.width(360.dp).fillMaxHeight()) {
             StatusFilterRow(
                 filter = filter,
@@ -164,7 +165,9 @@ private fun DispatcherSplitPane(
                 }
             }
         }
+        // list/detail divider
         Box(Modifier.width(0.5.dp).fillMaxHeight().background(colors.border))
+        // detail panel area
         Box(Modifier.weight(1f).fillMaxHeight()) {
             if (selectedIncidentId != null) {
                 detailPanel(selectedIncidentId)

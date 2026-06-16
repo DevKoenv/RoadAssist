@@ -238,6 +238,7 @@ internal fun DispatcherDetailContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // category chip + status edit chip header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -247,13 +248,14 @@ internal fun DispatcherDetailContent(
             StatusEditChip(status = incident.status, onClick = onStatusClick)
         }
 
-        Text(
+        Text( // incident description
             text = incident.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
 
         if (!incident.photoUrl.isNullOrBlank()) {
+            // incident photo (tap to expand)
             AsyncImage(
                 model = ImageRequest.Builder(context).data(incident.photoUrl).build(),
                 contentDescription = "Incident photo",
@@ -266,9 +268,9 @@ internal fun DispatcherDetailContent(
             )
         }
 
-        LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address)
+        LocationRow(latitude = incident.latitude, longitude = incident.longitude, address = address) // location
 
-        DispatcherCommentInputRow(
+        DispatcherCommentInputRow( // comment input
             input = commentInput,
             posting = commentPosting,
             enabled = serverReachable,
@@ -276,8 +278,9 @@ internal fun DispatcherDetailContent(
             onSend = onCommentSend,
         )
 
-        IncidentActivitySection(incident = incident, comments = comments)
+        IncidentActivitySection(incident = incident, comments = comments) // activity feed
     }
+    // lightbox dialog
     if (showLightbox && !incident.photoUrl.isNullOrBlank()) {
         Dialog(onDismissRequest = { showLightbox = false }) {
             Box(
@@ -443,6 +446,7 @@ private fun UpdateStatusDialog(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // dialog title row: "Update status" + close button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -457,6 +461,7 @@ private fun UpdateStatusDialog(
                 )
             }
 
+            // status option list
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 IncidentStatus.entries.forEach { status ->
                     val selected = status == currentStatus
@@ -492,6 +497,7 @@ private fun UpdateStatusDialog(
                 }
             }
 
+            // notes text field
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     "MESSAGE · OPTIONAL",

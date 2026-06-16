@@ -150,8 +150,8 @@ private fun StatusChangeEntry(comment: Comment, nowMillis: Long) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(Modifier.size(7.dp).background(dotColor, CircleShape))
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Box(Modifier.size(7.dp).background(dotColor, CircleShape)) // status dot
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) { // label + timestamp
             Text(
                 "Status updated to ${status?.displayName() ?: comment.content}",
                 style = MaterialTheme.typography.bodySmall,
@@ -175,19 +175,19 @@ private fun MessageBubbleEntry(comment: Comment, nowMillis: Long) {
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(
+        Box( // author dot
             modifier = Modifier
                 .padding(top = 3.dp)
                 .size(7.dp)
                 .background(dotColor, CircleShape),
         )
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) { // author label + bubble + timestamp
+            Text( // author label (Dispatcher / Road user)
                 label,
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
                 color = dotColor,
             )
-            Box(
+            Box( // message bubble
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(bubbleBg, RoundedCornerShape(6.dp))
@@ -195,7 +195,7 @@ private fun MessageBubbleEntry(comment: Comment, nowMillis: Long) {
             ) {
                 Text(comment.content, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
             }
-            Text(timeAgo(comment.createdAt, nowMillis), style = MaterialTheme.typography.labelSmall, color = colors.mutedForeground)
+            Text(timeAgo(comment.createdAt, nowMillis), style = MaterialTheme.typography.labelSmall, color = colors.mutedForeground) // timestamp
         }
     }
 }
