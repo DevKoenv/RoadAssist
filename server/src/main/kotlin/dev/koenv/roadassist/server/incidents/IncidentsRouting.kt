@@ -8,6 +8,7 @@ import dev.koenv.roadassist.core.incident.CreateIncidentRequest
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentStatus
 import dev.koenv.roadassist.core.user.Role
+import dev.koenv.roadassist.server.auth.jwtClaims
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.UsersTable
@@ -16,8 +17,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
@@ -277,14 +276,6 @@ private suspend fun handlePostComment(call: ApplicationCall) {
         )
     }
     call.respond(HttpStatusCode.Created, comment)
-}
-
-// JWT has already been validated by the auth plugin; this just extracts the claims
-private fun ApplicationCall.jwtClaims(): Pair<Int, String>? {
-    val principal = principal<JWTPrincipal>() ?: return null
-    val userId = principal.payload.subject?.toIntOrNull() ?: return null
-    val role = principal.payload.getClaim("role")?.asString() ?: return null
-    return userId to role
 }
 
 private fun ResultRow.toComment(): Comment = Comment(
