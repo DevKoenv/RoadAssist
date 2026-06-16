@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.data.sse.EventStreamService
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.core.auth.RefreshRequest
 import dev.koenv.roadassist.core.incident.Incident
@@ -20,6 +21,8 @@ class DispatcherHomeViewModel(
     private val apiClient: ApiClient,
     private val storage: SecureStorage,
     private val repository: IncidentRepository,
+    @Suppress("UnusedPrivateProperty")
+    private val eventStreamService: EventStreamService,
 ) : ViewModel() {
 
     private val _serverReachable = MutableStateFlow(true)
