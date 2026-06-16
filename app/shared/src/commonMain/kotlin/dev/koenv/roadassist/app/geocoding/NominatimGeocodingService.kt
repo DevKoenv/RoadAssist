@@ -1,7 +1,7 @@
 package dev.koenv.roadassist.app.geocoding
 
 import dev.koenv.roadassist.app.network.createHttpClient
-import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.location.LatLon
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get

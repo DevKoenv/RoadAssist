@@ -1,6 +1,6 @@
 package dev.koenv.roadassist.app.location
 
-import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.location.LatLon
 
 actual fun createLocationProvider(): LocationProvider = DesktopLocationProvider()
 

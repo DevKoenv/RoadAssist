@@ -13,7 +13,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import dev.koenv.roadassist.app.data.storage.ActivityHolder
 import dev.koenv.roadassist.app.data.storage.AndroidContextHolder
-import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.location.LatLon
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers

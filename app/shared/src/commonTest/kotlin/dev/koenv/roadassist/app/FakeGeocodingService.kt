@@ -2,7 +2,7 @@ package dev.koenv.roadassist.app
 
 import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.geocoding.GeocodingService
-import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.location.LatLon
 
 class FakeGeocodingService(
     private val searchResults: List<GeocodingResult> = emptyList(),

@@ -2,7 +2,7 @@ package dev.koenv.roadassist.server
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import dev.koenv.roadassist.core.PingMessage
+import dev.koenv.roadassist.core.health.PingMessage
 import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
