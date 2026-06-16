@@ -7,6 +7,7 @@ import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.core.comment.AuthorRole
 import dev.koenv.roadassist.core.comment.Comment
 import dev.koenv.roadassist.core.comment.CommentType
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentCategory
 import dev.koenv.roadassist.core.incident.IncidentStatus
@@ -135,6 +136,29 @@ class IncidentRepositoryTest {
         repo.patchIncidentStatus(1, PatchIncidentStatusRequest(IncidentStatus.IN_PROGRESS, null))
 
         assertEquals(IncidentStatus.IN_PROGRESS, repo.observeIncident(1).first()?.status)
+    }
+
+    @Test
+    fun createIncident_returns_api_result_on_success() = runTest {
+        val expected = incident(id = 5)
+        val request = CreateIncidentRequest(IncidentCategory.ACCIDENT, "rear-end collision", 51.5, 4.1)
+        val api = FakeApiClient(createIncidentResult = Result.success(expected))
+        val repo = IncidentRepository(api, db)
+
+        val result = repo.createIncident(request)
+
+        assertEquals(expected, result.getOrNull())
+    }
+
+    @Test
+    fun createIncident_propagates_api_failure() = runTest {
+        val repo = IncidentRepository(FakeApiClient(), db)
+
+        val result = repo.createIncident(
+            CreateIncidentRequest(IncidentCategory.BREAKDOWN, "breakdown", 51.0, 4.0)
+        )
+
+        assertTrue(result.isFailure)
     }
 
     @Test
