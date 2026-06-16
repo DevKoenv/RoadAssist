@@ -7,10 +7,10 @@ import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.db.toDomain
 import dev.koenv.roadassist.app.data.db.upsert
 import dev.koenv.roadassist.app.db.RoadAssistDb
-import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.PatchIncidentStatusRequest
+import dev.koenv.roadassist.core.comment.Comment
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -40,6 +40,7 @@ class IncidentRepository(
     suspend fun syncIncidents(): Result<Unit> =
         apiClient.getIncidents().map { incidents ->
             db.incidentEntityQueries.transaction {
+                // Delete and re-insert rather than upsert alone; handles incidents removed on the server
                 db.incidentEntityQueries.deleteAll()
                 incidents.forEach { db.incidentEntityQueries.upsert(it) }
             }
@@ -50,6 +51,7 @@ class IncidentRepository(
             db.incidentEntityQueries.upsert(incident)
             apiClient.getComments(id).onSuccess { comments ->
                 db.commentEntityQueries.transaction {
+                    // Replace all comments atomically so deleted server-side comments don't linger
                     db.commentEntityQueries.deleteByIncidentId(id.toLong())
                     comments.forEach { db.commentEntityQueries.upsert(it) }
                 }

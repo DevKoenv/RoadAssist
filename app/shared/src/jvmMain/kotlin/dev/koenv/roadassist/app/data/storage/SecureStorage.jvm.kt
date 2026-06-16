@@ -23,6 +23,8 @@ class JvmSecureStorage(private val storageDir: Path) : SecureStorage {
     private val keyFile = storageDir.resolve("machine.key")
     private val dataFile = storageDir.resolve("tokens.enc")
 
+    // Key is stored as raw bytes on disk next to the encrypted data. Not hardened against
+    // someone with filesystem access, but enough to prevent casual token inspection.
     private val key: SecretKey by lazy {
         storageDir.createDirectories()
         if (keyFile.exists()) {
@@ -39,7 +41,7 @@ class JvmSecureStorage(private val storageDir: Path) : SecureStorage {
         cipher.init(Cipher.ENCRYPT_MODE, key)
         val iv = cipher.iv
         val encrypted = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
-        return iv + encrypted
+        return iv + encrypted  // 12-byte IV prepended; decrypt slices it back out
     }
 
     private fun decrypt(data: ByteArray): String {
@@ -64,6 +66,8 @@ class JvmSecureStorage(private val storageDir: Path) : SecureStorage {
         }.getOrElse { emptyMap() }
     }
 
+    // Re-encrypts the whole file on every write. Fine for a handful of tokens,
+    // but wouldn't scale if we ever stored more than a few keys here.
     private fun writeAll(map: Map<String, String>) {
         storageDir.createDirectories()
         val plaintext = map.entries.joinToString("\n") { "${it.key}=${it.value}" }

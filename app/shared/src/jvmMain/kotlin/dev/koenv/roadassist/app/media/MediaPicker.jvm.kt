@@ -12,6 +12,8 @@ actual fun createMediaPicker(): MediaPicker = DesktopMediaPicker()
 class DesktopMediaPicker : MediaPicker {
     override suspend fun pickMedia(): ByteArray? = withContext(Dispatchers.IO) {
         var result: ByteArray? = null
+        // JFileChooser must run on the Swing EDT; the latch blocks the coroutine
+        // until the dialog is dismissed without blocking the EDT itself
         val latch = CountDownLatch(1)
 
         SwingUtilities.invokeLater {

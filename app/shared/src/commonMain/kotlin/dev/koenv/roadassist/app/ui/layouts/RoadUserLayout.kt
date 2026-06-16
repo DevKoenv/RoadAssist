@@ -38,7 +38,7 @@ import dev.koenv.roadassist.app.ui.components.NavRailItem
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.home.RoadUserTab
+import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserTab
 
 @Composable
 fun RoadUserLayout(
@@ -94,11 +94,12 @@ private fun CompactRoadUserLayout(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     if (onBack != null) {
+        // detail view: standard back-nav layout, no tabs or FAB
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 Column {
-                    ConnectivityBanner(visible = !serverReachable)
+                    ConnectivityBanner(visible = !serverReachable) // offline banner
                     MobileAppBar(
                         title = title ?: "Incident",
                         onBack = onBack,
@@ -106,31 +107,33 @@ private fun CompactRoadUserLayout(
                             headerTrailing?.invoke(this)
                             LogoutTextButton(onClick = onLogout)
                         },
-                    )
-                    AppDivider()
+                    ) // top app bar
+                    AppDivider() // header/content divider
                 }
             },
         ) { padding -> content(padding) }
     } else {
+        // home view: tabs + FAB
         val tabTitle = if (selectedTab == RoadUserTab.Active) "Active" else "History"
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 Column {
-                    ConnectivityBanner(visible = !serverReachable)
+                    ConnectivityBanner(visible = !serverReachable) // offline banner
                     MobileAppBar(
                         title = tabTitle,
                         trailing = {
                             headerTrailing?.invoke(this)
                             LogoutTextButton(onClick = onLogout)
                         },
-                    )
-                    AppDivider()
+                    ) // top app bar
+                    AppDivider() // header/content divider
                 }
             },
             bottomBar = {
                 Column {
-                    AppDivider()
+                    AppDivider() // nav bar top border
+                    // bottom tab bar
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.background,
                         tonalElevation = 0.dp,
@@ -153,6 +156,7 @@ private fun CompactRoadUserLayout(
                 }
             },
             floatingActionButton = {
+                // new incident FAB
                 fab?.let { config ->
                     FloatingActionButton(
                         onClick = config.onClick,
@@ -197,6 +201,7 @@ private fun WideRoadUserLayout(
     val colors = LocalRoadAssistColors.current
     val title = customTitle ?: if (selectedTab == RoadUserTab.Active) "Active incidents" else "History"
     Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // nav rail
         AppNavRail(onLogout = onLogout) {
             NavRailItem(
                 selected = selectedTab == RoadUserTab.Active,
@@ -223,12 +228,14 @@ private fun WideRoadUserLayout(
                 label = "History",
             )
         }
+        // rail/content divider
         Box(
             Modifier
                 .width(0.5.dp)
                 .fillMaxHeight()
                 .background(colors.border),
         )
+        // main content area
         Column(Modifier.weight(1f).fillMaxSize()) {
             ConnectivityBanner(visible = !serverReachable)
             DesktopPageHeader(

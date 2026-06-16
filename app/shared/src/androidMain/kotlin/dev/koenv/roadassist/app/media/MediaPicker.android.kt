@@ -41,6 +41,7 @@ class AndroidMediaPicker : MediaPicker {
 
     private suspend fun takeCameraPhoto(context: android.content.Context): ByteArray? {
         val imageFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+        // FileProvider is required on Android 7+ to share a file URI with the camera app
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",

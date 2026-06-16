@@ -9,6 +9,8 @@ actual fun createSecureStorage(): SecureStorage {
     val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
+    // SIV is deterministic (same key → same ciphertext), required for SharedPreferences key lookup.
+    // GCM uses a random nonce per write so ciphertext equality doesn't leak whether a value changed.
     val prefs: SharedPreferences = EncryptedSharedPreferences.create(
         context,
         "roadassist_secure_prefs",

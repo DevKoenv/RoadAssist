@@ -4,16 +4,17 @@ import dev.koenv.roadassist.app.db.CommentEntity
 import dev.koenv.roadassist.app.db.CommentEntityQueries
 import dev.koenv.roadassist.app.db.IncidentEntity
 import dev.koenv.roadassist.app.db.IncidentEntityQueries
-import dev.koenv.roadassist.core.AuthorRole
-import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CommentType
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentCategory
-import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.comment.AuthorRole
+import dev.koenv.roadassist.core.comment.Comment
+import dev.koenv.roadassist.core.comment.CommentType
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.IncidentStatus
 
 fun IncidentEntity.toDomain(): Incident = Incident(
     id = id.toInt(),
     userId = userId.toInt(),
+    // Fall back to a safe default rather than crash on unknown enum values from a DB migration
     category = runCatching { IncidentCategory.valueOf(category) }.getOrElse { IncidentCategory.OTHER },
     description = description,
     latitude = latitude,

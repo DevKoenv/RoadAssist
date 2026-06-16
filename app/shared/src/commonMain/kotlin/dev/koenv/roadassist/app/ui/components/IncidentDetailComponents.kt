@@ -29,12 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.util.timeAgo
-import dev.koenv.roadassist.core.AuthorRole
-import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CommentType
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentStatus
-import dev.koenv.roadassist.core.displayName
+import dev.koenv.roadassist.core.comment.AuthorRole
+import dev.koenv.roadassist.core.comment.Comment
+import dev.koenv.roadassist.core.comment.CommentType
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentStatus
+import dev.koenv.roadassist.core.incident.displayName
 
 @Composable
 fun CategoryChip(incident: Incident) {
@@ -116,6 +116,8 @@ fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
             color = muted,
         )
 
+        // Comments come from the DB in ASC order; reversed() puts newest at the top.
+        // The synthetic "Incident reported" entry below is always the bottom anchor.
         comments.reversed().forEach { comment ->
             when (comment.type) {
                 CommentType.STATUS_CHANGE -> StatusChangeEntry(comment = comment, nowMillis = nowMillis)
@@ -134,6 +136,7 @@ fun IncidentActivitySection(incident: Incident, comments: List<Comment>) {
 @Composable
 private fun StatusChangeEntry(comment: Comment, nowMillis: Long) {
     val colors = LocalRoadAssistColors.current
+    // Status name is stored as raw text in the comment body; parse it back to get the dot color
     val status = runCatching { IncidentStatus.valueOf(comment.content) }.getOrNull()
     val dotColor = when (status) {
         IncidentStatus.NEW -> colors.statusNew
@@ -147,8 +150,8 @@ private fun StatusChangeEntry(comment: Comment, nowMillis: Long) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(Modifier.size(7.dp).background(dotColor, CircleShape))
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Box(Modifier.size(7.dp).background(dotColor, CircleShape)) // status dot
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) { // label + timestamp
             Text(
                 "Status updated to ${status?.displayName() ?: comment.content}",
                 style = MaterialTheme.typography.bodySmall,
@@ -172,19 +175,19 @@ private fun MessageBubbleEntry(comment: Comment, nowMillis: Long) {
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(
+        Box( // author dot
             modifier = Modifier
                 .padding(top = 3.dp)
                 .size(7.dp)
                 .background(dotColor, CircleShape),
         )
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) { // author label + bubble + timestamp
+            Text( // author label (Dispatcher / Road user)
                 label,
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
                 color = dotColor,
             )
-            Box(
+            Box( // message bubble
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(bubbleBg, RoundedCornerShape(6.dp))
@@ -192,7 +195,7 @@ private fun MessageBubbleEntry(comment: Comment, nowMillis: Long) {
             ) {
                 Text(comment.content, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
             }
-            Text(timeAgo(comment.createdAt, nowMillis), style = MaterialTheme.typography.labelSmall, color = colors.mutedForeground)
+            Text(timeAgo(comment.createdAt, nowMillis), style = MaterialTheme.typography.labelSmall, color = colors.mutedForeground) // timestamp
         }
     }
 }

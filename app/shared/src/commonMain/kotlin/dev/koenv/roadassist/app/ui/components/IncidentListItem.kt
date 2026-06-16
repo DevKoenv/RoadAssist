@@ -20,8 +20,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.util.timeAgo
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.displayName
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.displayName
 
 @Composable
 fun IncidentListItem(

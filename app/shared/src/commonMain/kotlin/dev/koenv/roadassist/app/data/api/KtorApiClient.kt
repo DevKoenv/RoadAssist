@@ -3,14 +3,14 @@ package dev.koenv.roadassist.app.data.api
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.network.createHttpClient
-import dev.koenv.roadassist.core.AuthResponse
-import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.LoginRequest
-import dev.koenv.roadassist.core.PatchIncidentStatusRequest
-import dev.koenv.roadassist.core.PostCommentRequest
-import dev.koenv.roadassist.core.RefreshRequest
+import dev.koenv.roadassist.core.auth.AuthResponse
+import dev.koenv.roadassist.core.auth.LoginRequest
+import dev.koenv.roadassist.core.auth.RefreshRequest
+import dev.koenv.roadassist.core.comment.Comment
+import dev.koenv.roadassist.core.comment.PostCommentRequest
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpSend
@@ -84,7 +84,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
                         requestBuilder.headers {
                             set(HttpHeaders.Authorization, "Bearer ${authResp.token}")
                         }
-                        requestBuilder.attributes.put(retryAfterRefreshKey, true)
+                        requestBuilder.attributes.put(retryAfterRefreshKey, true)  // prevents a second 401 on this retry from triggering another refresh
                         execute(requestBuilder)
                     } else {
                         // Refresh failed; clear tokens and kick back to login
@@ -279,6 +279,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
         Result.failure(ApiException.Network(e))
     }
 
+    // Server returns relative paths; resolve against BASE_URL so callers don't need to know it
     private fun Incident.withAbsolutePhotoUrl(): Incident =
         if (photoUrl?.startsWith("/") == true) copy(photoUrl = "$BASE_URL$photoUrl") else this
 }

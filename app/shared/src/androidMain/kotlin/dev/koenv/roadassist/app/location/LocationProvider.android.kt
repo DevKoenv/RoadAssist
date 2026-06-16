@@ -13,7 +13,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import dev.koenv.roadassist.app.data.storage.ActivityHolder
 import dev.koenv.roadassist.app.data.storage.AndroidContextHolder
-import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.location.LatLon
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +60,7 @@ class AndroidLocationProvider : LocationProvider {
     private suspend fun requestPermission(permission: String): Boolean {
         val activity = ActivityHolder.activity ?: return false
 
+        // True after a first denial but before the user ticks "Don't ask again"
         val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
         if (shouldShowRationale) {
             val accepted = withContext(Dispatchers.Main) {

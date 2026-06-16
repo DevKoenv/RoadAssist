@@ -1,7 +1,7 @@
 package dev.koenv.roadassist.server.database
 
-import dev.koenv.roadassist.core.AuthorRole
-import dev.koenv.roadassist.core.CommentType
+import dev.koenv.roadassist.core.comment.AuthorRole
+import dev.koenv.roadassist.core.comment.CommentType
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 object CommentsTable : IntIdTable("comments") {

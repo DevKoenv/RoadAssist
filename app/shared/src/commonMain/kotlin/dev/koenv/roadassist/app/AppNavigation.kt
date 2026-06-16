@@ -24,23 +24,24 @@ import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.app.geocoding.NominatimGeocodingService
 import dev.koenv.roadassist.app.location.createLocationProvider
 import dev.koenv.roadassist.app.media.createMediaPicker
+import dev.koenv.roadassist.app.ui.auth.login.LoginScreen
+import dev.koenv.roadassist.app.ui.auth.login.LoginViewModel
+import dev.koenv.roadassist.app.ui.dispatcher.detail.DispatcherDetailPanel
+import dev.koenv.roadassist.app.ui.dispatcher.detail.DispatcherDetailScreen
+import dev.koenv.roadassist.app.ui.dispatcher.detail.DispatcherDetailViewModel
+import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeScreen
+import dev.koenv.roadassist.app.ui.dispatcher.home.DispatcherHomeViewModel
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.home.DispatcherDetailPanel
-import dev.koenv.roadassist.app.ui.home.DispatcherDetailScreen
-import dev.koenv.roadassist.app.ui.home.DispatcherDetailViewModel
-import dev.koenv.roadassist.app.ui.home.DispatcherHomeScreen
-import dev.koenv.roadassist.app.ui.home.HomeViewModel
-import dev.koenv.roadassist.app.ui.home.RoadUserDetailPanel
-import dev.koenv.roadassist.app.ui.home.RoadUserDetailScreen
-import dev.koenv.roadassist.app.ui.home.RoadUserDetailViewModel
-import dev.koenv.roadassist.app.ui.home.RoadUserHomeScreen
 import dev.koenv.roadassist.app.ui.layouts.AuthLayout
-import dev.koenv.roadassist.app.ui.login.LoginScreen
-import dev.koenv.roadassist.app.ui.login.LoginViewModel
-import dev.koenv.roadassist.app.ui.newincident.NewIncidentScreen
-import dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel
-import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.app.ui.roaduser.detail.RoadUserDetailPanel
+import dev.koenv.roadassist.app.ui.roaduser.detail.RoadUserDetailScreen
+import dev.koenv.roadassist.app.ui.roaduser.detail.RoadUserDetailViewModel
+import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeScreen
+import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeViewModel
+import dev.koenv.roadassist.app.ui.roaduser.newincident.NewIncidentScreen
+import dev.koenv.roadassist.app.ui.roaduser.newincident.NewIncidentViewModel
+import dev.koenv.roadassist.core.user.Role
 
 @Composable
 fun AppNavigation(
@@ -53,6 +54,7 @@ fun AppNavigation(
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 
+    // Wrapped in remember so we don't re-read storage on every recomposition
     val startDestination = remember {
         val token = storage.getToken()
         if (token != null) {
@@ -100,7 +102,7 @@ fun AppNavigation(
                     }
                 }
                 composable("road_user_home") {
-                    val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
+                    val vm = viewModel { RoadUserHomeViewModel(apiClient, storage, repo) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     LaunchedEffect(currentRoute) {
@@ -131,7 +133,7 @@ fun AppNavigation(
                     )
                 }
                 composable("dispatcher_home") {
-                    val vm = viewModel { HomeViewModel(apiClient, storage, repo) }
+                    val vm = viewModel { DispatcherHomeViewModel(apiClient, storage, repo) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     LaunchedEffect(currentRoute) {

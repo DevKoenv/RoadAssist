@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.app.ui.login.RoadAssistAppIcon
+import dev.koenv.roadassist.app.ui.auth.login.RoadAssistAppIcon
 
 @Composable
 internal fun NavItemContent(

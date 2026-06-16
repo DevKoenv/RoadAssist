@@ -81,4 +81,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    lint {
+        // Project uses ComponentActivity directly; no Fragments are in use.
+        // The transitive fragment:1.1.0 artifact (pulled in by legacy deps) triggers
+        // this lint check as a false positive.
+        disable += "InvalidFragmentVersionForActivityResult"
+    }
 }
