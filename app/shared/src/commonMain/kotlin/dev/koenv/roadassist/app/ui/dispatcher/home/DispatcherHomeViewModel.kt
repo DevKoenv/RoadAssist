@@ -8,12 +8,11 @@ import dev.koenv.roadassist.app.data.sse.EventStreamService
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.core.auth.RefreshRequest
 import dev.koenv.roadassist.core.incident.Incident
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -21,38 +20,18 @@ class DispatcherHomeViewModel(
     private val apiClient: ApiClient,
     private val storage: SecureStorage,
     private val repository: IncidentRepository,
-    @Suppress("UnusedPrivateProperty")
     private val eventStreamService: EventStreamService,
 ) : ViewModel() {
 
-    private val _serverReachable = MutableStateFlow(true)
-    val serverReachable: StateFlow<Boolean> = _serverReachable.asStateFlow()
+    val serverReachable: StateFlow<Boolean> = eventStreamService.connectionState
+        .map { it is EventStreamService.ConnectionState.Connected }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val incidents: StateFlow<List<Incident>> = repository.observeIncidents()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _incidentsLoading = MutableStateFlow(false)
     val incidentsLoading: StateFlow<Boolean> = _incidentsLoading.asStateFlow()
-
-    init {
-        // Three independent loops: connectivity probe every 10s, sync on reconnect,
-        // and a background sync every 15s to catch changes while the app is open.
-        viewModelScope.launch {
-            while (true) {
-                _serverReachable.value = apiClient.checkConnectivity()
-                delay(10_000L)
-            }
-        }
-        viewModelScope.launch {
-            serverReachable.filter { it }.collect { syncIncidents() }
-        }
-        viewModelScope.launch {
-            while (true) {
-                delay(15_000L)
-                syncIncidents()
-            }
-        }
-    }
 
     fun refreshIncidents() {
         viewModelScope.launch { syncIncidents() }
