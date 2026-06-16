@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.geocoding.GeocodingService
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentStatus
 import dev.koenv.roadassist.core.LatLon
-import dev.koenv.roadassist.core.PatchIncidentStatusRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentStatus
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

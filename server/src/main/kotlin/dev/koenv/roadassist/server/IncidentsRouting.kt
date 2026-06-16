@@ -3,10 +3,10 @@ package dev.koenv.roadassist.server
 import dev.koenv.roadassist.core.AuthorRole
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CommentType
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentStatus
 import dev.koenv.roadassist.core.PostCommentRequest
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentStatus
 import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
@@ -127,7 +127,7 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
     val incidentId = call.parameters["id"]?.toIntOrNull()
         ?: return call.respond(HttpStatusCode.BadRequest)
     val body = runCatching {
-        call.receive<dev.koenv.roadassist.core.PatchIncidentStatusRequest>()
+        call.receive<dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest>()
     }.getOrElse {
         call.respondText("Invalid status value", status = HttpStatusCode.BadRequest)
         return

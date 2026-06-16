@@ -38,8 +38,8 @@ import dev.koenv.roadassist.app.ui.layouts.FabConfig
 import dev.koenv.roadassist.app.ui.layouts.RoadUserLayout
 import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserHomeViewModel
 import dev.koenv.roadassist.app.ui.roaduser.home.RoadUserTab
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentStatus
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)

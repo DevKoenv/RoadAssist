@@ -5,9 +5,9 @@ import dev.koenv.roadassist.app.data.incidents.IncidentRepository
 import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.app.ui.newincident.NewIncidentViewModel
 import dev.koenv.roadassist.app.ui.newincident.SubmitState
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentCategory
-import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.IncidentStatus
 import dev.koenv.roadassist.core.LatLon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

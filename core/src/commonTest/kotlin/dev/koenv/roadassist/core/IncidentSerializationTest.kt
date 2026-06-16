@@ -1,5 +1,8 @@
 package dev.koenv.roadassist.core
 
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.IncidentStatus
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

@@ -4,13 +4,13 @@ import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.network.createHttpClient
 import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.PatchIncidentStatusRequest
 import dev.koenv.roadassist.core.PostCommentRequest
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest
 import dev.koenv.roadassist.core.auth.RefreshRequest
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpSend

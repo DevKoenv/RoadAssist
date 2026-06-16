@@ -6,9 +6,9 @@ import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.core.AuthorRole
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CommentType
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentCategory
-import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.IncidentStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -130,7 +130,7 @@ class IncidentRepositoryTest {
         val repo = IncidentRepository(api, db)
         repo.syncIncidents()
 
-        repo.patchIncidentStatus(1, dev.koenv.roadassist.core.PatchIncidentStatusRequest(IncidentStatus.IN_PROGRESS, null))
+        repo.patchIncidentStatus(1, dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest(IncidentStatus.IN_PROGRESS, null))
 
         assertEquals(IncidentStatus.IN_PROGRESS, repo.observeIncident(1).first()?.status)
     }

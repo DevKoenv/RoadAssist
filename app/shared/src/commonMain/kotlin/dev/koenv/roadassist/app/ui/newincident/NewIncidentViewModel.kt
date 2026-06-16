@@ -7,9 +7,9 @@ import dev.koenv.roadassist.app.geocoding.GeocodingResult
 import dev.koenv.roadassist.app.geocoding.GeocodingService
 import dev.koenv.roadassist.app.location.LocationProvider
 import dev.koenv.roadassist.app.media.MediaPicker
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LatLon
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.IncidentCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

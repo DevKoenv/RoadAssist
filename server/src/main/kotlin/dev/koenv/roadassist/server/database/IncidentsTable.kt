@@ -1,7 +1,7 @@
 package dev.koenv.roadassist.server.database
 
-import dev.koenv.roadassist.core.IncidentCategory
-import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.IncidentStatus
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 object IncidentsTable : IntIdTable("incidents") {

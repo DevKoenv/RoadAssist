@@ -32,9 +32,9 @@ import dev.koenv.roadassist.app.util.timeAgo
 import dev.koenv.roadassist.core.AuthorRole
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CommentType
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentStatus
-import dev.koenv.roadassist.core.displayName
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentStatus
+import dev.koenv.roadassist.core.incident.displayName
 
 @Composable
 fun CategoryChip(incident: Incident) {

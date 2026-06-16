@@ -57,7 +57,7 @@ import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.RoadUserLayout
 import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.Incident
+import dev.koenv.roadassist.core.incident.Incident
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

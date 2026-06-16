@@ -64,9 +64,9 @@ import dev.koenv.roadassist.app.ui.components.SectionLabel
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.DetailLayout
-import dev.koenv.roadassist.core.IncidentCategory
 import dev.koenv.roadassist.core.LatLon
-import dev.koenv.roadassist.core.displayName
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.displayName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

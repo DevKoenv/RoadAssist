@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.core.IncidentCategory
-import dev.koenv.roadassist.core.displayName
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.displayName
 
 @Composable
 fun CategoryIcon(

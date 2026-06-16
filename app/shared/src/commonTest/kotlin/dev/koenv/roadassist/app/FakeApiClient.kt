@@ -4,10 +4,10 @@ import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.auth.LoginRequest
-import dev.koenv.roadassist.core.PatchIncidentStatusRequest
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import dev.koenv.roadassist.core.auth.RefreshRequest
 
 class FakeApiClient(

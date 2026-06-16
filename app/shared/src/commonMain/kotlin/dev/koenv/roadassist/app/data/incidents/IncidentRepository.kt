@@ -8,9 +8,9 @@ import dev.koenv.roadassist.app.data.db.toDomain
 import dev.koenv.roadassist.app.data.db.upsert
 import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.PatchIncidentStatusRequest
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

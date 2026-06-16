@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
-import dev.koenv.roadassist.core.IncidentStatus
+import dev.koenv.roadassist.core.incident.IncidentStatus
 
 @Composable
 fun StatusBadge(status: IncidentStatus, modifier: Modifier = Modifier, large: Boolean = false) {

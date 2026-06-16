@@ -1,8 +1,10 @@
 package dev.koenv.roadassist.server
 
-import dev.koenv.roadassist.core.CreateIncidentRequest
-import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.IncidentCategory
+import dev.koenv.roadassist.core.incident.CreateIncidentRequest
+import dev.koenv.roadassist.core.incident.Incident
+import dev.koenv.roadassist.core.incident.IncidentCategory
+import dev.koenv.roadassist.core.incident.IncidentStatus
+import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest
 import dev.koenv.roadassist.core.auth.RegisterRequest
@@ -62,7 +64,7 @@ class IncidentsRoutingTest {
         val incident = response.body<Incident>()
         assertEquals(IncidentCategory.BREAKDOWN, incident.category)
         assertEquals("Engine failure", incident.description)
-        assertEquals(dev.koenv.roadassist.core.IncidentStatus.NEW, incident.status)
+        assertEquals(dev.koenv.roadassist.core.incident.IncidentStatus.NEW, incident.status)
     }
 
     @Test
@@ -217,14 +219,14 @@ class IncidentsRoutingTest {
         val response = client.patch("/incidents/${created.id}/status") {
             headers { append(HttpHeaders.Authorization, "Bearer $dispatcherToken") }
             contentType(ContentType.Application.Json)
-            setBody(dev.koenv.roadassist.core.PatchIncidentStatusRequest(
-                status = dev.koenv.roadassist.core.IncidentStatus.IN_PROGRESS,
+            setBody(dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest(
+                status = dev.koenv.roadassist.core.incident.IncidentStatus.IN_PROGRESS,
                 notes = "On the way",
             ))
         }
         assertEquals(HttpStatusCode.OK, response.status)
         val updated = response.body<Incident>()
-        assertEquals(dev.koenv.roadassist.core.IncidentStatus.IN_PROGRESS, updated.status)
+        assertEquals(dev.koenv.roadassist.core.incident.IncidentStatus.IN_PROGRESS, updated.status)
         assertEquals("On the way", updated.notes)
     }
 
@@ -244,8 +246,8 @@ class IncidentsRoutingTest {
         val response = client.patch("/incidents/${created.id}/status") {
             headers { append(HttpHeaders.Authorization, "Bearer $userToken") }
             contentType(ContentType.Application.Json)
-            setBody(dev.koenv.roadassist.core.PatchIncidentStatusRequest(
-                status = dev.koenv.roadassist.core.IncidentStatus.IN_PROGRESS,
+            setBody(dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest(
+                status = dev.koenv.roadassist.core.incident.IncidentStatus.IN_PROGRESS,
                 notes = null,
             ))
         }
@@ -262,8 +264,8 @@ class IncidentsRoutingTest {
         val response = client.patch("/incidents/99999/status") {
             headers { append(HttpHeaders.Authorization, "Bearer $dispatcherToken") }
             contentType(ContentType.Application.Json)
-            setBody(dev.koenv.roadassist.core.PatchIncidentStatusRequest(
-                status = dev.koenv.roadassist.core.IncidentStatus.RESOLVED,
+            setBody(dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest(
+                status = dev.koenv.roadassist.core.incident.IncidentStatus.RESOLVED,
                 notes = null,
             ))
         }
