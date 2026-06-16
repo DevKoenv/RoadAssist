@@ -1,9 +1,9 @@
 package dev.koenv.roadassist.app.data.api
 
-import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.auth.AuthResponse
 import dev.koenv.roadassist.core.auth.LoginRequest
 import dev.koenv.roadassist.core.auth.RefreshRequest
+import dev.koenv.roadassist.core.comment.Comment
 import dev.koenv.roadassist.core.incident.CreateIncidentRequest
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.PatchIncidentStatusRequest

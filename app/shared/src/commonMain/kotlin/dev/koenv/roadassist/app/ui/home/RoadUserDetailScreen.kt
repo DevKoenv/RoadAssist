@@ -56,7 +56,7 @@ import dev.koenv.roadassist.app.ui.components.StatusBadge
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
 import dev.koenv.roadassist.app.ui.layouts.RoadUserLayout
-import dev.koenv.roadassist.core.Comment
+import dev.koenv.roadassist.core.comment.Comment
 import dev.koenv.roadassist.core.incident.Incident
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,9 +1,9 @@
 package dev.koenv.roadassist.server
 
-import dev.koenv.roadassist.core.AuthorRole
-import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CommentType
-import dev.koenv.roadassist.core.PostCommentRequest
+import dev.koenv.roadassist.core.comment.AuthorRole
+import dev.koenv.roadassist.core.comment.Comment
+import dev.koenv.roadassist.core.comment.CommentType
+import dev.koenv.roadassist.core.comment.PostCommentRequest
 import dev.koenv.roadassist.core.incident.CreateIncidentRequest
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentStatus

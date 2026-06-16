@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.core
+package dev.koenv.roadassist.core.comment
 
 import kotlinx.serialization.Serializable
 

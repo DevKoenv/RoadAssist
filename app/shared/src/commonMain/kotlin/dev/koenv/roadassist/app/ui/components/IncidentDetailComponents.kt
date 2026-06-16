@@ -29,9 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.LocalRoadAssistColors
 import dev.koenv.roadassist.app.util.timeAgo
-import dev.koenv.roadassist.core.AuthorRole
-import dev.koenv.roadassist.core.Comment
-import dev.koenv.roadassist.core.CommentType
+import dev.koenv.roadassist.core.comment.AuthorRole
+import dev.koenv.roadassist.core.comment.Comment
+import dev.koenv.roadassist.core.comment.CommentType
 import dev.koenv.roadassist.core.incident.Incident
 import dev.koenv.roadassist.core.incident.IncidentStatus
 import dev.koenv.roadassist.core.incident.displayName
