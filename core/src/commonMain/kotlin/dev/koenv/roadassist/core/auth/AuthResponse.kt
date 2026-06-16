@@ -1,5 +1,6 @@
-package dev.koenv.roadassist.core
+package dev.koenv.roadassist.core.auth
 
+import dev.koenv.roadassist.core.Role
 import kotlinx.serialization.Serializable
 
 @Serializable

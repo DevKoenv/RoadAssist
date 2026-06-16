@@ -6,8 +6,8 @@ import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
 import dev.koenv.roadassist.app.ui.login.LoginState
 import dev.koenv.roadassist.app.ui.login.LoginViewModel
-import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.auth.AuthResponse
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest

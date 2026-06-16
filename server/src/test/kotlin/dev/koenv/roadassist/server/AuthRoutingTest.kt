@@ -1,10 +1,10 @@
 package dev.koenv.roadassist.server
 
-import dev.koenv.roadassist.core.AuthResponse
-import dev.koenv.roadassist.core.LoginRequest
-import dev.koenv.roadassist.core.RefreshRequest
-import dev.koenv.roadassist.core.RegisterRequest
 import dev.koenv.roadassist.core.Role
+import dev.koenv.roadassist.core.auth.AuthResponse
+import dev.koenv.roadassist.core.auth.LoginRequest
+import dev.koenv.roadassist.core.auth.RefreshRequest
+import dev.koenv.roadassist.core.auth.RegisterRequest
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.RefreshTokensTable

@@ -1,10 +1,11 @@
 package dev.koenv.roadassist.server
 
-import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
 import dev.koenv.roadassist.core.IncidentCategory
-import dev.koenv.roadassist.core.LoginRequest
+import dev.koenv.roadassist.core.auth.AuthResponse
+import dev.koenv.roadassist.core.auth.LoginRequest
+import dev.koenv.roadassist.core.auth.RegisterRequest
 import dev.koenv.roadassist.server.database.CommentsTable
 import dev.koenv.roadassist.server.database.IncidentsTable
 import dev.koenv.roadassist.server.database.RefreshTokensTable
@@ -164,7 +165,7 @@ class IncidentsRoutingTest {
 
         client.post("/auth/register") {
             contentType(ContentType.Application.Json)
-            setBody(dev.koenv.roadassist.core.RegisterRequest("other_user", "pass1234"))
+            setBody(RegisterRequest("other_user", "pass1234"))
         }
         val otherToken = loginToken(client, "other_user", "pass1234")
         val created = client.post("/incidents") {
@@ -420,7 +421,7 @@ class IncidentsRoutingTest {
         val userToken = loginToken(client, "user", "user123")
         client.post("/auth/register") {
             contentType(ContentType.Application.Json)
-            setBody(dev.koenv.roadassist.core.RegisterRequest("intruder", "pass1234"))
+            setBody(RegisterRequest("intruder", "pass1234"))
         }
         val intruderToken = loginToken(client, "intruder", "pass1234")
 

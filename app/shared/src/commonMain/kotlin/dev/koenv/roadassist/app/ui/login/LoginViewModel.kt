@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.app.data.storage.SecureStorage
-import dev.koenv.roadassist.core.LoginRequest
+import dev.koenv.roadassist.core.auth.LoginRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

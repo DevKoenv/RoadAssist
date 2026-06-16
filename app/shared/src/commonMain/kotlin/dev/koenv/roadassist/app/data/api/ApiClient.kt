@@ -1,12 +1,12 @@
 package dev.koenv.roadassist.app.data.api
 
-import dev.koenv.roadassist.core.AuthResponse
 import dev.koenv.roadassist.core.Comment
 import dev.koenv.roadassist.core.CreateIncidentRequest
 import dev.koenv.roadassist.core.Incident
-import dev.koenv.roadassist.core.LoginRequest
 import dev.koenv.roadassist.core.PatchIncidentStatusRequest
-import dev.koenv.roadassist.core.RefreshRequest
+import dev.koenv.roadassist.core.auth.AuthResponse
+import dev.koenv.roadassist.core.auth.LoginRequest
+import dev.koenv.roadassist.core.auth.RefreshRequest
 
 interface ApiClient {
     suspend fun login(request: LoginRequest): Result<AuthResponse>
