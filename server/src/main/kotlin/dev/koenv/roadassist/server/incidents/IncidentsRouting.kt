@@ -133,6 +133,12 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
         call.respondText("Invalid status value", status = HttpStatusCode.BadRequest)
         return
     }
+    // Trim whitespace before validation so the length check reflects the real stored value
+    val trimmedNotes = body.notes?.trim()
+    if (trimmedNotes != null && trimmedNotes.length > 1000) {
+        call.respondText("Notes must not exceed 1000 characters", status = HttpStatusCode.UnprocessableEntity)
+        return
+    }
     val now = java.time.Instant.now().toString()
     val updated = transaction {
         IncidentsTable.selectAll()
@@ -140,7 +146,7 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
             .firstOrNull() ?: return@transaction null
         IncidentsTable.update({ IncidentsTable.id eq incidentId }) {
             it[status] = body.status
-            body.notes?.let { n -> it[notes] = n }
+            trimmedNotes?.let { n -> it[notes] = n }
             it[updatedAt] = now
         }
         // Every status change is automatically audit-logged as a STATUS_CHANGE comment

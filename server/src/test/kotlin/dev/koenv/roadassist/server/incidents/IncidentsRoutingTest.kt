@@ -448,6 +448,61 @@ class IncidentsRoutingTest {
         }
         assertEquals(HttpStatusCode.Forbidden, response.status)
     }
+
+    @Test
+    fun patch_status_notes_over_1000_chars_returns_422() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val userToken = loginToken(client, "user", "user123")
+        val dispatcherToken = loginToken(client, "dispatcher", "dispatch123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $userToken") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        // 1001 characters exceeds the 1000-character limit
+        val longNotes = "A".repeat(1001)
+        val response = client.patch("/incidents/${created.id}/status") {
+            headers { append(HttpHeaders.Authorization, "Bearer $dispatcherToken") }
+            contentType(ContentType.Application.Json)
+            setBody(PatchIncidentStatusRequest(
+                status = IncidentStatus.IN_PROGRESS,
+                notes = longNotes,
+            ))
+        }
+        assertEquals(HttpStatusCode.UnprocessableEntity, response.status)
+    }
+
+    @Test
+    fun patch_status_trims_whitespace_from_notes() = testApplication {
+        applyTestConfig()
+        application { module() }
+        val client = createClient { install(ClientContentNegotiation) { json() } }
+        val userToken = loginToken(client, "user", "user123")
+        val dispatcherToken = loginToken(client, "dispatcher", "dispatch123")
+
+        val created = client.post("/incidents") {
+            headers { append(HttpHeaders.Authorization, "Bearer $userToken") }
+            contentType(ContentType.Application.Json)
+            setBody(createBody)
+        }.body<Incident>()
+
+        val response = client.patch("/incidents/${created.id}/status") {
+            headers { append(HttpHeaders.Authorization, "Bearer $dispatcherToken") }
+            contentType(ContentType.Application.Json)
+            setBody(PatchIncidentStatusRequest(
+                status = IncidentStatus.IN_PROGRESS,
+                notes = "  On the way  ",
+            ))
+        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        val updated = response.body<Incident>()
+        // Leading and trailing whitespace must be stripped before storing
+        assertEquals("On the way", updated.notes)
+    }
 }
 
 private suspend fun loginToken(
