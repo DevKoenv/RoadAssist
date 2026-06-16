@@ -50,6 +50,7 @@ class NewIncidentViewModel(
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
+    // GPS fetch and reverse geocoding are async; checked in init so a manual selection isn't overwritten
     private var locationSetManually = false
 
     init {

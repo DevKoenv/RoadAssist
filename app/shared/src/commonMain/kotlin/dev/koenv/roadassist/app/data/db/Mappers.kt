@@ -14,6 +14,7 @@ import dev.koenv.roadassist.core.incident.IncidentStatus
 fun IncidentEntity.toDomain(): Incident = Incident(
     id = id.toInt(),
     userId = userId.toInt(),
+    // Fall back to a safe default rather than crash on unknown enum values from a DB migration
     category = runCatching { IncidentCategory.valueOf(category) }.getOrElse { IncidentCategory.OTHER },
     description = description,
     latitude = latitude,

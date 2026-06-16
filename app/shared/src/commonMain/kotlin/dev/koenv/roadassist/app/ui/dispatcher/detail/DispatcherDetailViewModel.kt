@@ -72,7 +72,7 @@ class DispatcherDetailViewModel(
             }
         }
         viewModelScope.launch {
-            var isFirstSync = true
+            var isFirstSync = true  // clear loading state once; subsequent connectivity events shouldn't re-show it
             serverReachable.filter { it }.collect {
                 repository.syncIncident(incidentId)
                 if (isFirstSync) {

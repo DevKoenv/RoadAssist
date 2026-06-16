@@ -279,6 +279,7 @@ class KtorApiClient(private val storage: SecureStorage) : ApiClient {
         Result.failure(ApiException.Network(e))
     }
 
+    // Server returns relative paths; resolve against BASE_URL so callers don't need to know it
     private fun Incident.withAbsolutePhotoUrl(): Incident =
         if (photoUrl?.startsWith("/") == true) copy(photoUrl = "$BASE_URL$photoUrl") else this
 }

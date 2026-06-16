@@ -40,6 +40,7 @@ class IncidentRepository(
     suspend fun syncIncidents(): Result<Unit> =
         apiClient.getIncidents().map { incidents ->
             db.incidentEntityQueries.transaction {
+                // Delete and re-insert rather than upsert alone; handles incidents removed on the server
                 db.incidentEntityQueries.deleteAll()
                 incidents.forEach { db.incidentEntityQueries.upsert(it) }
             }
@@ -50,6 +51,7 @@ class IncidentRepository(
             db.incidentEntityQueries.upsert(incident)
             apiClient.getComments(id).onSuccess { comments ->
                 db.commentEntityQueries.transaction {
+                    // Replace all comments atomically so deleted server-side comments don't linger
                     db.commentEntityQueries.deleteByIncidentId(id.toLong())
                     comments.forEach { db.commentEntityQueries.upsert(it) }
                 }

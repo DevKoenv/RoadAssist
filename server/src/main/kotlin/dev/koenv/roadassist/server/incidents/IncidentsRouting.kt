@@ -92,6 +92,7 @@ private suspend fun handleCreateIncident(call: ApplicationCall) {
 private suspend fun handleListIncidents(call: ApplicationCall) {
     val (userId, role) = call.jwtClaims() ?: return call.respond(HttpStatusCode.Unauthorized)
     val incidents = transaction {
+        // Dispatchers see all incidents; road users see only their own
         val query = if (role == Role.DISPATCHER.name) {
             IncidentsTable.selectAll()
         } else {
@@ -142,6 +143,7 @@ private suspend fun handlePatchStatus(call: ApplicationCall) {
             body.notes?.let { n -> it[notes] = n }
             it[updatedAt] = now
         }
+        // Every status change is automatically audit-logged as a STATUS_CHANGE comment
         CommentsTable.insert {
             it[CommentsTable.incidentId] = EntityID(incidentId, IncidentsTable)
             it[CommentsTable.authorRole] = AuthorRole.DISPATCHER
@@ -179,7 +181,7 @@ private suspend fun handleUploadPhoto(call: ApplicationCall) {
             photoContentType = part.contentType
             photoBytes = part.provider().toByteArray()
         }
-        part.release()
+        part.release()  // must release every part or the multipart channel won't drain
     }
 
     val bytes = photoBytes ?: run {
@@ -191,13 +193,13 @@ private suspend fun handleUploadPhoto(call: ApplicationCall) {
         call.respond(HttpStatusCode.UnsupportedMediaType)
         return
     }
-    if (bytes.size > 5 * 1024 * 1024) {
+    if (bytes.size > 5 * 1024 * 1024) {  // 5 MB cap
         call.respond(HttpStatusCode.PayloadTooLarge)
         return
     }
 
     val ext = if (photoContentType == ContentType.Image.JPEG) "jpg" else "png"
-    val filename = "$incidentId-${java.util.UUID.randomUUID()}.$ext"
+    val filename = "$incidentId-${java.util.UUID.randomUUID()}.$ext"  // UUID avoids collisions on re-upload
     val uploadsDir = java.io.File("uploads")
     uploadsDir.resolve(filename).writeBytes(bytes)
 
@@ -271,6 +273,7 @@ private suspend fun handlePostComment(call: ApplicationCall) {
     call.respond(HttpStatusCode.Created, comment)
 }
 
+// JWT has already been validated by the auth plugin; this just extracts the claims
 private fun ApplicationCall.jwtClaims(): Pair<Int, String>? {
     val principal = principal<JWTPrincipal>() ?: return null
     val userId = principal.payload.subject?.toIntOrNull() ?: return null
