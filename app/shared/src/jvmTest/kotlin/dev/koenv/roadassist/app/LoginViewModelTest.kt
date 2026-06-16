@@ -4,8 +4,8 @@ import androidx.lifecycle.viewModelScope
 import dev.koenv.roadassist.app.data.api.ApiException
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
-import dev.koenv.roadassist.app.ui.login.LoginState
-import dev.koenv.roadassist.app.ui.login.LoginViewModel
+import dev.koenv.roadassist.app.ui.auth.login.LoginState
+import dev.koenv.roadassist.app.ui.auth.login.LoginViewModel
 import dev.koenv.roadassist.core.user.Role
 import dev.koenv.roadassist.core.auth.AuthResponse
 import java.io.File

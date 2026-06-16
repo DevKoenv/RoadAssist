@@ -1,4 +1,4 @@
-package dev.koenv.roadassist.app.ui.login
+package dev.koenv.roadassist.app.ui.auth.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

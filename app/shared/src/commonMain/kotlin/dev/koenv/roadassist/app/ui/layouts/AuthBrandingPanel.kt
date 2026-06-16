@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.koenv.roadassist.app.theme.RoadAssistColors
-import dev.koenv.roadassist.app.ui.login.RoadAssistAppIcon
+import dev.koenv.roadassist.app.ui.auth.login.RoadAssistAppIcon
 
 @Composable
 internal fun AuthBrandingPanel(modifier: Modifier = Modifier) {
