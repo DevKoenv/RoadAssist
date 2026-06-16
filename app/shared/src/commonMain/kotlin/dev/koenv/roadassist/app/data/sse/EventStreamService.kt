@@ -13,7 +13,6 @@ import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
 import io.ktor.utils.io.readUTF8Line
-import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,9 +80,9 @@ class EventStreamService(
     }
 
     private fun connectWithRetry(token: String): Flow<SseEvent> {
+        // Shared between flow{} and retryWhen{}: set by retryWhen on failure, read at flow start to sync and signal reconnect
         var wasReconnecting = false
         return flow {
-            val collector = this
             if (wasReconnecting) {
                 repository.syncIncidents()
                 _reconnects.tryEmit(Unit)
@@ -111,14 +110,14 @@ class EventStreamService(
                         }
                         line.startsWith(":") -> { /* heartbeat/comment, ignore */ }
                         line.isEmpty() && currentData.isNotEmpty() -> {
-                            collector.emit(parseEvent(currentEvent, currentData.toString()))
+                            emit(parseEvent(currentEvent, currentData.toString()))
                             currentEvent = null
                             currentData.clear()
                         }
                     }
                 }
             }
-            throw IOException("SSE stream ended; reconnecting")
+            error("SSE stream ended; reconnecting")
         }.retryWhen { cause, attempt ->
             if (cause is CancellationException) return@retryWhen false
             wasReconnecting = true
