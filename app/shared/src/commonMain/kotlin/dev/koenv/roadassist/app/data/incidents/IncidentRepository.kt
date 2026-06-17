@@ -77,4 +77,12 @@ class IncidentRepository(
         }
 
     suspend fun checkConnectivity(): Boolean = apiClient.checkConnectivity()
+
+    fun upsertIncident(incident: Incident) {
+        db.incidentEntityQueries.upsert(incident)
+    }
+
+    fun upsertComment(comment: Comment) {
+        db.commentEntityQueries.upsert(comment)
+    }
 }

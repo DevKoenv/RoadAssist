@@ -5,6 +5,8 @@ import com.auth0.jwt.algorithms.Algorithm
 import dev.koenv.roadassist.server.auth.configureAuthRouting
 import dev.koenv.roadassist.server.database.DatabaseFactory
 import dev.koenv.roadassist.server.database.DatabaseSeeder
+import dev.koenv.roadassist.server.events.EventBroadcaster
+import dev.koenv.roadassist.server.events.configureEventsRouting
 import dev.koenv.roadassist.server.health.configureHealthRouting
 import dev.koenv.roadassist.server.health.configurePingRouting
 import dev.koenv.roadassist.server.incidents.configureIncidentsRouting
@@ -20,6 +22,7 @@ import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
+import io.ktor.server.sse.SSE
 import org.slf4j.event.Level
 
 fun main(args: Array<String>) = EngineMain.main(args)
@@ -51,6 +54,8 @@ private fun Application.configure(jwtSecret: String) {
     }
     install(CallLogging) { level = Level.INFO }
     install(ContentNegotiation) { json() }
+    install(SSE)
+    val broadcaster = EventBroadcaster()
     routing {
         java.io.File("uploads").mkdirs()  // created relative to CWD; must exist before static serving
         staticFiles("/uploads", java.io.File("uploads"))
@@ -58,7 +63,8 @@ private fun Application.configure(jwtSecret: String) {
         configurePingRouting()
         configureAuthRouting(jwtSecret)
         authenticate("auth-jwt") {
-            configureIncidentsRouting()
+            configureEventsRouting(broadcaster)
+            configureIncidentsRouting(broadcaster)
         }
     }
 }

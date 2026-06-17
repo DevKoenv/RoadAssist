@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import dev.koenv.roadassist.app.data.api.FakeApiClient
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.data.sse.EventStreamService
 import dev.koenv.roadassist.app.data.storage.createSecureStorage
 import dev.koenv.roadassist.app.db.RoadAssistDb
 import java.io.File
@@ -46,10 +47,14 @@ class DispatcherHomeViewModelTest {
     private fun makeVm(api: FakeApiClient = FakeApiClient()): DispatcherHomeViewModel {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         RoadAssistDb.Schema.create(driver)
+        val db = RoadAssistDb(driver)
+        val storage = createSecureStorage()
+        val repo = IncidentRepository(api, db)
         return DispatcherHomeViewModel(
             apiClient = api,
-            storage = createSecureStorage(),
-            repository = IncidentRepository(api, RoadAssistDb(driver)),
+            storage = storage,
+            repository = repo,
+            eventStreamService = EventStreamService(storage, repo),
         )
     }
 
@@ -64,10 +69,10 @@ class DispatcherHomeViewModelTest {
     }
 
     @Test
-    fun server_reachable_defaults_to_true() = runTest {
+    fun server_reachable_defaults_to_false() = runTest {
         vm = makeVm()
         try {
-            assertTrue(vm!!.serverReachable.value)
+            assertFalse(vm!!.serverReachable.value)
         } finally {
             vm!!.viewModelScope.cancel()
         }

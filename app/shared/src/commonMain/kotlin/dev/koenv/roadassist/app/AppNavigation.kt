@@ -19,6 +19,7 @@ import dev.koenv.roadassist.app.data.api.ApiClient
 import dev.koenv.roadassist.app.data.auth.AuthEventBus
 import dev.koenv.roadassist.app.data.auth.decodeRoleFromJwt
 import dev.koenv.roadassist.app.data.incidents.IncidentRepository
+import dev.koenv.roadassist.app.data.sse.EventStreamService
 import dev.koenv.roadassist.app.data.storage.SecureStorage
 import dev.koenv.roadassist.app.db.RoadAssistDb
 import dev.koenv.roadassist.app.geocoding.NominatimGeocodingService
@@ -51,6 +52,7 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val repo = remember { IncidentRepository(apiClient, db) }
+    val eventStreamService = remember { EventStreamService(storage, repo) }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 
@@ -68,7 +70,9 @@ fun AppNavigation(
     }
 
     LaunchedEffect(Unit) {
+        if (startDestination != "login") eventStreamService.start()
         AuthEventBus.unauthorizedEvents.collect {
+            eventStreamService.stop()
             navController.navigate("login") {
                 popUpTo(0) { inclusive = true }
             }
@@ -76,6 +80,7 @@ fun AppNavigation(
     }
 
     val goToLogin: () -> Unit = {
+        eventStreamService.stop()
         navController.navigate("login") { popUpTo(0) { inclusive = true } }
     }
 
@@ -93,6 +98,7 @@ fun AppNavigation(
                         LoginScreen(
                             viewModel = vm,
                             onLoginSuccess = { role ->
+                                eventStreamService.start()
                                 val destination = if (role == Role.DISPATCHER) "dispatcher_home" else "road_user_home"
                                 navController.navigate(destination) {
                                     popUpTo("login") { inclusive = true }
@@ -102,7 +108,7 @@ fun AppNavigation(
                     }
                 }
                 composable("road_user_home") {
-                    val vm = viewModel { RoadUserHomeViewModel(apiClient, storage, repo) }
+                    val vm = viewModel { RoadUserHomeViewModel(apiClient, storage, repo, eventStreamService) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     LaunchedEffect(currentRoute) {
@@ -115,7 +121,7 @@ fun AppNavigation(
                         onIncidentClick = { id -> navController.navigate("road_user_detail/$id") },
                         detailPanel = { id ->
                             val detailVm = viewModel(key = "road_user_panel_$id") {
-                                RoadUserDetailViewModel(repo, id, geocodingService)
+                                RoadUserDetailViewModel(repo, id, geocodingService, eventStreamService)
                             }
                             RoadUserDetailPanel(viewModel = detailVm)
                         },
@@ -125,7 +131,7 @@ fun AppNavigation(
                     val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
-                    val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id, geocodingService) }
+                    val vm = viewModel(key = "road_user_detail_$id") { RoadUserDetailViewModel(repo, id, geocodingService, eventStreamService) }
                     RoadUserDetailScreen(
                         viewModel = vm,
                         onBack = { navController.popBackStack("road_user_home", inclusive = false) },
@@ -133,7 +139,7 @@ fun AppNavigation(
                     )
                 }
                 composable("dispatcher_home") {
-                    val vm = viewModel { DispatcherHomeViewModel(apiClient, storage, repo) }
+                    val vm = viewModel { DispatcherHomeViewModel(apiClient, storage, repo, eventStreamService) }
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
                     LaunchedEffect(currentRoute) {
@@ -145,7 +151,7 @@ fun AppNavigation(
                         onIncidentClick = { id -> navController.navigate("dispatcher_detail/$id") },
                         detailPanel = { id ->
                             val detailVm = viewModel(key = "dispatcher_panel_$id") {
-                                DispatcherDetailViewModel(repo, id, geocodingService)
+                                DispatcherDetailViewModel(repo, id, geocodingService, eventStreamService)
                             }
                             DispatcherDetailPanel(viewModel = detailVm)
                         },
@@ -155,7 +161,7 @@ fun AppNavigation(
                     val id = backStackEntry.savedStateHandle.get<String>("id")?.toIntOrNull() ?: return@composable
                     val geocodingService = remember { NominatimGeocodingService() }
                     DisposableEffect(Unit) { onDispose { geocodingService.close() } }
-                    val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id, geocodingService) }
+                    val vm = viewModel(key = "dispatcher_detail_$id") { DispatcherDetailViewModel(repo, id, geocodingService, eventStreamService) }
                     DispatcherDetailScreen(
                         viewModel = vm,
                         onBack = { navController.popBackStack("dispatcher_home", inclusive = false) },
