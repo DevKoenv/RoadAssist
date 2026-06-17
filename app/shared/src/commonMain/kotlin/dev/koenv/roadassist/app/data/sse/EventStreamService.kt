@@ -12,6 +12,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
 import io.ktor.utils.io.readLine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -96,6 +97,9 @@ class EventStreamService(
                     append(HttpHeaders.CacheControl, "no-cache")
                 }
             }.execute { response ->
+                if (!response.status.isSuccess()) {
+                    error("SSE connection rejected: ${response.status}")
+                }
                 _connectionState.value = ConnectionState.Connected
                 val channel = response.bodyAsChannel()
                 var currentEvent: String? = null
