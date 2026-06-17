@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,9 +24,7 @@ class RoadUserHomeViewModel(
     private val eventStreamService: EventStreamService,
 ) : ViewModel() {
 
-    val serverReachable: StateFlow<Boolean> = eventStreamService.connectionState
-        .map { it is EventStreamService.ConnectionState.Connected }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val serverReachable: StateFlow<Boolean> = eventStreamService.serverReachable
 
     val incidents: StateFlow<List<Incident>> = repository.observeIncidents()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())

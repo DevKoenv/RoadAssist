@@ -8,6 +8,7 @@ import dev.koenv.roadassist.core.comment.Comment
 import dev.koenv.roadassist.core.incident.Incident
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.HttpTimeoutConfig
+import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 
 class EventStreamService(
@@ -52,6 +54,9 @@ class EventStreamService(
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Stopped)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
+    private val _serverReachable = MutableStateFlow(false)
+    val serverReachable: StateFlow<Boolean> = _serverReachable.asStateFlow()
+
     private val _reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val reconnects: Flow<Unit> = _reconnects.asSharedFlow()
 
@@ -72,12 +77,35 @@ class EventStreamService(
         scope.launch {
             connectWithRetry(token).collect { event -> handleEvent(event) }
         }
+        scope.launch {
+            connectionState.collect { state ->
+                if (state is ConnectionState.Connected) _serverReachable.value = true
+            }
+        }
+        scope.launch {
+            while (true) {
+                if (_connectionState.value !is ConnectionState.Connected) {
+                    _serverReachable.value = checkHealth()
+                }
+                delay(10_000L)
+            }
+        }
     }
 
     fun stop() {
         serviceScope?.cancel()
         serviceScope = null
         _connectionState.value = ConnectionState.Stopped
+        _serverReachable.value = false
+    }
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private suspend fun checkHealth(): Boolean = try {
+        withTimeoutOrNull(3_000L) {
+            httpClient.get("$BASE_URL/health").status.isSuccess()
+        } ?: false
+    } catch (e: Exception) {
+        false
     }
 
     private fun connectWithRetry(token: String): Flow<SseEvent> {

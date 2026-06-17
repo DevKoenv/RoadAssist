@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -62,9 +61,7 @@ class DispatcherDetailViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
-    val serverReachable: StateFlow<Boolean> = eventStreamService.connectionState
-        .map { it is EventStreamService.ConnectionState.Connected }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val serverReachable: StateFlow<Boolean> = eventStreamService.serverReachable
 
     init {
         viewModelScope.launch {
