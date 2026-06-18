@@ -72,7 +72,6 @@ fun RoadUserLayout(
             serverReachable = serverReachable,
             onLogout = onLogout,
             fab = fab,
-            windowSizeClass = windowSizeClass,
             onBack = onBack,
             customTitle = title,
             headerTrailing = headerTrailing,
@@ -192,7 +191,6 @@ private fun WideRoadUserLayout(
     serverReachable: Boolean,
     onLogout: () -> Unit,
     fab: FabConfig?,
-    windowSizeClass: WindowSizeClass,
     onBack: (() -> Unit)?,
     customTitle: String?,
     headerTrailing: (@Composable RowScope.() -> Unit)?,
@@ -255,20 +253,12 @@ private fun WideRoadUserLayout(
                 },
                 trailing = {
                     headerTrailing?.invoke(this)
-                    when (windowSizeClass) {
-                        WindowSizeClass.Medium -> fab?.let { config ->
-                            FloatingActionButton(onClick = config.onClick) {
-                                Icon(config.icon, contentDescription = config.label)
-                            }
+                    fab?.let { config ->
+                        PrimaryButton(onClick = config.onClick) {
+                            Icon(config.icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(config.label, style = MaterialTheme.typography.bodyMedium)
                         }
-                        WindowSizeClass.Expanded -> fab?.let { config ->
-                            PrimaryButton(onClick = config.onClick) {
-                                Icon(config.icon, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text(config.label, style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                        else -> {}
                     }
                 },
             )
