@@ -467,7 +467,7 @@ Verwachte uitvoer: alle tests geslaagd; geen emulator vereist.
 
 Alle datamodellen zijn gedefinieerd in de `:core`-module en geannoteerd met `@Serializable`. Ze worden gedeeld door de backend en de app (NF-03).
 
-### Kernmodellen
+### 13.1 Kernmodellen
 
 **Incident**
 
@@ -507,7 +507,7 @@ User
 └── role: Role
 ```
 
-### Enums
+### 13.2 Enums
 
 | Enum | Waarden |
 |------|---------|
@@ -517,7 +517,7 @@ User
 | `AuthorRole` | `DISPATCHER`, `ROAD_USER` |
 | `CommentType` | `MESSAGE`, `STATUS_CHANGE` |
 
-### Auth-modellen
+### 13.3 Auth-modellen
 
 | Klasse | Velden |
 |--------|--------|
