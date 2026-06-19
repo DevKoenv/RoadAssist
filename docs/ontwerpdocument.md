@@ -578,11 +578,12 @@ graph TD
 
     RUHome -->|"+ Nieuwe melding"| NewInc[Nieuw meldingsscherm]
     RUHome -->|"Tik op melding"| RUDetail["Meldingsdetail\n(alleen-lezen)"]
-    RUHome -->|"Geschiedenis-tab"| History[Meldingsgeschiednis]
+    RUHome -->|"Geschiedenis-tab"| History[Meldingsgeschiedenis]
     History -->|"Tik op melding"| RUDetail
 
     DHome -->|"Tik op melding"| DDetail["Meldingsdetail\n(Dispatcher)"]
     DDetail -->|"Status opslaan"| DHome
+    DDetail --> Settings
 
     NewInc -->|"Indienen"| RUHome
 
