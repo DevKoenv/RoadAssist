@@ -6,6 +6,10 @@ plugins {
 group = "dev.koenv.roadassist"
 version = "1.0.0"
 
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveFileName = "roadassist-server.jar"
+}
+
 application {
     mainClass = "dev.koenv.roadassist.server.ApplicationKt"
 }

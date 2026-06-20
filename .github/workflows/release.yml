@@ -104,13 +104,15 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build server shadow distribution
-        run: ./gradlew :server:shadowDistTar --no-daemon
+      - name: Build server fat JAR and shadow distribution
+        run: ./gradlew :server:shadowJar :server:shadowDistTar --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: server-linux
-          path: server/build/distributions/server-shadow-*.tar
+          path: |
+            server/build/libs/roadassist-server.jar
+            server/build/distributions/server-shadow-*.tar
 
   publish:
     name: Publish Release
