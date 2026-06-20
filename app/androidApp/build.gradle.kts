@@ -27,6 +27,7 @@ dependencies {
 android {
     namespace = "dev.koenv.roadassist"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
+    base.archivesName = "roadassist"
 
     defaultConfig {
         applicationId = "dev.koenv.roadassist"
