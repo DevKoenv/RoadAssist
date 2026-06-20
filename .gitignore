@@ -167,3 +167,13 @@ local.properties
 
 # Local workspace (notes, scratch, plans)
 .workspace/
+
+# PDF generation tooling
+node_modules/
+package.json
+package-lock.json
+
+# SQLite dev database
+server/roadassist.db
+server/uploads/
+.superpowers/

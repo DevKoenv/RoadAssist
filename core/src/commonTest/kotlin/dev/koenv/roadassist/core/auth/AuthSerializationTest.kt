@@ -1,0 +1,59 @@
+package dev.koenv.roadassist.core.auth
+
+import dev.koenv.roadassist.core.auth.AuthResponse
+import dev.koenv.roadassist.core.auth.LoginRequest
+import dev.koenv.roadassist.core.auth.RefreshRequest
+import dev.koenv.roadassist.core.auth.RegisterRequest
+import dev.koenv.roadassist.core.user.Role
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class AuthSerializationTest {
+
+    @Test
+    fun login_request_round_trip() {
+        val original = LoginRequest(username = "alice", password = "secret")
+        val decoded = Json.decodeFromString<LoginRequest>(Json.encodeToString(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun auth_response_round_trip() {
+        val original = AuthResponse(token = "eyJ.abc.def", refreshToken = "refresh-tok", role = Role.DISPATCHER)
+        val decoded = Json.decodeFromString<AuthResponse>(Json.encodeToString(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun refresh_request_round_trip() {
+        val original = RefreshRequest(refreshToken = "some-refresh-token")
+        val decoded = Json.decodeFromString<RefreshRequest>(Json.encodeToString(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun register_request_round_trip() {
+        val original = RegisterRequest(username = "alice", password = "secret123")
+        val decoded = Json.decodeFromString<RegisterRequest>(Json.encodeToString(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun login_request_fields_map_correctly() {
+        val json = """{"username":"bob","password":"hunter2"}"""
+        val req = Json.decodeFromString<LoginRequest>(json)
+        assertEquals("bob", req.username)
+        assertEquals("hunter2", req.password)
+    }
+
+    @Test
+    fun auth_response_fields_map_correctly() {
+        val json = """{"token":"tok","refreshToken":"rtok","role":"ROAD_USER"}"""
+        val resp = Json.decodeFromString<AuthResponse>(json)
+        assertEquals("tok", resp.token)
+        assertEquals("rtok", resp.refreshToken)
+        assertEquals(Role.ROAD_USER, resp.role)
+    }
+}
