@@ -1,20 +1,9 @@
-# RoadAssist
+# Installatiehandleiding — RoadAssist
 
-Cross-platform roadside assistance and incident reporting app built with Kotlin Multiplatform and Compose Multiplatform.
+Dit document beschrijft hoe je de RoadAssist applicatie en backend installeert, configureert en opstart op een lokale ontwikkelomgeving.
 
-Road users submit incidents (description, GPS location, optional photo) from their Android phone or desktop. Dispatchers monitor all incoming incidents, filter by status and category, and update incident status in real time. Changes are pushed to connected clients via Server-Sent Events without requiring a manual refresh.
-
-**Targets:** Android (API 26+), Desktop (Windows and Linux). **Backend:** Ktor on the JVM.
-
-## 1. Features
-
-- Role-based login: road users and dispatchers see different views after sign-in
-- Road users can report a new incident with category, description, GPS location, and an optional photo
-- Road users can track active incidents and browse their full history
-- Dispatchers see all incoming incidents, filter by status or category, and update status with a note
-- Both roles see full incident detail including photo, location, and dispatcher comments
-- Real-time updates via SSE: incident and comment changes appear without manual refresh
-- Offline detection: a banner appears whenever the server is unreachable
+**Platforms:** Android (API 26+) en Desktop (Windows en Linux).
+**Backend:** Ktor server op de JVM.
 
 ## 2. Requirements
 
@@ -98,23 +87,3 @@ Passwords are stored as bcrypt hashes. These credentials are for local developme
 ```
 
 All tests run on the JVM; no Android device or emulator is required.
-
-## Project layout
-
-| Path | Contents |
-|------|----------|
-| `core/` | Shared KMP library: data models and serialization |
-| `server/` | Ktor backend (JVM) |
-| `app/shared/` | Shared Compose UI and ViewModels |
-| `app/androidApp/` | Android entry point |
-| `app/desktopApp/` | Desktop entry point |
-
-## Branch strategy
-
-| Branch | Purpose |
-|--------|---------|
-| `master` | Protected. Stable, releasable code. Merge via PR only. |
-| `staging` | Acceptance environment. All feature branches merge here first. |
-| `feature/<name>` | Short-lived branches per issue, e.g. `feature/9-jwt-auth`. |
-
-PRs target `staging`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for commit conventions.

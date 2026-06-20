@@ -43,6 +43,14 @@ fun Application.module() {
     configure(jwtSecret)
 }
 
+/**
+ * Installs Ktor plugins and registers all routes.
+ *
+ * JWT setup: HMAC-256 signed tokens verified against [jwtSecret]. Access tokens expire after
+ * 24 hours; refresh tokens after 7 days. The payload must contain `sub` (user ID) and `role`
+ * ([dev.koenv.roadassist.core.user.Role]); tokens missing either claim are rejected.
+ * The `auth-jwt` scheme protects all routes except those under `/auth`, `/health`, and `/ping`.
+ */
 private fun Application.configure(jwtSecret: String) {
     install(Authentication) {
         jwt("auth-jwt") {
