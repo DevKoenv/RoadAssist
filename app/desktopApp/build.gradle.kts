@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: 0
+val appVersion = rootProject.file("version").readText().trim()
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -35,7 +36,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "RoadAssist"
-            packageVersion = "1.1.${maxOf(0, buildNumber)}"
+            packageVersion = appVersion
             description = "Roadside assistance dispatch platform"
 
             macOS {
