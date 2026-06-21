@@ -34,6 +34,7 @@ compose.desktop {
         jvmArgs += listOf("-Dskiko.renderApi=SOFTWARE")
 
         nativeDistributions {
+            modules("java.sql")
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "RoadAssist"
             packageVersion = appVersion
