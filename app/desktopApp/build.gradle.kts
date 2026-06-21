@@ -42,6 +42,7 @@ compose.desktop {
                 bundleID = "dev.koenv.roadassist"
             }
             windows {
+                iconFile = file("../../docs/icons/roadassist.ico")
                 upgradeUuid = "9F2A4E8B-3C1D-4F56-A7E2-8B3C9D1E4F57"
                 menuGroup = "RoadAssist"
                 perUserInstall = false
