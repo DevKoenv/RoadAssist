@@ -13,7 +13,7 @@ WorkingDirectory=/var/lib/roadassist
 # Secrets and runtime config — keep this file chmod 640, owned root:roadassist
 EnvironmentFile=/etc/roadassist/env
 
-ExecStart=${JAVA_HOME}/bin/java -Dktor.deployment.port=${PORT} -jar /opt/roadassist/roadassist-server.jar
+ExecStart=/usr/bin/java -Dktor.deployment.port=${PORT} -jar /opt/roadassist/roadassist-server.jar
 
 Restart=on-failure
 RestartSec=5s
