@@ -35,7 +35,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "RoadAssist"
-            packageVersion = "1.0.${maxOf(0, buildNumber)}"
+            packageVersion = "1.1.${maxOf(0, buildNumber)}"
             description = "Roadside assistance dispatch platform"
 
             macOS {
@@ -44,7 +44,8 @@ compose.desktop {
             windows {
                 upgradeUuid = "9F2A4E8B-3C1D-4F56-A7E2-8B3C9D1E4F57"
                 menuGroup = "RoadAssist"
-                perUserInstall = true
+                perUserInstall = false
+                dirChooser = true
             }
             linux {
                 packageName = "roadassist"

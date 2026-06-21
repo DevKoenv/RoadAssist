@@ -34,7 +34,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = maxOf(1, buildNumber)
-        versionName = if (buildNumber > 0) "1.0.$buildNumber" else "1.0"
+        versionName = if (buildNumber > 0) "1.1.$buildNumber" else "1.1"
 
         val localProps = Properties()
         val localPropsFile = rootProject.file("local.properties")
