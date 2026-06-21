@@ -2,6 +2,7 @@ package dev.koenv.roadassist.app.ui.layouts
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,8 +18,8 @@ fun AuthLayout(content: @Composable () -> Unit) {
     } else {
         // desktop: branding panel on left, login form on right
         Row(Modifier.fillMaxSize()) {
-            AuthBrandingPanel(Modifier.weight(1f)) // left: dark branded sidebar
-            Box(Modifier.weight(1f)) { content() } // right: login form panel
+            AuthBrandingPanel(Modifier.weight(1f).fillMaxHeight()) // left: dark branded sidebar
+            Box(Modifier.weight(1f).fillMaxHeight()) { content() } // right: login form panel
         }
     }
 }

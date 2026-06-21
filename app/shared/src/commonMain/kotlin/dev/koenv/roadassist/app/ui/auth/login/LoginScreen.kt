@@ -149,17 +149,15 @@ private fun DesktopFormPanel(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.background(Color.White)) {
-        ConnectivityBanner(visible = !serverReachable) // offline banner
-        // centered form container
+        ConnectivityBanner(visible = !serverReachable)
         Box(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
-            // form content (max 400dp wide)
             Column(modifier = Modifier.widthIn(max = 400.dp).padding(horizontal = 40.dp)) {
-                Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground) // form title
+                Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(6.dp))
-                Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground) // subtitle
+                Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
                 Spacer(Modifier.height(24.dp))
                 LoginForm(state = state, username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onLogin = onLogin, modifier = Modifier.fillMaxWidth())
             }
