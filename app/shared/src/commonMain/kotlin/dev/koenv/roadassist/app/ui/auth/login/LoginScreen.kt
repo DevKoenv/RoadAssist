@@ -7,9 +7,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,7 +55,6 @@ import dev.koenv.roadassist.app.ui.components.ConnectivityBanner
 import dev.koenv.roadassist.app.ui.components.PrimaryButton
 import dev.koenv.roadassist.app.ui.foundation.LocalWindowSizeClass
 import dev.koenv.roadassist.app.ui.foundation.WindowSizeClass
-import dev.koenv.roadassist.app.ui.layouts.AuthBrandingPanel
 import dev.koenv.roadassist.core.user.Role
 
 @Composable
@@ -151,26 +148,18 @@ private fun DesktopFormPanel(
     serverReachable: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.background(Color.White)) {
         ConnectivityBanner(visible = !serverReachable)
-        Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            // Left: brand panel
-            AuthBrandingPanel(modifier = Modifier.weight(0.45f).fillMaxHeight())
-            // Right: form panel
-            Box(
-                modifier = Modifier
-                    .weight(0.55f)
-                    .fillMaxHeight()
-                    .background(Color.White),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(modifier = Modifier.widthIn(max = 400.dp).padding(horizontal = 40.dp)) {
-                    Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
-                    Spacer(Modifier.height(24.dp))
-                    LoginForm(state = state, username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onLogin = onLogin, modifier = Modifier.fillMaxWidth())
-                }
+        Box(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(modifier = Modifier.widthIn(max = 400.dp).padding(horizontal = 40.dp)) {
+                Text("Sign in", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                Spacer(Modifier.height(6.dp))
+                Text("Use your RoadAssist credentials.", style = MaterialTheme.typography.bodySmall, color = LocalRoadAssistColors.current.mutedForeground)
+                Spacer(Modifier.height(24.dp))
+                LoginForm(state = state, username = username, password = password, onUsernameChange = onUsernameChange, onPasswordChange = onPasswordChange, onLogin = onLogin, modifier = Modifier.fillMaxWidth())
             }
         }
     }
