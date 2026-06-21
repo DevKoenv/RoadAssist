@@ -37,7 +37,12 @@ plugins {
 }
 
 configurations.all {
-    exclude(group = "org.jetbrains.skiko")
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.skiko") {
+            useVersion("0.144.6")
+            because("Pin to CMP 1.11.1 version; Coil 3.x requests 0.8.18 which conflicts")
+        }
+    }
 }
 
 kotlin {
