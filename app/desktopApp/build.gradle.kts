@@ -2,6 +2,11 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: 0
 val appVersion = rootProject.file("version").readText().trim()
+// MSI/EXE require MAJOR.MINOR.BUILD (3 components, BUILD ≤ 65535).
+// Use the build number as the BUILD component so each CI release is
+// a higher version and Windows Installer treats it as an upgrade.
+val versionParts = appVersion.split(".")
+val windowsVersion = "${versionParts[0]}.${versionParts[1]}.$buildNumber"
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -32,8 +37,10 @@ compose.desktop {
     application {
         mainClass = "dev.koenv.roadassist.app.MainKt"
         jvmArgs += listOf("-Dskiko.renderApi=SOFTWARE")
+        buildTypes.release.proguard.isEnabled.set(false)
 
         nativeDistributions {
+            includeAllModules = true
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "RoadAssist"
             packageVersion = appVersion
@@ -43,6 +50,7 @@ compose.desktop {
                 bundleID = "dev.koenv.roadassist"
             }
             windows {
+                packageVersion = windowsVersion
                 iconFile = file("../../docs/icons/roadassist.ico")
                 upgradeUuid = "9F2A4E8B-3C1D-4F56-A7E2-8B3C9D1E4F57"
                 menuGroup = "RoadAssist"
