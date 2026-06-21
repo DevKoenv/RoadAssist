@@ -1,0 +1,33 @@
+[Unit]
+Description=RoadAssist Server
+Documentation=https://github.com/DevKoenv/RoadAssist
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=roadassist
+Group=roadassist
+WorkingDirectory=/var/lib/roadassist
+
+# Secrets and runtime config — keep this file chmod 640, owned root:roadassist
+EnvironmentFile=/etc/roadassist/env
+
+ExecStart=/usr/bin/java -Dktor.deployment.port=${PORT} -jar /opt/roadassist/roadassist-server.jar
+
+Restart=on-failure
+RestartSec=5s
+
+# Logging goes to journald — use: journalctl -u roadassist -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=roadassist
+
+# Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/roadassist
+
+[Install]
+WantedBy=multi-user.target

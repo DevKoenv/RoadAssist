@@ -1,10 +1,12 @@
+val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: 0
+
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
 }
 
 group = "dev.koenv.roadassist"
-version = "1.0.0"
+version = if (buildNumber > 0) "1.1.$buildNumber" else "1.1.0"
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveFileName = "roadassist-server.jar"
